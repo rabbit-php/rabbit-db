@@ -19,7 +19,7 @@
       "rabbit\\db\\": "src/"
     },
     "files": [
-      "src/db/functions.php"
+      "src/functions.php"
     ]
   }
 }

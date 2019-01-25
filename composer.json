@@ -1,0 +1,25 @@
+{
+  "name": "rabbit/db",
+  "description": "rabbit db base on yiisoft/db.Add Manager and Pool",
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "albert",
+      "email": "63851587@qq.com"
+    }
+  ],
+  "require": {
+    "ext-pdo": "*",
+    "rabbit/framework": "dev-master",
+    "rabbit/pool": "dev-master"
+  },
+  "autoload": {
+    "psr-4": {
+      "rabbit\\db\\": "src/"
+    },
+    "files": [
+      "src/db/functions.php"
+    ]
+  }
+}

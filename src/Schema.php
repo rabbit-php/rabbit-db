@@ -10,6 +10,7 @@ namespace rabbit\db;
 use Psr\SimpleCache\CacheInterface;
 use rabbit\core\BaseObject;
 use rabbit\core\ObjectFactory;
+use rabbit\exception\InvalidCallException;
 use rabbit\exception\NotSupportedException;
 
 /**
@@ -355,7 +356,7 @@ abstract class Schema extends BaseObject
      * Returns the ID of the last inserted row or sequence value.
      * @param string $sequenceName name of the sequence object (required by some DBMS)
      * @return string the row ID of the last row inserted, or the last value retrieved from the sequence object
-     * @throws \BadFunctionCallException if the DB connection is not active
+     * @throws InvalidCallException if the DB connection is not active
      * @see http://www.php.net/manual/en/function.PDO-lastInsertId.php
      */
     public function getLastInsertID($sequenceName = '')
@@ -364,7 +365,7 @@ abstract class Schema extends BaseObject
             return $this->db->pdo->lastInsertId($sequenceName === '' ? null : $this->quoteTableName($sequenceName));
         }
 
-        throw new \BadFunctionCallException('DB Connection is not active.');
+        throw new InvalidCallException('DB Connection is not active.');
     }
 
     /**

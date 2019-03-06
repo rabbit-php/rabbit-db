@@ -9,31 +9,28 @@
 namespace rabbit\db;
 
 
+use rabbit\core\Context;
 use rabbit\core\ContextTrait;
-use rabbit\helper\CoroHelper;
 
 /**
  * Class DbContext
  * @package rabbit\illuminate\db
  */
-class DbContext
+class DbContext extends Context
 {
-    use ContextTrait;
-    /**
-     * @var array
-     */
-    private static $context = [];
+    protected static $key = 'database';
 
     /**
      *
      */
     public static function release(): void
     {
-        if (self::$context !== [] && isset(self::$context[CoroHelper::getId()])) {
-            foreach (self::$context[CoroHelper::getId()] as $name => $connection) {
+        $context = \Co::getContext();
+        if (isset($context[self::$key])) {
+            foreach ($context[self::$key] as $name => $connection) {
                 $connection->release();
             }
-            unset(self::$context[CoroHelper::getId()]);
+            unset($context[self::$key]);
         }
     }
 }

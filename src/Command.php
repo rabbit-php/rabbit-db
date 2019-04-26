@@ -1118,7 +1118,7 @@ class Command extends BaseObject
                 ];
                 $result = $cache->get($cacheKey);
                 if (is_array($result) && isset($result[0])) {
-                    App::debug('Query result served from cache', 'rabbit\db\Command::query');
+                    App::debug('Query result served from cache', 'db');
                     return $result[0];
                 }
             }
@@ -1144,7 +1144,7 @@ class Command extends BaseObject
 
         if (isset($cache, $cacheKey, $info)) {
             $cache->set($cacheKey, [$result], $info[1], $info[2]);
-            App::debug('Saved query result in cache', 'rabbit\db\Command::query');
+            App::debug('Saved query result in cache', 'db');
         }
 
         return $result;

@@ -1075,7 +1075,7 @@ class Connection extends BaseObject implements ConnectionInterface
                 $db->open();
                 return $db;
             } catch (\Exception $e) {
-                App::warning("Connection ({$config['dsn']}) failed: " . $e->getMessage(), __METHOD__);
+                App::warning("Connection ({$config['dsn']}) failed: " . $e->getMessage(), 'db');
                 if ($cache instanceof CacheInterface) {
                     // mark this server as dead and only retry it after the specified interval
                     $cache->set($key, 1, $this->serverRetryInterval);

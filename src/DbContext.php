@@ -13,6 +13,7 @@ use rabbit\core\Context;
 
 /**
  * Class DbContext
+ * @method void release()
  * @package rabbit\db
  */
 class DbContext extends Context

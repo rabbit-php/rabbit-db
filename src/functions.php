@@ -9,6 +9,7 @@
 if (!function_exists('DbRelease')) {
     function DbRelease()
     {
+        /** @var \rabbit\db\Manager $db */
         $db = getDI('db');
         $db->release();
     }

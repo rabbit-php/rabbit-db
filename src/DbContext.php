@@ -86,7 +86,7 @@ class DbContext extends Context
              * @var \rabbit\db\mysql\Connection $connection
              */
             foreach ($context['database'] as $name => $connection) {
-                $connection->release($name);
+                $connection->release(true, $name);
             }
         }
     }

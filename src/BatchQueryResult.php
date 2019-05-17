@@ -8,6 +8,8 @@
 namespace rabbit\db;
 
 
+use rabbit\core\BaseObject;
+
 /**
  * BatchQueryResult represents a batch query from which you can retrieve data in batches.
  *

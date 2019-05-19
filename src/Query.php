@@ -113,9 +113,6 @@ class Query extends BaseObject implements QueryInterface, ExpressionInterface
      * For example, `[':name' => 'Dan', ':age' => 31]`.
      */
     public $params = [];
-
-    /** @var bool */
-    protected $childCreate = false;
     /**
      * @var int|true the default number of seconds that query results can remain valid in cache.
      * Use 0 to indicate that the cached data will never expire.
@@ -125,13 +122,6 @@ class Query extends BaseObject implements QueryInterface, ExpressionInterface
      * @since 2.0.14
      */
     public $queryCacheDuration;
-
-    public function __destruct()
-    {
-        if (!$this->childCreate) {
-            DbContext::release();
-        }
-    }
 
     /**
      * Creates a DB command that can be used to execute this query.
@@ -1295,8 +1285,7 @@ PATTERN;
             'join' => $from->join,
             'having' => $from->having,
             'union' => $from->union,
-            'params' => $from->params,
-            'childCreate' => true,
+            'params' => $from->params
         ]);
     }
 

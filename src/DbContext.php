@@ -10,6 +10,7 @@ namespace rabbit\db;
 
 
 use rabbit\core\Context;
+use rabbit\helper\CoroHelper;
 
 /**
  * Class DbContext
@@ -79,7 +80,18 @@ class DbContext extends Context
      */
     public static function release(): void
     {
-        $context = \Co::getContext();
+        while (($cid = CoroHelper::getPid()) !== -1) {
+            self::auto($cid);
+        }
+        self::auto();
+    }
+
+    /**
+     * @param int|null $cid
+     */
+    private static function auto(int $cid = null)
+    {
+        $context = $cid === null ? \Co::getContext() : \Co::getContext($cid);
         if (isset($context['database'])) {
             /**
              * @var  $name

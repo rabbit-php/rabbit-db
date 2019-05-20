@@ -80,18 +80,7 @@ class DbContext extends Context
      */
     public static function release(): void
     {
-        while (($cid = CoroHelper::getPid()) !== -1) {
-            self::auto($cid);
-        }
-        self::auto();
-    }
-
-    /**
-     * @param int|null $cid
-     */
-    private static function auto(int $cid = null)
-    {
-        $context = $cid === null ? \Co::getContext() : \Co::getContext($cid);
+        $context = \Co::getContext();
         if (isset($context['database'])) {
             /**
              * @var  $name

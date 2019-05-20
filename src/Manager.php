@@ -11,6 +11,7 @@ namespace rabbit\db;
 use rabbit\contract\ReleaseInterface;
 use rabbit\db\pool\PdoPool;
 use rabbit\helper\ArrayHelper;
+use rabbit\helper\CoroHelper;
 
 /**
  * Class Manager
@@ -20,6 +21,8 @@ class Manager implements ReleaseInterface
 {
     /** @var PdoPool[] */
     private $connections = [];
+    /** @var array */
+    private $deferList = [];
 
     /**
      * Manager constructor.
@@ -57,6 +60,13 @@ class Manager implements ReleaseInterface
             $pool = $this->connections[$name];
             $connection = $pool->getConnection();
             DbContext::set($name, $connection);
+            if (($cid = CoroHelper::getId()) !== -1 && !array_key_exists($cid, $this->deferList)) {
+                defer(function () use ($cid) {
+                    DbContext::release();
+                    unset($this->deferList[$cid]);
+                });
+                $this->deferList[$cid] = true;
+            }
         }
         return $connection;
     }

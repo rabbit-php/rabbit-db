@@ -772,7 +772,8 @@ class Command extends BaseObject
      */
     public function addForeignKey($name, $table, $columns, $refTable, $refColumns, $delete = null, $update = null)
     {
-        $sql = $this->db->getQueryBuilder()->addForeignKey($name, $table, $columns, $refTable, $refColumns, $delete, $update);
+        $sql = $this->db->getQueryBuilder()->addForeignKey($name, $table, $columns, $refTable, $refColumns, $delete,
+            $update);
 
         return $this->setSql($sql)->requireTableSchemaRefresh($table);
     }
@@ -1240,7 +1241,7 @@ class Command extends BaseObject
             } catch (\Exception $e) {
                 $rawSql = $rawSql ?: $this->getRawSql();
                 $e = $this->db->getSchema()->convertException($e, $rawSql);
-                if ($this->_retryHandler === null || !call_user_func($this->_retryHandler, $e, $attempt)) {
+                if ($this->_retryHandler === null || !call_user_func($this->_retryHandler, $this, $e, $attempt)) {
                     throw $e;
                 }
             }

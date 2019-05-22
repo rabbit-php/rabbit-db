@@ -102,8 +102,7 @@ class Command extends BaseObject
      */
     private $_isolationLevel = false;
     /**
-     * @var callable a callable (e.g. anonymous function) that is called when [[\rabbit\db\Exception]] is thrown
-     * when executing the command.
+     * @var RetryHandlerInterface
      */
     private $_retryHandler;
 
@@ -243,19 +242,33 @@ class Command extends BaseObject
             // master is in a transaction. use the same connection.
             $forRead = false;
         }
-        if ($forRead || $forRead === null && $this->db->getSchema()->isReadQuery($sql)) {
-            $pdo = $this->db->getSlavePdo();
-        } else {
-            $pdo = $this->db->getMasterPdo();
-        }
 
-        try {
-            $this->pdoStatement = $pdo->prepare($sql);
-            $this->bindPendingParams();
-        } catch (\Exception $e) {
-            $message = $e->getMessage() . "\nFailed to prepare SQL: $sql";
-            $errorInfo = $e instanceof \PDOException ? $e->errorInfo : null;
-            throw new Exception($message, $errorInfo, (int)$e->getCode(), $e);
+        $attempt = 0;
+        while (true) {
+            ++$attempt;
+            if ($forRead || $forRead === null && $this->db->getSchema()->isReadQuery($sql)) {
+                $pdo = $this->db->getSlavePdo();
+            } else {
+                $pdo = $this->db->getMasterPdo();
+            }
+            try {
+                $this->pdoStatement = $pdo->prepare($sql);
+                $this->bindPendingParams();
+                if ($this->_retryHandler !== null) {
+                    $this->_retryHandler->setTotalCount(0);
+                }
+                break;
+            } catch (\Exception $e) {
+                $message = $e->getMessage() . "\nFailed to prepare SQL: $sql";
+                $errorInfo = $e instanceof \PDOException ? $e->errorInfo : null;
+                $e = new Exception($message, $errorInfo, (int)$e->getCode(), $e);
+                if ($this->_retryHandler === null) {
+                    $this->_retryHandler = clone getDI('db.retryHandler');
+                }
+                if (!$this->_retryHandler->handle($this, $e, $attempt)) {
+                    throw $e;
+                }
+            }
         }
     }
 
@@ -1188,30 +1201,6 @@ class Command extends BaseObject
     }
 
     /**
-     * Sets a callable (e.g. anonymous function) that is called when [[Exception]] is thrown
-     * when executing the command. The signature of the callable should be:
-     *
-     * ```php
-     * function (\rabbit\db\Exception $e, $attempt)
-     * {
-     *     // return true or false (whether to retry the command or rethrow $e)
-     * }
-     * ```
-     *
-     * The callable will recieve a database exception thrown and a current attempt
-     * (to execute the command) number starting from 1.
-     *
-     * @param callable $handler a PHP callback to handle database exceptions.
-     * @return $this this command instance.
-     * @since 2.0.14
-     */
-    protected function setRetryHandler(callable $handler)
-    {
-        $this->_retryHandler = $handler;
-        return $this;
-    }
-
-    /**
      * Executes a prepared statement.
      *
      * It's a wrapper around [[\PDOStatement::execute()]] to support transactions
@@ -1236,12 +1225,18 @@ class Command extends BaseObject
                     }, $this->_isolationLevel);
                 } else {
                     $this->pdoStatement->execute();
+                    if ($this->_retryHandler !== null) {
+                        $this->_retryHandler->setTotalCount(0);
+                    }
                 }
                 break;
             } catch (\Exception $e) {
                 $rawSql = $rawSql ?: $this->getRawSql();
                 $e = $this->db->getSchema()->convertException($e, $rawSql);
-                if ($this->_retryHandler === null || !call_user_func($this->_retryHandler, $this, $e, $attempt)) {
+                if ($this->_retryHandler === null) {
+                    $this->_retryHandler = clone getDI('db.retryHandler');
+                }
+                if (!$this->_retryHandler->handle($this, $e, $attempt)) {
                     throw $e;
                 }
             }

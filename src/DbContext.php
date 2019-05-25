@@ -10,7 +10,6 @@ namespace rabbit\db;
 
 
 use rabbit\core\Context;
-use rabbit\helper\CoroHelper;
 
 /**
  * Class DbContext

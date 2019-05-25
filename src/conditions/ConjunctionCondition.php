@@ -30,6 +30,14 @@ abstract class ConjunctionCondition implements ConditionInterface
     }
 
     /**
+     * {@inheritdoc}
+     */
+    public static function fromArrayDefinition($operator, $operands)
+    {
+        return new static($operands);
+    }
+
+    /**
      * @return mixed[]
      */
     public function getExpressions()
@@ -42,12 +50,4 @@ abstract class ConjunctionCondition implements ConditionInterface
      * @return string
      */
     abstract public function getOperator();
-
-    /**
-     * {@inheritdoc}
-     */
-    public static function fromArrayDefinition($operator, $operands)
-    {
-        return new static($operands);
-    }
 }

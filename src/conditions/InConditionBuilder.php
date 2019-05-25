@@ -48,7 +48,7 @@ class InConditionBuilder implements ExpressionBuilderInterface
 
         if (!is_array($values) && !$values instanceof \Traversable) {
             // ensure values is an array
-            $values = (array) $values;
+            $values = (array)$values;
         }
         if ($column instanceof \Traversable || ((is_array($column) || $column instanceof \Countable) && count($column) > 1)) {
             return $this->buildCompositeInCondition($operator, $column, $values, $params);
@@ -73,35 +73,6 @@ class InConditionBuilder implements ExpressionBuilderInterface
         $operator = $operator === 'IN' ? '=' : '<>';
 
         return $column . $operator . reset($sqlValues);
-    }
-
-    /**
-     * Builds $values to be used in [[InCondition]]
-     *
-     * @param ConditionInterface|InCondition $condition
-     * @param array $values
-     * @param array $params the binding parameters
-     * @return array of prepared for SQL placeholders
-     */
-    protected function buildValues(ConditionInterface $condition, $values, &$params)
-    {
-        $sqlValues = [];
-        $column = $condition->getColumn();
-
-        foreach ($values as $i => $value) {
-            if (is_array($value) || $value instanceof \ArrayAccess) {
-                $value = $value[$column] ?? null;
-            }
-            if ($value === null) {
-                $sqlValues[$i] = 'NULL';
-            } elseif ($value instanceof ExpressionInterface) {
-                $sqlValues[$i] = $this->queryBuilder->buildExpression($value, $params);
-            } else {
-                $sqlValues[$i] = $this->queryBuilder->bindParam($value, $params);
-            }
-        }
-
-        return $sqlValues;
     }
 
     /**
@@ -164,9 +135,39 @@ class InConditionBuilder implements ExpressionBuilderInterface
 
         $sqlColumns = [];
         foreach ($columns as $i => $column) {
-            $sqlColumns[] = strpos($column, '(') === false ? $this->queryBuilder->db->quoteColumnName($column) : $column;
+            $sqlColumns[] = strpos($column,
+                '(') === false ? $this->queryBuilder->db->quoteColumnName($column) : $column;
         }
 
         return '(' . implode(', ', $sqlColumns) . ") $operator (" . implode(', ', $vss) . ')';
+    }
+
+    /**
+     * Builds $values to be used in [[InCondition]]
+     *
+     * @param ConditionInterface|InCondition $condition
+     * @param array $values
+     * @param array $params the binding parameters
+     * @return array of prepared for SQL placeholders
+     */
+    protected function buildValues(ConditionInterface $condition, $values, &$params)
+    {
+        $sqlValues = [];
+        $column = $condition->getColumn();
+
+        foreach ($values as $i => $value) {
+            if (is_array($value) || $value instanceof \ArrayAccess) {
+                $value = $value[$column] ?? null;
+            }
+            if ($value === null) {
+                $sqlValues[$i] = 'NULL';
+            } elseif ($value instanceof ExpressionInterface) {
+                $sqlValues[$i] = $this->queryBuilder->buildExpression($value, $params);
+            } else {
+                $sqlValues[$i] = $this->queryBuilder->bindParam($value, $params);
+            }
+        }
+
+        return $sqlValues;
     }
 }

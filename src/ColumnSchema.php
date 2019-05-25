@@ -91,20 +91,6 @@ class ColumnSchema
     }
 
     /**
-     * Converts the input value according to [[type]] and [[dbType]] for use in a db query.
-     * If the value is null or an [[Expression]], it will not be converted.
-     * @param mixed $value input value
-     * @return mixed converted value. This may also be an array containing the value as the first element
-     * and the PDO type as the second element.
-     */
-    public function dbTypecast($value)
-    {
-        // the default implementation does the same as casting for PHP, but it should be possible
-        // to override this with annotation of explicit PDO type.
-        return $this->typecast($value);
-    }
-
-    /**
      * Converts the input value according to [[phpType]] after retrieval from the database.
      * If the value is null or an [[Expression]], it will not be converted.
      * @param mixed $value input value
@@ -153,15 +139,15 @@ class ColumnSchema
                     // ensure type cast always has . as decimal separator in all locales
                     return StringHelper::floatToString($value);
                 }
-                return (string) $value;
+                return (string)$value;
             case 'integer':
-                return (int) $value;
+                return (int)$value;
             case 'boolean':
                 // treating a 0 bit value as false too
                 // https://github.com/yiisoft/yii2/issues/9006
-                return (bool) $value && $value !== "\0";
+                return (bool)$value && $value !== "\0";
             case 'double':
-                return (float) $value;
+                return (float)$value;
         }
 
         return $value;
@@ -170,8 +156,29 @@ class ColumnSchema
     /**
      * @return int[] array of numbers that represent possible PDO parameter types
      */
-    private function getPdoParamTypes()
+    protected function getPdoParamTypes()
     {
-        return [\PDO::PARAM_BOOL, \PDO::PARAM_INT, \PDO::PARAM_STR, \PDO::PARAM_LOB, \PDO::PARAM_NULL, \PDO::PARAM_STMT];
+        return [
+            \PDO::PARAM_BOOL,
+            \PDO::PARAM_INT,
+            \PDO::PARAM_STR,
+            \PDO::PARAM_LOB,
+            \PDO::PARAM_NULL,
+            \PDO::PARAM_STMT
+        ];
+    }
+
+    /**
+     * Converts the input value according to [[type]] and [[dbType]] for use in a db query.
+     * If the value is null or an [[Expression]], it will not be converted.
+     * @param mixed $value input value
+     * @return mixed converted value. This may also be an array containing the value as the first element
+     * and the PDO type as the second element.
+     */
+    public function dbTypecast($value)
+    {
+        // the default implementation does the same as casting for PHP, but it should be possible
+        // to override this with annotation of explicit PDO type.
+        return $this->typecast($value);
     }
 }

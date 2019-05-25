@@ -32,18 +32,18 @@ class HashCondition implements ConditionInterface
     }
 
     /**
-     * @return array|null
-     */
-    public function getHash()
-    {
-        return $this->hash;
-    }
-
-    /**
      * {@inheritdoc}
      */
     public static function fromArrayDefinition($operator, $operands)
     {
         return new static($operands);
+    }
+
+    /**
+     * @return array|null
+     */
+    public function getHash()
+    {
+        return $this->hash;
     }
 }

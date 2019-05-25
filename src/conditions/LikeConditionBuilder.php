@@ -75,24 +75,13 @@ class LikeConditionBuilder implements ExpressionBuilderInterface
             if ($value instanceof ExpressionInterface) {
                 $phName = $this->queryBuilder->buildExpression($value, $params);
             } else {
-                $phName = $this->queryBuilder->bindParam(empty($escape) ? $value : ('%' . strtr($value, $escape) . '%'), $params);
+                $phName = $this->queryBuilder->bindParam(empty($escape) ? $value : ('%' . strtr($value, $escape) . '%'),
+                    $params);
             }
             $parts[] = "{$column} {$operator} {$phName}{$escapeSql}";
         }
 
         return implode($andor, $parts);
-    }
-
-    /**
-     * @return string
-     */
-    private function getEscapeSql()
-    {
-        if ($this->escapeCharacter !== null) {
-            return " ESCAPE '{$this->escapeCharacter}'";
-        }
-
-        return '';
     }
 
     /**
@@ -109,5 +98,17 @@ class LikeConditionBuilder implements ExpressionBuilderInterface
         $operator = $matches[2];
 
         return [$andor, $not, $operator];
+    }
+
+    /**
+     * @return string
+     */
+    private function getEscapeSql()
+    {
+        if ($this->escapeCharacter !== null) {
+            return " ESCAPE '{$this->escapeCharacter}'";
+        }
+
+        return '';
     }
 }

@@ -35,11 +35,6 @@ namespace rabbit\db;
 trait SchemaBuilderTrait
 {
     /**
-     * @return Connection the database connection to be used for schema building.
-     */
-    abstract protected function getDb();
-
-    /**
      * Creates a primary key column.
      * @param int $length column size or precision definition.
      * This parameter will be ignored if not supported by the DBMS.
@@ -50,6 +45,11 @@ trait SchemaBuilderTrait
     {
         return $this->getDb()->getSchema()->createColumnSchemaBuilder(Schema::TYPE_PK, $length);
     }
+
+    /**
+     * @return Connection the database connection to be used for schema building.
+     */
+    abstract protected function getDb();
 
     /**
      * Creates a big primary key column.
@@ -288,8 +288,8 @@ trait SchemaBuilderTrait
     /**
      * Creates a JSON column.
      * @return ColumnSchemaBuilder the column instance which can be further customized.
-     * @since 2.0.14
      * @throws \rabbit\core\Exception
+     * @since 2.0.14
      */
     public function json()
     {

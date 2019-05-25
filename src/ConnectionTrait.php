@@ -7,6 +7,7 @@
  */
 
 namespace rabbit\db;
+
 use rabbit\exception\NotSupportedException;
 use rabbit\pool\PoolInterface;
 
@@ -78,25 +79,9 @@ trait ConnectionTrait
     /**
      * @return bool
      */
-    public function isAutoRelease(): bool
-    {
-        return $this->autoRelease;
-    }
-
-    /**
-     * @return bool
-     */
     public function isRecv(): bool
     {
         return $this->recv;
-    }
-
-    /**
-     * @param bool $autoRelease
-     */
-    public function setAutoRelease(bool $autoRelease): void
-    {
-        $this->autoRelease = $autoRelease;
     }
 
     /**
@@ -115,6 +100,22 @@ trait ConnectionTrait
         if ($this->isAutoRelease() || $release) {
             $this->pool->release($this);
         }
+    }
+
+    /**
+     * @return bool
+     */
+    public function isAutoRelease(): bool
+    {
+        return $this->autoRelease;
+    }
+
+    /**
+     * @param bool $autoRelease
+     */
+    public function setAutoRelease(bool $autoRelease): void
+    {
+        $this->autoRelease = $autoRelease;
     }
 
     /**

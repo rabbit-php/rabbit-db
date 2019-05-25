@@ -21,19 +21,19 @@ class PdoPoolConfig extends PoolProperties
     private $config = [];
 
     /**
-     * @param array $config
-     */
-    public function setConfig(array $config)
-    {
-        $this->config = $config;
-    }
-
-    /**
      * @return array
      */
     public function getConfig(): array
     {
         return $this->config;
+    }
+
+    /**
+     * @param array $config
+     */
+    public function setConfig(array $config)
+    {
+        $this->config = $config;
     }
 
     /**

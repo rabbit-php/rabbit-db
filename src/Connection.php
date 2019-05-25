@@ -13,6 +13,7 @@ use rabbit\App;
 use rabbit\core\BaseObject;
 use rabbit\core\ObjectFactory;
 use rabbit\exception\NotSupportedException;
+use rabbit\helper\ArrayHelper;
 
 /**
  * Connection represents a connection to a database via [PDO](http://php.net/manual/en/book.pdo.php).
@@ -424,17 +425,6 @@ class Connection extends BaseObject implements ConnectionInterface
     private $_queryCacheInfo = [];
 
     /**
-     * Constructor based on dns info
-     * @param array dns info
-     */
-    public function __construct(array $dsn = null)
-    {
-        if (is_array($dsn)) {
-            $this->dsn = $this->buildDSN($dsn);
-        }
-    }
-
-    /**
      * Returns a value indicating whether the DB connection is established.
      * @return bool whether the DB connection is established
      */
@@ -558,42 +548,6 @@ class Connection extends BaseObject implements ConnectionInterface
     }
 
     /**
-     * Establishes a DB connection.
-     * It does nothing if a DB connection has already been established.
-     * @throws Exception if connection fails
-     */
-    public function open()
-    {
-        if ($this->pdo !== null) {
-            return;
-        }
-
-        if (!empty($this->masters)) {
-            $db = $this->getMaster();
-            if ($db !== null) {
-                $this->pdo = $db->pdo;
-                return;
-            }
-
-            throw new \InvalidArgumentException('None of the master DB servers is available.');
-        }
-
-        if (empty($this->dsn)) {
-            throw new \InvalidArgumentException('Connection::dsn cannot be empty.');
-        }
-
-        $token = 'Opening DB connection: ' . $this->dsn;
-        try {
-            App::info($token, "db");
-
-            $this->pdo = $this->createPdoInstance();
-            $this->initConnection();
-        } catch (\PDOException $e) {
-            throw new Exception($e->getMessage(), $e->errorInfo, (int)$e->getCode(), $e);
-        }
-    }
-
-    /**
      * Closes the currently active DB connection.
      * It does nothing if the connection is already closed.
      */
@@ -622,43 +576,6 @@ class Connection extends BaseObject implements ConnectionInterface
     }
 
     /**
-     * Creates the PDO instance.
-     * This method is called by [[open]] to establish a DB connection.
-     * The default implementation will create a PHP PDO instance.
-     * You may override this method if the default PDO needs to be adapted for certain DBMS.
-     * @return PDO the pdo instance
-     */
-    protected function createPdoInstance()
-    {
-        $pdoClass = $this->pdoClass;
-        if ($pdoClass === null) {
-            $pdoClass = 'PDO';
-        }
-
-        $dsn = $this->dsn;
-
-        return new $pdoClass($dsn, $this->username, $this->password, $this->attributes);
-    }
-
-    /**
-     * Initializes the DB connection.
-     * This method is invoked right after the DB connection is established.
-     * The default implementation turns on `PDO::ATTR_EMULATE_PREPARES`
-     * if [[emulatePrepare]] is true.
-     * It then triggers an [[EVENT_AFTER_OPEN]] event.
-     */
-    protected function initConnection()
-    {
-        $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        if ($this->emulatePrepare !== null && constant('PDO::ATTR_EMULATE_PREPARES')) {
-            $this->pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, $this->emulatePrepare);
-        }
-        if ($this->charset !== null && in_array($this->getDriverName(), ['pgsql', 'mysql', 'mysqli', 'cubrid'], true)) {
-            $this->pdo->exec('SET NAMES ' . $this->pdo->quote($this->charset));
-        }
-    }
-
-    /**
      * Creates a command for execution.
      * @param string $sql the SQL statement to be executed
      * @param array $params the parameters to be bound to the SQL statement
@@ -676,208 +593,6 @@ class Connection extends BaseObject implements ConnectionInterface
         /** @var Command $command */
         $command = ObjectFactory::createObject($config, [], false);
         return $command->bindValues($params);
-    }
-
-    /**
-     * Returns the currently active transaction.
-     * @return Transaction|null the currently active transaction. Null if no active transaction.
-     */
-    public function getTransaction()
-    {
-        return $this->_transaction && $this->_transaction->getIsActive() ? $this->_transaction : null;
-    }
-
-    /**
-     * Starts a transaction.
-     * @param string|null $isolationLevel The isolation level to use for this transaction.
-     * See [[Transaction::begin()]] for details.
-     * @return Transaction the transaction initiated
-     */
-    public function beginTransaction($isolationLevel = null)
-    {
-        $this->open();
-
-        if (($transaction = $this->getTransaction()) === null) {
-            $transaction = $this->_transaction = new Transaction($this);
-        }
-        $transaction->begin($isolationLevel);
-
-        return $transaction;
-    }
-
-    /**
-     * Executes callback provided in a transaction.
-     *
-     * @param callable $callback a valid PHP callback that performs the job. Accepts connection instance as parameter.
-     * @param string|null $isolationLevel The isolation level to use for this transaction.
-     * See [[Transaction::begin()]] for details.
-     * @throws \Throwable if there is any exception during query. In this case the transaction will be rolled back.
-     * @return mixed result of callback function
-     */
-    public function transaction(callable $callback, $isolationLevel = null)
-    {
-        $transaction = $this->beginTransaction($isolationLevel);
-        $level = $transaction->level;
-
-        try {
-            $result = call_user_func($callback, $this);
-            if ($transaction->isActive && $transaction->level === $level) {
-                $transaction->commit();
-            }
-        } catch (\Throwable $e) {
-            $this->rollbackTransactionOnLevel($transaction, $level);
-            throw $e;
-        }
-
-        return $result;
-    }
-
-    /**
-     * Rolls back given [[Transaction]] object if it's still active and level match.
-     * In some cases rollback can fail, so this method is fail safe. Exception thrown
-     * from rollback will be caught and just logged with [[\Yii::error()]].
-     * @param Transaction $transaction Transaction object given from [[beginTransaction()]].
-     * @param int $level Transaction level just after [[beginTransaction()]] call.
-     */
-    private function rollbackTransactionOnLevel($transaction, $level)
-    {
-        if ($transaction->isActive && $transaction->level === $level) {
-            // https://github.com/yiisoft/yii2/pull/13347
-            try {
-                $transaction->rollBack();
-            } catch (\Exception $e) {
-                App::error($e, "db");
-                // hide this exception to be able to continue throwing original exception outside
-            }
-        }
-    }
-
-    /**
-     * Returns the schema information for the database opened by this connection.
-     * @return Schema the schema information for the database opened by this connection.
-     * @throws NotSupportedException if there is no support for the current driver type
-     */
-    public function getSchema()
-    {
-        if ($this->_schema !== null) {
-            return $this->_schema;
-        }
-
-        $driver = $this->getDriverName();
-        if (isset($this->schemaMap[$driver])) {
-            $class = $this->schemaMap[$driver];
-
-            return $this->_schema = new $class($this);
-        }
-
-        throw new NotSupportedException("Connection does not support reading schema information for '$driver' DBMS.");
-    }
-
-    /**
-     * Returns the query builder for the current DB connection.
-     * @return QueryBuilder the query builder for the current DB connection.
-     */
-    public function getQueryBuilder()
-    {
-        return $this->getSchema()->getQueryBuilder();
-    }
-
-    /**
-     * Can be used to set [[QueryBuilder]] configuration via Connection configuration array.
-     *
-     * @param iterable $config the [[QueryBuilder]] properties to be configured.
-     * @since 2.0.14
-     */
-    public function setQueryBuilder(iterable $config)
-    {
-        $builder = $this->getQueryBuilder();
-        foreach ($config as $key => $value) {
-            $builder->{$key} = $value;
-        }
-    }
-
-    /**
-     * Obtains the schema information for the named table.
-     * @param string $name table name.
-     * @param bool $refresh whether to reload the table schema even if it is found in the cache.
-     * @return TableSchema table schema information. Null if the named table does not exist.
-     */
-    public function getTableSchema($name, $refresh = false)
-    {
-        return $this->getSchema()->getTableSchema($name, $refresh);
-    }
-
-    /**
-     * Returns the ID of the last inserted row or sequence value.
-     * @param string $sequenceName name of the sequence object (required by some DBMS)
-     * @return string the row ID of the last row inserted, or the last value retrieved from the sequence object
-     * @see http://php.net/manual/en/pdo.lastinsertid.php
-     */
-    public function getLastInsertID($sequenceName = '')
-    {
-        return $this->getSchema()->getLastInsertID($sequenceName);
-    }
-
-    /**
-     * Quotes a string value for use in a query.
-     * Note that if the parameter is not a string, it will be returned without change.
-     * @param string $value string to be quoted
-     * @return string the properly quoted string
-     * @see http://php.net/manual/en/pdo.quote.php
-     */
-    public function quoteValue($value)
-    {
-        return $this->getSchema()->quoteValue($value);
-    }
-
-    /**
-     * Quotes a table name for use in a query.
-     * If the table name contains schema prefix, the prefix will also be properly quoted.
-     * If the table name is already quoted or contains special characters including '(', '[[' and '{{',
-     * then this method will do nothing.
-     * @param string $name table name
-     * @return string the properly quoted table name
-     */
-    public function quoteTableName($name)
-    {
-        return $this->getSchema()->quoteTableName($name);
-    }
-
-    /**
-     * Quotes a column name for use in a query.
-     * If the column name contains prefix, the prefix will also be properly quoted.
-     * If the column name is already quoted or contains special characters including '(', '[[' and '{{',
-     * then this method will do nothing.
-     * @param string $name column name
-     * @return string the properly quoted column name
-     */
-    public function quoteColumnName($name)
-    {
-        return $this->getSchema()->quoteColumnName($name);
-    }
-
-    /**
-     * Processes a SQL statement by quoting table and column names that are enclosed within double brackets.
-     * Tokens enclosed within double curly brackets are treated as table names, while
-     * tokens enclosed within double square brackets are column names. They will be quoted accordingly.
-     * Also, the percentage character "%" at the beginning or ending of a table name will be replaced
-     * with [[tablePrefix]].
-     * @param string $sql the SQL to be quoted
-     * @return string the quoted SQL
-     */
-    public function quoteSql($sql)
-    {
-        return preg_replace_callback(
-            '/(\\{\\{(%?[\w\-\. ]+%?)\\}\\}|\\[\\[([\w\-\. ]+)\\]\\])/',
-            function ($matches) {
-                if (isset($matches[3])) {
-                    return $this->quoteColumnName($matches[3]);
-                }
-
-                return str_replace('%', $this->tablePrefix, $this->quoteTableName($matches[2]));
-            },
-            $sql
-        );
     }
 
     /**
@@ -908,16 +623,6 @@ class Connection extends BaseObject implements ConnectionInterface
     }
 
     /**
-     * Returns a server version as a string comparable by [[\version_compare()]].
-     * @return string server version as a string.
-     * @since 2.0.14
-     */
-    public function getServerVersion()
-    {
-        return $this->getSchema()->getServerVersion();
-    }
-
-    /**
      * Returns the PDO instance for the currently active slave connection.
      * When [[enableSlaves]] is true, one of the slaves will be used for read queries, and its PDO instance
      * will be returned by this method.
@@ -933,17 +638,6 @@ class Connection extends BaseObject implements ConnectionInterface
         }
 
         return $db->pdo;
-    }
-
-    /**
-     * Returns the PDO instance for the currently active master connection.
-     * This method will open the master DB connection and then return [[pdo]].
-     * @return PDO the PDO instance for the currently active master connection.
-     */
-    public function getMasterPdo()
-    {
-        $this->open();
-        return $this->pdo;
     }
 
     /**
@@ -964,59 +658,6 @@ class Connection extends BaseObject implements ConnectionInterface
         }
 
         return $this->_slave === null && $fallbackToMaster ? $this : $this->_slave;
-    }
-
-    /**
-     * Returns the currently active master connection.
-     * If this method is called for the first time, it will try to open a master connection.
-     * @return Connection the currently active master connection. `null` is returned if there is no master available.
-     * @since 2.0.11
-     */
-    public function getMaster()
-    {
-        if ($this->_master === false) {
-            $this->_master = $this->shuffleMasters
-                ? $this->openFromPool($this->masters, $this->masterConfig)
-                : $this->openFromPoolSequentially($this->masters, $this->masterConfig);
-        }
-
-        return $this->_master;
-    }
-
-    /**
-     * Executes the provided callback by using the master connection.
-     *
-     * This method is provided so that you can temporarily force using the master connection to perform
-     * DB operations even if they are read queries. For example,
-     *
-     * ```php
-     * $result = $db->useMaster(function ($db) {
-     *     return $db->createCommand('SELECT * FROM user LIMIT 1')->queryOne();
-     * });
-     * ```
-     *
-     * @param callable $callback a PHP callable to be executed by this method. Its signature is
-     * `function (Connection $db)`. Its return value will be returned by this method.
-     * @return mixed the return value of the callback
-     * @throws \Throwable if there is any exception thrown from the callback
-     */
-    public function useMaster(callable $callback)
-    {
-        if ($this->enableSlaves) {
-            $this->enableSlaves = false;
-            try {
-                $result = call_user_func($callback, $this);
-            } catch (\Throwable $e) {
-                $this->enableSlaves = true;
-                throw $e;
-            }
-            // TODO: use "finally" keyword when miminum required PHP version is >= 5.5
-            $this->enableSlaves = true;
-        } else {
-            $result = call_user_func($callback, $this);
-        }
-
-        return $result;
     }
 
     /**
@@ -1054,7 +695,8 @@ class Connection extends BaseObject implements ConnectionInterface
             $sharedConfig['class'] = get_class($this);
         }
 
-        $cache = is_string($this->serverStatusCache) ? getDI($this->serverStatusCache, false) : $this->serverStatusCache;
+        $cache = is_string($this->serverStatusCache) ? getDI($this->serverStatusCache,
+            false) : $this->serverStatusCache;
 
         foreach ($pool as $config) {
             $config = array_merge($sharedConfig, $config);
@@ -1087,25 +729,359 @@ class Connection extends BaseObject implements ConnectionInterface
     }
 
     /**
-     * Build the Data Source Name or DSN
-     * @param array $config the DSN configurations
-     * @return string the formated DSN
-     * @throws \InvalidArgumentException if 'driver' key was not defined
+     * Establishes a DB connection.
+     * It does nothing if a DB connection has already been established.
+     * @throws Exception if connection fails
      */
-    private function buildDSN(array $config)
+    public function open()
     {
-        if (isset($config['driver'])) {
-            $driver = $config['driver'];
-            unset($config['driver']);
+        if ($this->pdo !== null) {
+            return;
+        }
 
-            $parts = [];
-            foreach ($config as $key => $value) {
-                $parts[] = "$key=$value";
+        if (!empty($this->masters)) {
+            $db = $this->getMaster();
+            if ($db !== null) {
+                $this->pdo = $db->pdo;
+                return;
             }
 
-            return "$driver:" . implode(';', $parts);
+            throw new \InvalidArgumentException('None of the master DB servers is available.');
         }
-        throw new \InvalidArgumentException("Connection DSN 'driver' must be set.");
+
+        if (empty($this->dsn)) {
+            throw new \InvalidArgumentException('Connection::dsn cannot be empty.');
+        }
+
+        $token = 'Opening DB connection: ' . $this->dsn;
+        try {
+            App::info($token, "db");
+
+            $this->pdo = $this->createPdoInstance();
+            $this->initConnection();
+        } catch (\PDOException $e) {
+            throw new Exception($e->getMessage(), $e->errorInfo, (int)$e->getCode(), $e);
+        }
+    }
+
+    /**
+     * Returns the currently active master connection.
+     * If this method is called for the first time, it will try to open a master connection.
+     * @return Connection the currently active master connection. `null` is returned if there is no master available.
+     * @since 2.0.11
+     */
+    public function getMaster()
+    {
+        if ($this->_master === false) {
+            $this->_master = $this->shuffleMasters
+                ? $this->openFromPool($this->masters, $this->masterConfig)
+                : $this->openFromPoolSequentially($this->masters, $this->masterConfig);
+        }
+
+        return $this->_master;
+    }
+
+    /**
+     * Creates the PDO instance.
+     * This method is called by [[open]] to establish a DB connection.
+     * The default implementation will create a PHP PDO instance.
+     * You may override this method if the default PDO needs to be adapted for certain DBMS.
+     * @return PDO the pdo instance
+     */
+    protected function createPdoInstance()
+    {
+        $pdoClass = $this->pdoClass;
+        if ($pdoClass === null) {
+            $pdoClass = 'PDO';
+        }
+
+        $parsed = parse_url($this->dsn);
+        isset($parsed['query']) ? parse_str($parsed['query'], $parsed['query']) : $parsed['query'] = [];
+        [$driver, $host, $port, $this->username, $this->password, $query] = ArrayHelper::getValueByArray($parsed,
+            ['scheme', 'host', 'port', 'user', 'pass', 'query'], null, ['mysql', 'localhost', '3306', '', '', []]);
+        $parts = [];
+        foreach ($query as $key => $value) {
+            $parts[] = "$key=$value";
+        }
+        $dsn = "$driver:host=$host;port=$port;" . implode(';', $parts);
+        return new $pdoClass($dsn, $this->username, $this->password, $this->attributes);
+    }
+
+    /**
+     * Initializes the DB connection.
+     * This method is invoked right after the DB connection is established.
+     * The default implementation turns on `PDO::ATTR_EMULATE_PREPARES`
+     * if [[emulatePrepare]] is true.
+     * It then triggers an [[EVENT_AFTER_OPEN]] event.
+     */
+    protected function initConnection()
+    {
+        $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        if ($this->emulatePrepare !== null && constant('PDO::ATTR_EMULATE_PREPARES')) {
+            $this->pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, $this->emulatePrepare);
+        }
+        if ($this->charset !== null && in_array($this->getDriverName(), ['pgsql', 'mysql', 'mysqli', 'cubrid'], true)) {
+            $this->pdo->exec('SET NAMES ' . $this->pdo->quote($this->charset));
+        }
+    }
+
+    /**
+     * Returns the PDO instance for the currently active master connection.
+     * This method will open the master DB connection and then return [[pdo]].
+     * @return PDO the PDO instance for the currently active master connection.
+     */
+    public function getMasterPdo()
+    {
+        $this->open();
+        return $this->pdo;
+    }
+
+    /**
+     * Executes callback provided in a transaction.
+     *
+     * @param callable $callback a valid PHP callback that performs the job. Accepts connection instance as parameter.
+     * @param string|null $isolationLevel The isolation level to use for this transaction.
+     * See [[Transaction::begin()]] for details.
+     * @return mixed result of callback function
+     * @throws \Throwable if there is any exception during query. In this case the transaction will be rolled back.
+     */
+    public function transaction(callable $callback, $isolationLevel = null)
+    {
+        $transaction = $this->beginTransaction($isolationLevel);
+        $level = $transaction->level;
+
+        try {
+            $result = call_user_func($callback, $this);
+            if ($transaction->isActive && $transaction->level === $level) {
+                $transaction->commit();
+            }
+        } catch (\Throwable $e) {
+            $this->rollbackTransactionOnLevel($transaction, $level);
+            throw $e;
+        }
+
+        return $result;
+    }
+
+    /**
+     * Starts a transaction.
+     * @param string|null $isolationLevel The isolation level to use for this transaction.
+     * See [[Transaction::begin()]] for details.
+     * @return Transaction the transaction initiated
+     */
+    public function beginTransaction($isolationLevel = null)
+    {
+        $this->open();
+
+        if (($transaction = $this->getTransaction()) === null) {
+            $transaction = $this->_transaction = new Transaction($this);
+        }
+        $transaction->begin($isolationLevel);
+
+        return $transaction;
+    }
+
+    /**
+     * Returns the currently active transaction.
+     * @return Transaction|null the currently active transaction. Null if no active transaction.
+     */
+    public function getTransaction()
+    {
+        return $this->_transaction && $this->_transaction->getIsActive() ? $this->_transaction : null;
+    }
+
+    /**
+     * Rolls back given [[Transaction]] object if it's still active and level match.
+     * In some cases rollback can fail, so this method is fail safe. Exception thrown
+     * from rollback will be caught and just logged with [[\Yii::error()]].
+     * @param Transaction $transaction Transaction object given from [[beginTransaction()]].
+     * @param int $level Transaction level just after [[beginTransaction()]] call.
+     */
+    private function rollbackTransactionOnLevel($transaction, $level)
+    {
+        if ($transaction->isActive && $transaction->level === $level) {
+            // https://github.com/yiisoft/yii2/pull/13347
+            try {
+                $transaction->rollBack();
+            } catch (\Exception $e) {
+                App::error($e, "db");
+                // hide this exception to be able to continue throwing original exception outside
+            }
+        }
+    }
+
+    /**
+     * Can be used to set [[QueryBuilder]] configuration via Connection configuration array.
+     *
+     * @param iterable $config the [[QueryBuilder]] properties to be configured.
+     * @since 2.0.14
+     */
+    public function setQueryBuilder(iterable $config)
+    {
+        $builder = $this->getQueryBuilder();
+        foreach ($config as $key => $value) {
+            $builder->{$key} = $value;
+        }
+    }
+
+    /**
+     * Returns the query builder for the current DB connection.
+     * @return QueryBuilder the query builder for the current DB connection.
+     */
+    public function getQueryBuilder()
+    {
+        return $this->getSchema()->getQueryBuilder();
+    }
+
+    /**
+     * Returns the schema information for the database opened by this connection.
+     * @return Schema the schema information for the database opened by this connection.
+     * @throws NotSupportedException if there is no support for the current driver type
+     */
+    public function getSchema()
+    {
+        if ($this->_schema !== null) {
+            return $this->_schema;
+        }
+
+        $driver = $this->getDriverName();
+        if (isset($this->schemaMap[$driver])) {
+            $class = $this->schemaMap[$driver];
+
+            return $this->_schema = new $class($this);
+        }
+
+        throw new NotSupportedException("Connection does not support reading schema information for '$driver' DBMS.");
+    }
+
+    /**
+     * Obtains the schema information for the named table.
+     * @param string $name table name.
+     * @param bool $refresh whether to reload the table schema even if it is found in the cache.
+     * @return TableSchema table schema information. Null if the named table does not exist.
+     */
+    public function getTableSchema($name, $refresh = false)
+    {
+        return $this->getSchema()->getTableSchema($name, $refresh);
+    }
+
+    /**
+     * Returns the ID of the last inserted row or sequence value.
+     * @param string $sequenceName name of the sequence object (required by some DBMS)
+     * @return string the row ID of the last row inserted, or the last value retrieved from the sequence object
+     * @see http://php.net/manual/en/pdo.lastinsertid.php
+     */
+    public function getLastInsertID($sequenceName = '')
+    {
+        return $this->getSchema()->getLastInsertID($sequenceName);
+    }
+
+    /**
+     * Quotes a string value for use in a query.
+     * Note that if the parameter is not a string, it will be returned without change.
+     * @param string $value string to be quoted
+     * @return string the properly quoted string
+     * @see http://php.net/manual/en/pdo.quote.php
+     */
+    public function quoteValue($value)
+    {
+        return $this->getSchema()->quoteValue($value);
+    }
+
+    /**
+     * Processes a SQL statement by quoting table and column names that are enclosed within double brackets.
+     * Tokens enclosed within double curly brackets are treated as table names, while
+     * tokens enclosed within double square brackets are column names. They will be quoted accordingly.
+     * Also, the percentage character "%" at the beginning or ending of a table name will be replaced
+     * with [[tablePrefix]].
+     * @param string $sql the SQL to be quoted
+     * @return string the quoted SQL
+     */
+    public function quoteSql($sql)
+    {
+        return preg_replace_callback(
+            '/(\\{\\{(%?[\w\-\. ]+%?)\\}\\}|\\[\\[([\w\-\. ]+)\\]\\])/',
+            function ($matches) {
+                if (isset($matches[3])) {
+                    return $this->quoteColumnName($matches[3]);
+                }
+
+                return str_replace('%', $this->tablePrefix, $this->quoteTableName($matches[2]));
+            },
+            $sql
+        );
+    }
+
+    /**
+     * Quotes a column name for use in a query.
+     * If the column name contains prefix, the prefix will also be properly quoted.
+     * If the column name is already quoted or contains special characters including '(', '[[' and '{{',
+     * then this method will do nothing.
+     * @param string $name column name
+     * @return string the properly quoted column name
+     */
+    public function quoteColumnName($name)
+    {
+        return $this->getSchema()->quoteColumnName($name);
+    }
+
+    /**
+     * Quotes a table name for use in a query.
+     * If the table name contains schema prefix, the prefix will also be properly quoted.
+     * If the table name is already quoted or contains special characters including '(', '[[' and '{{',
+     * then this method will do nothing.
+     * @param string $name table name
+     * @return string the properly quoted table name
+     */
+    public function quoteTableName($name)
+    {
+        return $this->getSchema()->quoteTableName($name);
+    }
+
+    /**
+     * Returns a server version as a string comparable by [[\version_compare()]].
+     * @return string server version as a string.
+     * @since 2.0.14
+     */
+    public function getServerVersion()
+    {
+        return $this->getSchema()->getServerVersion();
+    }
+
+    /**
+     * Executes the provided callback by using the master connection.
+     *
+     * This method is provided so that you can temporarily force using the master connection to perform
+     * DB operations even if they are read queries. For example,
+     *
+     * ```php
+     * $result = $db->useMaster(function ($db) {
+     *     return $db->createCommand('SELECT * FROM user LIMIT 1')->queryOne();
+     * });
+     * ```
+     *
+     * @param callable $callback a PHP callable to be executed by this method. Its signature is
+     * `function (Connection $db)`. Its return value will be returned by this method.
+     * @return mixed the return value of the callback
+     * @throws \Throwable if there is any exception thrown from the callback
+     */
+    public function useMaster(callable $callback)
+    {
+        if ($this->enableSlaves) {
+            $this->enableSlaves = false;
+            try {
+                $result = call_user_func($callback, $this);
+            } catch (\Throwable $e) {
+                $this->enableSlaves = true;
+                throw $e;
+            }
+            // TODO: use "finally" keyword when miminum required PHP version is >= 5.5
+            $this->enableSlaves = true;
+        } else {
+            $result = call_user_func($callback, $this);
+        }
+
+        return $result;
     }
 
     /**

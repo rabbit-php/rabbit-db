@@ -82,16 +82,6 @@ class Transaction
     }
 
     /**
-     * Returns a value indicating whether this transaction is active.
-     * @return bool whether this transaction is active. Only an active transaction
-     * can [[commit()]] or [[rollBack()]].
-     */
-    public function getIsActive()
-    {
-        return $this->_level > 0 && $this->db && $this->db->isActive;
-    }
-
-    /**
      * Begins a transaction.
      * @param string|null $isolationLevel The [isolation level][] to use for this transaction.
      * This can be one of [[READ_UNCOMMITTED]], [[READ_COMMITTED]], [[REPEATABLE_READ]] and [[SERIALIZABLE]] but
@@ -167,6 +157,16 @@ class Transaction
         } else {
             App::info('Transaction not committed: nested transaction not supported', "db");
         }
+    }
+
+    /**
+     * Returns a value indicating whether this transaction is active.
+     * @return bool whether this transaction is active. Only an active transaction
+     * can [[commit()]] or [[rollBack()]].
+     */
+    public function getIsActive()
+    {
+        return $this->_level > 0 && $this->db && $this->db->isActive;
     }
 
     /**

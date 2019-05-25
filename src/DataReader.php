@@ -71,7 +71,7 @@ class DataReader implements \Iterator, \Countable
         $this->_statement->setFetchMode(\PDO::FETCH_ASSOC);
 
         ObjectFactory::configure($this, $config);
-    }   
+    }
 
     /**
      * Binds a column to a PHP variable.
@@ -182,17 +182,6 @@ class DataReader implements \Iterator, \Countable
 
     /**
      * Returns the number of rows in the result set.
-     * Note, most DBMS may not give a meaningful count.
-     * In this case, use "SELECT COUNT(*) FROM tableName" to obtain the number of rows.
-     * @return int number of rows contained in the result.
-     */
-    public function getRowCount()
-    {
-        return $this->_statement->rowCount();
-    }
-
-    /**
-     * Returns the number of rows in the result set.
      * This method is required by the Countable interface.
      * Note, most DBMS may not give a meaningful count.
      * In this case, use "SELECT COUNT(*) FROM tableName" to obtain the number of rows.
@@ -201,6 +190,17 @@ class DataReader implements \Iterator, \Countable
     public function count()
     {
         return $this->getRowCount();
+    }
+
+    /**
+     * Returns the number of rows in the result set.
+     * Note, most DBMS may not give a meaningful count.
+     * In this case, use "SELECT COUNT(*) FROM tableName" to obtain the number of rows.
+     * @return int number of rows contained in the result.
+     */
+    public function getRowCount()
+    {
+        return $this->_statement->rowCount();
     }
 
     /**

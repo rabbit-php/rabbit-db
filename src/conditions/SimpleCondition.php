@@ -45,6 +45,19 @@ class SimpleCondition implements ConditionInterface
     }
 
     /**
+     * {@inheritdoc}
+     * @throws InvalidArgumentException if wrong number of operands have been given.
+     */
+    public static function fromArrayDefinition($operator, $operands)
+    {
+        if (count($operands) !== 2) {
+            throw new \InvalidArgumentException("Operator '$operator' requires two operands.");
+        }
+
+        return new static($operands[0], $operator, $operands[1]);
+    }
+
+    /**
      * @return string
      */
     public function getOperator()
@@ -66,18 +79,5 @@ class SimpleCondition implements ConditionInterface
     public function getValue()
     {
         return $this->value;
-    }
-
-    /**
-     * {@inheritdoc}
-     * @throws InvalidArgumentException if wrong number of operands have been given.
-     */
-    public static function fromArrayDefinition($operator, $operands)
-    {
-        if (count($operands) !== 2) {
-            throw new \InvalidArgumentException("Operator '$operator' requires two operands.");
-        }
-
-        return new static($operands[0], $operator, $operands[1]);
     }
 }

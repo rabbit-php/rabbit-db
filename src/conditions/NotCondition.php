@@ -33,14 +33,6 @@ class NotCondition implements ConditionInterface
     }
 
     /**
-     * @return mixed
-     */
-    public function getCondition()
-    {
-        return $this->condition;
-    }
-
-    /**
      * {@inheritdoc}
      * @throws InvalidArgumentException if wrong number of operands have been given.
      */
@@ -51,5 +43,13 @@ class NotCondition implements ConditionInterface
         }
 
         return new static(array_shift($operands));
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getCondition()
+    {
+        return $this->condition;
     }
 }

@@ -29,68 +29,6 @@ namespace rabbit\db;
 trait ConstraintFinderTrait
 {
     /**
-     * Returns the metadata of the given type for the given table.
-     * @param string $name table name. The table name may contain schema name if any. Do not quote the table name.
-     * @param string $type metadata type.
-     * @param bool $refresh whether to reload the table metadata even if it is found in the cache.
-     * @return mixed metadata.
-     */
-    abstract protected function getTableMetadata($name, $type, $refresh);
-
-    /**
-     * Returns the metadata of the given type for all tables in the given schema.
-     * @param string $schema the schema of the metadata. Defaults to empty string, meaning the current or default schema name.
-     * @param string $type metadata type.
-     * @param bool $refresh whether to fetch the latest available table metadata. If this is `false`,
-     * cached data may be returned if available.
-     * @return array array of metadata.
-     */
-    abstract protected function getSchemaMetadata($schema, $type, $refresh);
-
-    /**
-     * Loads a primary key for the given table.
-     * @param string $tableName table name.
-     * @return Constraint|null primary key for the given table, `null` if the table has no primary key.
-     */
-    abstract protected function loadTablePrimaryKey($tableName);
-
-    /**
-     * Loads all foreign keys for the given table.
-     * @param string $tableName table name.
-     * @return ForeignKeyConstraint[] foreign keys for the given table.
-     */
-    abstract protected function loadTableForeignKeys($tableName);
-
-    /**
-     * Loads all indexes for the given table.
-     * @param string $tableName table name.
-     * @return IndexConstraint[] indexes for the given table.
-     */
-    abstract protected function loadTableIndexes($tableName);
-
-    /**
-     * Loads all unique constraints for the given table.
-     * @param string $tableName table name.
-     * @return Constraint[] unique constraints for the given table.
-     */
-    abstract protected function loadTableUniques($tableName);
-
-    /**
-     * Loads all check constraints for the given table.
-     * @param string $tableName table name.
-     * @return CheckConstraint[] check constraints for the given table.
-     */
-    abstract protected function loadTableChecks($tableName);
-
-    /**
-     * Loads all default value constraints for the given table.
-     *
-     * @param string $tableName table name.
-     * @return DefaultValueConstraint[] default value constraints for the given table.
-     */
-    abstract protected function loadTableDefaultValues($tableName);
-
-    /**
      * Obtains the primary key for the named table.
      * @param string $name table name. The table name may contain schema name if any. Do not quote the table name.
      * @param bool $refresh whether to reload the information even if it is found in the cache.
@@ -100,6 +38,15 @@ trait ConstraintFinderTrait
     {
         return $this->getTableMetadata($name, 'primaryKey', $refresh);
     }
+
+    /**
+     * Returns the metadata of the given type for the given table.
+     * @param string $name table name. The table name may contain schema name if any. Do not quote the table name.
+     * @param string $type metadata type.
+     * @param bool $refresh whether to reload the table metadata even if it is found in the cache.
+     * @return mixed metadata.
+     */
+    abstract protected function getTableMetadata($name, $type, $refresh);
 
     /**
      * Returns primary keys for all tables in the database.
@@ -113,6 +60,16 @@ trait ConstraintFinderTrait
     {
         return $this->getSchemaMetadata($schema, 'primaryKey', $refresh);
     }
+
+    /**
+     * Returns the metadata of the given type for all tables in the given schema.
+     * @param string $schema the schema of the metadata. Defaults to empty string, meaning the current or default schema name.
+     * @param string $type metadata type.
+     * @param bool $refresh whether to fetch the latest available table metadata. If this is `false`,
+     * cached data may be returned if available.
+     * @return array array of metadata.
+     */
+    abstract protected function getSchemaMetadata($schema, $type, $refresh);
 
     /**
      * Obtains the foreign keys information for the named table.
@@ -233,4 +190,47 @@ trait ConstraintFinderTrait
     {
         return $this->getSchemaMetadata($schema, 'defaultValues', $refresh);
     }
+
+    /**
+     * Loads a primary key for the given table.
+     * @param string $tableName table name.
+     * @return Constraint|null primary key for the given table, `null` if the table has no primary key.
+     */
+    abstract protected function loadTablePrimaryKey($tableName);
+
+    /**
+     * Loads all foreign keys for the given table.
+     * @param string $tableName table name.
+     * @return ForeignKeyConstraint[] foreign keys for the given table.
+     */
+    abstract protected function loadTableForeignKeys($tableName);
+
+    /**
+     * Loads all indexes for the given table.
+     * @param string $tableName table name.
+     * @return IndexConstraint[] indexes for the given table.
+     */
+    abstract protected function loadTableIndexes($tableName);
+
+    /**
+     * Loads all unique constraints for the given table.
+     * @param string $tableName table name.
+     * @return Constraint[] unique constraints for the given table.
+     */
+    abstract protected function loadTableUniques($tableName);
+
+    /**
+     * Loads all check constraints for the given table.
+     * @param string $tableName table name.
+     * @return CheckConstraint[] check constraints for the given table.
+     */
+    abstract protected function loadTableChecks($tableName);
+
+    /**
+     * Loads all default value constraints for the given table.
+     *
+     * @param string $tableName table name.
+     * @return DefaultValueConstraint[] default value constraints for the given table.
+     */
+    abstract protected function loadTableDefaultValues($tableName);
 }

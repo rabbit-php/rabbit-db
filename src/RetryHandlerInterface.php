@@ -13,6 +13,7 @@ interface RetryHandlerInterface
      * @param int $count
      */
     public function setTotalCount(int $count): void;
+
     /**
      * @param Command $cmd
      * @param \Throwable $e

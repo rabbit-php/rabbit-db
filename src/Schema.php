@@ -129,73 +129,6 @@ abstract class Schema extends BaseObject
     }
 
     /**
-     * Resolves the table name and schema name (if any).
-     * @param string $name the table name
-     * @return TableSchema [[TableSchema]] with resolved table, schema, etc. names.
-     * @throws NotSupportedException if this method is not supported by the DBMS.
-     * @since 2.0.13
-     */
-    protected function resolveTableName($name)
-    {
-        throw new NotSupportedException(get_class($this) . ' does not support resolving table names.');
-    }
-
-    /**
-     * Returns all schema names in the database, including the default one but not system schemas.
-     * This method should be overridden by child classes in order to support this feature
-     * because the default implementation simply throws an exception.
-     * @return array all schema names in the database, except system schemas.
-     * @throws NotSupportedException if this method is not supported by the DBMS.
-     * @since 2.0.4
-     */
-    protected function findSchemaNames()
-    {
-        throw new NotSupportedException(get_class($this) . ' does not support fetching all schema names.');
-    }
-
-    /**
-     * Returns all table names in the database.
-     * This method should be overridden by child classes in order to support this feature
-     * because the default implementation simply throws an exception.
-     * @param string $schema the schema of the tables. Defaults to empty string, meaning the current or default schema.
-     * @return array all table names in the database. The names have NO schema name prefix.
-     * @throws NotSupportedException if this method is not supported by the DBMS.
-     */
-    protected function findTableNames($schema = '')
-    {
-        throw new NotSupportedException(get_class($this) . ' does not support fetching all table names.');
-    }
-
-    /**
-     * Loads the metadata for the specified table.
-     * @param string $name table name
-     * @return TableSchema|null DBMS-dependent table metadata, `null` if the table does not exist.
-     */
-    abstract protected function loadTableSchema($name);
-
-    /**
-     * Creates a column schema for the database.
-     * This method may be overridden by child classes to create a DBMS-specific column schema.
-     * @return ColumnSchema column schema instance.
-     * @throws \InvalidArgumentException if a column schema class cannot be created.
-     */
-    protected function createColumnSchema()
-    {
-        return ObjectFactory::createObject($this->columnSchemaClass, [], false);
-    }
-
-    /**
-     * Obtains the metadata for the named table.
-     * @param string $name table name. The table name may contain schema name if any. Do not quote the table name.
-     * @param bool $refresh whether to reload the table schema even if it is found in the cache.
-     * @return TableSchema|null table metadata. `null` if the named table does not exist.
-     */
-    public function getTableSchema($name, $refresh = false)
-    {
-        return $this->getTableMetadata($name, 'schema', $refresh);
-    }
-
-    /**
      * Returns the metadata for all tables in the database.
      * @param string $schema the schema of the tables. Defaults to empty string, meaning the current or default schema name.
      * @param bool $refresh whether to fetch the latest available table schemas. If this is `false`,
@@ -209,19 +142,31 @@ abstract class Schema extends BaseObject
     }
 
     /**
-     * Returns all schema names in the database, except system schemas.
-     * @param bool $refresh whether to fetch the latest available schema names. If this is false,
-     * schema names fetched previously (if available) will be returned.
-     * @return string[] all schema names in the database, except system schemas.
-     * @since 2.0.4
+     * Returns the metadata of the given type for all tables in the given schema.
+     * This method will call a `'getTable' . ucfirst($type)` named method with the table name
+     * and the refresh flag to obtain the metadata.
+     * @param string $schema the schema of the metadata. Defaults to empty string, meaning the current or default schema name.
+     * @param string $type metadata type.
+     * @param bool $refresh whether to fetch the latest available table metadata. If this is `false`,
+     * cached data may be returned if available.
+     * @return array array of metadata.
+     * @since 2.0.13
      */
-    public function getSchemaNames($refresh = false)
+    protected function getSchemaMetadata($schema, $type, $refresh)
     {
-        if ($this->_schemaNames === null || $refresh) {
-            $this->_schemaNames = $this->findSchemaNames();
+        $metadata = [];
+        $methodName = 'getTable' . ucfirst($type);
+        foreach ($this->getTableNames($schema, $refresh) as $name) {
+            if ($schema !== '') {
+                $name = $schema . '.' . $name;
+            }
+            $tableMetadata = $this->$methodName($name, $refresh);
+            if ($tableMetadata !== null) {
+                $metadata[] = $tableMetadata;
+            }
         }
 
-        return $this->_schemaNames;
+        return $metadata;
     }
 
     /**
@@ -242,6 +187,48 @@ abstract class Schema extends BaseObject
     }
 
     /**
+     * Returns all table names in the database.
+     * This method should be overridden by child classes in order to support this feature
+     * because the default implementation simply throws an exception.
+     * @param string $schema the schema of the tables. Defaults to empty string, meaning the current or default schema.
+     * @return array all table names in the database. The names have NO schema name prefix.
+     * @throws NotSupportedException if this method is not supported by the DBMS.
+     */
+    protected function findTableNames($schema = '')
+    {
+        throw new NotSupportedException(get_class($this) . ' does not support fetching all table names.');
+    }
+
+    /**
+     * Returns all schema names in the database, except system schemas.
+     * @param bool $refresh whether to fetch the latest available schema names. If this is false,
+     * schema names fetched previously (if available) will be returned.
+     * @return string[] all schema names in the database, except system schemas.
+     * @since 2.0.4
+     */
+    public function getSchemaNames($refresh = false)
+    {
+        if ($this->_schemaNames === null || $refresh) {
+            $this->_schemaNames = $this->findSchemaNames();
+        }
+
+        return $this->_schemaNames;
+    }
+
+    /**
+     * Returns all schema names in the database, including the default one but not system schemas.
+     * This method should be overridden by child classes in order to support this feature
+     * because the default implementation simply throws an exception.
+     * @return array all schema names in the database, except system schemas.
+     * @throws NotSupportedException if this method is not supported by the DBMS.
+     * @since 2.0.4
+     */
+    protected function findSchemaNames()
+    {
+        throw new NotSupportedException(get_class($this) . ' does not support fetching all schema names.');
+    }
+
+    /**
      * @return QueryBuilder the query builder for this connection.
      */
     public function getQueryBuilder()
@@ -251,6 +238,16 @@ abstract class Schema extends BaseObject
         }
 
         return $this->_builder;
+    }
+
+    /**
+     * Creates a query builder for the database.
+     * This method may be overridden by child classes to create a DBMS-specific query builder.
+     * @return QueryBuilder query builder instance
+     */
+    public function createQueryBuilder()
+    {
+        return new QueryBuilder($this->db);
     }
 
     /**
@@ -305,13 +302,36 @@ abstract class Schema extends BaseObject
     }
 
     /**
-     * Creates a query builder for the database.
-     * This method may be overridden by child classes to create a DBMS-specific query builder.
-     * @return QueryBuilder query builder instance
+     * Returns the actual name of a given table name.
+     * This method will strip off curly brackets from the given table name
+     * and replace the percentage character '%' with [[Connection::tablePrefix]].
+     * @param string $name the table name to be converted
+     * @return string the real name of the given table name
      */
-    public function createQueryBuilder()
+    public function getRawTableName($name)
     {
-        return new QueryBuilder($this->db);
+        if (strpos($name, '{{') !== false) {
+            $name = preg_replace('/\\{\\{(.*?)\\}\\}/', '\1', $name);
+
+            return str_replace('%', $this->db->tablePrefix, $name);
+        }
+
+        return $name;
+    }
+
+    /**
+     * Returns the cache key for the specified table name.
+     * @param string $name the table name.
+     * @return mixed the cache key.
+     */
+    protected function getCacheKey($name)
+    {
+        return [
+            __CLASS__,
+            $this->db->dsn,
+            $this->db->username,
+            $this->getRawTableName($name),
+        ];
     }
 
     /**
@@ -350,22 +370,6 @@ abstract class Schema extends BaseObject
     public function findUniqueIndexes($table)
     {
         throw new NotSupportedException(get_class($this) . ' does not support getting unique indexes information.');
-    }
-
-    /**
-     * Returns the ID of the last inserted row or sequence value.
-     * @param string $sequenceName name of the sequence object (required by some DBMS)
-     * @return string the row ID of the last row inserted, or the last value retrieved from the sequence object
-     * @throws InvalidCallException if the DB connection is not active
-     * @see http://www.php.net/manual/en/function.PDO-lastInsertId.php
-     */
-    public function getLastInsertID($sequenceName = '')
-    {
-        if ($this->db->isActive) {
-            return $this->db->pdo->lastInsertId($sequenceName === '' ? null : $this->quoteTableName($sequenceName));
-        }
-
-        throw new InvalidCallException('DB Connection is not active.');
     }
 
     /**
@@ -444,24 +448,116 @@ abstract class Schema extends BaseObject
     }
 
     /**
-     * Quotes a string value for use in a query.
-     * Note that if the parameter is not a string, it will be returned without change.
-     * @param string $str string to be quoted
-     * @return string the properly quoted string
-     * @see http://www.php.net/manual/en/function.PDO-quote.php
+     * Obtains the metadata for the named table.
+     * @param string $name table name. The table name may contain schema name if any. Do not quote the table name.
+     * @param bool $refresh whether to reload the table schema even if it is found in the cache.
+     * @return TableSchema|null table metadata. `null` if the named table does not exist.
      */
-    public function quoteValue($str)
+    public function getTableSchema($name, $refresh = false)
     {
-        if (!is_string($str)) {
-            return $str;
+        return $this->getTableMetadata($name, 'schema', $refresh);
+    }
+
+    /**
+     * Returns the metadata of the given type for the given table.
+     * If there's no metadata in the cache, this method will call
+     * a `'loadTable' . ucfirst($type)` named method with the table name to obtain the metadata.
+     * @param string $name table name. The table name may contain schema name if any. Do not quote the table name.
+     * @param string $type metadata type.
+     * @param bool $refresh whether to reload the table metadata even if it is found in the cache.
+     * @return mixed metadata.
+     * @since 2.0.13
+     */
+    protected function getTableMetadata($name, $type, $refresh)
+    {
+        $cache = null;
+        if ($this->db->enableSchemaCache && !in_array($name, $this->db->schemaCacheExclude, true)) {
+            $schemaCache = is_string($this->db->schemaCache) ? getDI($this->db->schemaCache,
+                false) : $this->db->schemaCache;
+            if ($schemaCache instanceof CacheInterface) {
+                $cache = $schemaCache;
+            }
+        }
+        $rawName = $this->getRawTableName($name);
+        if (!isset($this->_tableMetadata[$rawName])) {
+            $this->loadTableMetadataFromCache($cache, $rawName);
+        }
+        if ($refresh || !array_key_exists($type, $this->_tableMetadata[$rawName])) {
+            $this->_tableMetadata[$rawName][$type] = $this->{'loadTable' . ucfirst($type)}($rawName);
+            $this->saveTableMetadataToCache($cache, $rawName);
         }
 
-        if (($value = $this->db->getSlavePdo()->quote($str)) !== false) {
-            return $value;
+        return $this->_tableMetadata[$rawName][$type];
+    }
+
+    /**
+     * Sets the metadata of the given type for the given table.
+     * @param string $name table name.
+     * @param string $type metadata type.
+     * @param mixed $data metadata.
+     * @since 2.0.13
+     */
+    protected function setTableMetadata($name, $type, $data)
+    {
+        $this->_tableMetadata[$this->getRawTableName($name)][$type] = $data;
+    }
+
+    /**
+     * Tries to load and populate table metadata from cache.
+     * @param Cache|null $cache
+     * @param string $name
+     */
+    private function loadTableMetadataFromCache($cache, $name)
+    {
+        if ($cache === null) {
+            $this->_tableMetadata[$name] = [];
+            return;
         }
 
-        // the driver doesn't support quote (e.g. oci)
-        return "'" . addcslashes(str_replace("'", "''", $str), "\000\n\r\\\032") . "'";
+        $metadata = $cache->get($this->getCacheKey($name));
+        if (!is_array($metadata) || !isset($metadata['cacheVersion']) || $metadata['cacheVersion'] !== static::SCHEMA_CACHE_VERSION) {
+            $this->_tableMetadata[$name] = [];
+            return;
+        }
+
+        unset($metadata['cacheVersion']);
+        $this->_tableMetadata[$name] = $metadata;
+    }
+
+    /**
+     * Saves table metadata to cache.
+     * @param Cache|null $cache
+     * @param string $name
+     */
+    private function saveTableMetadataToCache($cache, $name)
+    {
+        if ($cache === null) {
+            return;
+        }
+
+        $metadata = $this->_tableMetadata[$name];
+        $metadata['cacheVersion'] = static::SCHEMA_CACHE_VERSION;
+        $cache->set(
+            $this->getCacheKey($name),
+            $metadata,
+            $this->db->schemaCacheDuration
+        );
+    }
+
+    /**
+     * Returns the ID of the last inserted row or sequence value.
+     * @param string $sequenceName name of the sequence object (required by some DBMS)
+     * @return string the row ID of the last row inserted, or the last value retrieved from the sequence object
+     * @throws InvalidCallException if the DB connection is not active
+     * @see http://www.php.net/manual/en/function.PDO-lastInsertId.php
+     */
+    public function getLastInsertID($sequenceName = '')
+    {
+        if ($this->db->isActive) {
+            return $this->db->pdo->lastInsertId($sequenceName === '' ? null : $this->quoteTableName($sequenceName));
+        }
+
+        throw new InvalidCallException('DB Connection is not active.');
     }
 
     /**
@@ -487,6 +583,44 @@ abstract class Schema extends BaseObject
         }
 
         return implode('.', $parts);
+    }
+
+    /**
+     * Quotes a simple table name for use in a query.
+     * A simple table name should contain the table name only without any schema prefix.
+     * If the table name is already quoted, this method will do nothing.
+     * @param string $name table name
+     * @return string the properly quoted table name
+     */
+    public function quoteSimpleTableName($name)
+    {
+        if (is_string($this->tableQuoteCharacter)) {
+            $startingCharacter = $endingCharacter = $this->tableQuoteCharacter;
+        } else {
+            [$startingCharacter, $endingCharacter] = $this->tableQuoteCharacter;
+        }
+        return strpos($name, $startingCharacter) !== false ? $name : $startingCharacter . $name . $endingCharacter;
+    }
+
+    /**
+     * Quotes a string value for use in a query.
+     * Note that if the parameter is not a string, it will be returned without change.
+     * @param string $str string to be quoted
+     * @return string the properly quoted string
+     * @see http://www.php.net/manual/en/function.PDO-quote.php
+     */
+    public function quoteValue($str)
+    {
+        if (!is_string($str)) {
+            return $str;
+        }
+
+        if (($value = $this->db->getSlavePdo()->quote($str)) !== false) {
+            return $value;
+        }
+
+        // the driver doesn't support quote (e.g. oci)
+        return "'" . addcslashes(str_replace("'", "''", $str), "\000\n\r\\\032") . "'";
     }
 
     /**
@@ -517,23 +651,6 @@ abstract class Schema extends BaseObject
     }
 
     /**
-     * Quotes a simple table name for use in a query.
-     * A simple table name should contain the table name only without any schema prefix.
-     * If the table name is already quoted, this method will do nothing.
-     * @param string $name table name
-     * @return string the properly quoted table name
-     */
-    public function quoteSimpleTableName($name)
-    {
-        if (is_string($this->tableQuoteCharacter)) {
-            $startingCharacter = $endingCharacter = $this->tableQuoteCharacter;
-        } else {
-            [$startingCharacter, $endingCharacter] = $this->tableQuoteCharacter;
-        }
-        return strpos($name, $startingCharacter) !== false ? $name : $startingCharacter . $name . $endingCharacter;
-    }
-
-    /**
      * Quotes a simple column name for use in a query.
      * A simple column name should contain the column name only without any prefix.
      * If the column name is already quoted or is the asterisk character '*', this method will do nothing.
@@ -547,7 +664,8 @@ abstract class Schema extends BaseObject
         } else {
             [$startingCharacter, $endingCharacter] = $this->columnQuoteCharacter;
         }
-        return $name === '*' || strpos($name, $startingCharacter) !== false ? $name : $startingCharacter . $name . $endingCharacter;
+        return $name === '*' || strpos($name,
+            $startingCharacter) !== false ? $name : $startingCharacter . $name . $endingCharacter;
     }
 
     /**
@@ -584,56 +702,6 @@ abstract class Schema extends BaseObject
             $startingCharacter = $this->columnQuoteCharacter[0];
         }
         return strpos($name, $startingCharacter) === false ? $name : substr($name, 1, -1);
-    }
-
-    /**
-     * Returns the actual name of a given table name.
-     * This method will strip off curly brackets from the given table name
-     * and replace the percentage character '%' with [[Connection::tablePrefix]].
-     * @param string $name the table name to be converted
-     * @return string the real name of the given table name
-     */
-    public function getRawTableName($name)
-    {
-        if (strpos($name, '{{') !== false) {
-            $name = preg_replace('/\\{\\{(.*?)\\}\\}/', '\1', $name);
-
-            return str_replace('%', $this->db->tablePrefix, $name);
-        }
-
-        return $name;
-    }
-
-    /**
-     * Extracts the PHP type from abstract DB type.
-     * @param ColumnSchema $column the column schema information
-     * @return string PHP type name
-     */
-    protected function getColumnPhpType($column)
-    {
-        static $typeMap = [
-            // abstract type => php type
-            self::TYPE_TINYINT => 'integer',
-            self::TYPE_SMALLINT => 'integer',
-            self::TYPE_INTEGER => 'integer',
-            self::TYPE_BIGINT => 'integer',
-            self::TYPE_BOOLEAN => 'boolean',
-            self::TYPE_FLOAT => 'double',
-            self::TYPE_DOUBLE => 'double',
-            self::TYPE_BINARY => 'resource',
-            self::TYPE_JSON => 'array',
-        ];
-        if (isset($typeMap[$column->type])) {
-            if ($column->type === 'bigint') {
-                return PHP_INT_SIZE === 8 && !$column->unsigned ? 'integer' : 'string';
-            } elseif ($column->type === 'integer') {
-                return PHP_INT_SIZE === 4 && $column->unsigned ? 'string' : 'integer';
-            }
-
-            return $typeMap[$column->type];
-        }
-
-        return 'string';
     }
 
     /**
@@ -685,18 +753,65 @@ abstract class Schema extends BaseObject
     }
 
     /**
-     * Returns the cache key for the specified table name.
-     * @param string $name the table name.
-     * @return mixed the cache key.
+     * Resolves the table name and schema name (if any).
+     * @param string $name the table name
+     * @return TableSchema [[TableSchema]] with resolved table, schema, etc. names.
+     * @throws NotSupportedException if this method is not supported by the DBMS.
+     * @since 2.0.13
      */
-    protected function getCacheKey($name)
+    protected function resolveTableName($name)
     {
-        return [
-            __CLASS__,
-            $this->db->dsn,
-            $this->db->username,
-            $this->getRawTableName($name),
+        throw new NotSupportedException(get_class($this) . ' does not support resolving table names.');
+    }
+
+    /**
+     * Loads the metadata for the specified table.
+     * @param string $name table name
+     * @return TableSchema|null DBMS-dependent table metadata, `null` if the table does not exist.
+     */
+    abstract protected function loadTableSchema($name);
+
+    /**
+     * Creates a column schema for the database.
+     * This method may be overridden by child classes to create a DBMS-specific column schema.
+     * @return ColumnSchema column schema instance.
+     * @throws \InvalidArgumentException if a column schema class cannot be created.
+     */
+    protected function createColumnSchema()
+    {
+        return ObjectFactory::createObject($this->columnSchemaClass, [], false);
+    }
+
+    /**
+     * Extracts the PHP type from abstract DB type.
+     * @param ColumnSchema $column the column schema information
+     * @return string PHP type name
+     */
+    protected function getColumnPhpType($column)
+    {
+        static $typeMap = [
+            // abstract type => php type
+            self::TYPE_TINYINT => 'integer',
+            self::TYPE_SMALLINT => 'integer',
+            self::TYPE_INTEGER => 'integer',
+            self::TYPE_BIGINT => 'integer',
+            self::TYPE_BOOLEAN => 'boolean',
+            self::TYPE_FLOAT => 'double',
+            self::TYPE_DOUBLE => 'double',
+            self::TYPE_BINARY => 'resource',
+            self::TYPE_JSON => 'array',
         ];
+        if (isset($typeMap[$column->type])) {
+            if ($column->type === 'bigint') {
+                return PHP_INT_SIZE === 8 && !$column->unsigned ? 'integer' : 'string';
+            } elseif ($column->type === 'integer') {
+                return PHP_INT_SIZE === 4 && $column->unsigned ? 'string' : 'integer';
+            }
+
+            return $typeMap[$column->type];
+        }
+
+        return 'string';
     }
 
     /**
@@ -711,77 +826,6 @@ abstract class Schema extends BaseObject
             $this->db->dsn,
             $this->db->username,
         ]));
-    }
-
-    /**
-     * Returns the metadata of the given type for the given table.
-     * If there's no metadata in the cache, this method will call
-     * a `'loadTable' . ucfirst($type)` named method with the table name to obtain the metadata.
-     * @param string $name table name. The table name may contain schema name if any. Do not quote the table name.
-     * @param string $type metadata type.
-     * @param bool $refresh whether to reload the table metadata even if it is found in the cache.
-     * @return mixed metadata.
-     * @since 2.0.13
-     */
-    protected function getTableMetadata($name, $type, $refresh)
-    {
-        $cache = null;
-        if ($this->db->enableSchemaCache && !in_array($name, $this->db->schemaCacheExclude, true)) {
-            $schemaCache = is_string($this->db->schemaCache) ? getDI($this->db->schemaCache, false) : $this->db->schemaCache;
-            if ($schemaCache instanceof CacheInterface) {
-                $cache = $schemaCache;
-            }
-        }
-        $rawName = $this->getRawTableName($name);
-        if (!isset($this->_tableMetadata[$rawName])) {
-            $this->loadTableMetadataFromCache($cache, $rawName);
-        }
-        if ($refresh || !array_key_exists($type, $this->_tableMetadata[$rawName])) {
-            $this->_tableMetadata[$rawName][$type] = $this->{'loadTable' . ucfirst($type)}($rawName);
-            $this->saveTableMetadataToCache($cache, $rawName);
-        }
-
-        return $this->_tableMetadata[$rawName][$type];
-    }
-
-    /**
-     * Returns the metadata of the given type for all tables in the given schema.
-     * This method will call a `'getTable' . ucfirst($type)` named method with the table name
-     * and the refresh flag to obtain the metadata.
-     * @param string $schema the schema of the metadata. Defaults to empty string, meaning the current or default schema name.
-     * @param string $type metadata type.
-     * @param bool $refresh whether to fetch the latest available table metadata. If this is `false`,
-     * cached data may be returned if available.
-     * @return array array of metadata.
-     * @since 2.0.13
-     */
-    protected function getSchemaMetadata($schema, $type, $refresh)
-    {
-        $metadata = [];
-        $methodName = 'getTable' . ucfirst($type);
-        foreach ($this->getTableNames($schema, $refresh) as $name) {
-            if ($schema !== '') {
-                $name = $schema . '.' . $name;
-            }
-            $tableMetadata = $this->$methodName($name, $refresh);
-            if ($tableMetadata !== null) {
-                $metadata[] = $tableMetadata;
-            }
-        }
-
-        return $metadata;
-    }
-
-    /**
-     * Sets the metadata of the given type for the given table.
-     * @param string $name table name.
-     * @param string $type metadata type.
-     * @param mixed $data metadata.
-     * @since 2.0.13
-     */
-    protected function setTableMetadata($name, $type, $data)
-    {
-        $this->_tableMetadata[$this->getRawTableName($name)][$type] = $data;
     }
 
     /**
@@ -804,47 +848,5 @@ abstract class Schema extends BaseObject
         }
 
         return array_change_key_case($row, CASE_LOWER);
-    }
-
-    /**
-     * Tries to load and populate table metadata from cache.
-     * @param Cache|null $cache
-     * @param string $name
-     */
-    private function loadTableMetadataFromCache($cache, $name)
-    {
-        if ($cache === null) {
-            $this->_tableMetadata[$name] = [];
-            return;
-        }
-
-        $metadata = $cache->get($this->getCacheKey($name));
-        if (!is_array($metadata) || !isset($metadata['cacheVersion']) || $metadata['cacheVersion'] !== static::SCHEMA_CACHE_VERSION) {
-            $this->_tableMetadata[$name] = [];
-            return;
-        }
-
-        unset($metadata['cacheVersion']);
-        $this->_tableMetadata[$name] = $metadata;
-    }
-
-    /**
-     * Saves table metadata to cache.
-     * @param Cache|null $cache
-     * @param string $name
-     */
-    private function saveTableMetadataToCache($cache, $name)
-    {
-        if ($cache === null) {
-            return;
-        }
-
-        $metadata = $this->_tableMetadata[$name];
-        $metadata['cacheVersion'] = static::SCHEMA_CACHE_VERSION;
-        $cache->set(
-            $this->getCacheKey($name),
-            $metadata,
-            $this->db->schemaCacheDuration
-        );
     }
 }

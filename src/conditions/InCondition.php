@@ -51,6 +51,19 @@ class InCondition implements ConditionInterface
     }
 
     /**
+     * {@inheritdoc}
+     * @throws InvalidArgumentException if wrong number of operands have been given.
+     */
+    public static function fromArrayDefinition($operator, $operands)
+    {
+        if (!isset($operands[0], $operands[1])) {
+            throw new \InvalidArgumentException("Operator '$operator' requires two operands.");
+        }
+
+        return new static($operands[0], $operator, $operands[1]);
+    }
+
+    /**
      * @return string
      */
     public function getOperator()
@@ -72,17 +85,5 @@ class InCondition implements ConditionInterface
     public function getValues()
     {
         return $this->values;
-    }
-    /**
-     * {@inheritdoc}
-     * @throws InvalidArgumentException if wrong number of operands have been given.
-     */
-    public static function fromArrayDefinition($operator, $operands)
-    {
-        if (!isset($operands[0], $operands[1])) {
-            throw new \InvalidArgumentException("Operator '$operator' requires two operands.");
-        }
-
-        return new static($operands[0], $operator, $operands[1]);
     }
 }

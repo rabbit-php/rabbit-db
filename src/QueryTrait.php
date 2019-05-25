@@ -81,62 +81,6 @@ trait QueryTrait
     }
 
     /**
-     * Sets the WHERE part of the query.
-     *
-     * See [[QueryInterface::where()]] for detailed documentation.
-     *
-     * @param array $condition the conditions that should be put in the WHERE part.
-     * @return $this the query object itself
-     * @see andWhere()
-     * @see orWhere()
-     */
-    public function where($condition)
-    {
-        $this->where = $condition;
-        return $this;
-    }
-
-    /**
-     * Adds an additional WHERE condition to the existing one.
-     * The new condition and the existing one will be joined using the 'AND' operator.
-     * @param array $condition the new WHERE condition. Please refer to [[where()]]
-     * on how to specify this parameter.
-     * @return $this the query object itself
-     * @see where()
-     * @see orWhere()
-     */
-    public function andWhere($condition)
-    {
-        if ($this->where === null) {
-            $this->where = $condition;
-        } else {
-            $this->where = ['and', $this->where, $condition];
-        }
-
-        return $this;
-    }
-
-    /**
-     * Adds an additional WHERE condition to the existing one.
-     * The new condition and the existing one will be joined using the 'OR' operator.
-     * @param array $condition the new WHERE condition. Please refer to [[where()]]
-     * on how to specify this parameter.
-     * @return $this the query object itself
-     * @see where()
-     * @see andWhere()
-     */
-    public function orWhere($condition)
-    {
-        if ($this->where === null) {
-            $this->where = $condition;
-        } else {
-            $this->where = ['or', $this->where, $condition];
-        }
-
-        return $this;
-    }
-
-    /**
      * Sets the WHERE part of the query but ignores [[isEmpty()|empty operands]].
      *
      * This method is similar to [[where()]]. The main difference is that this method will
@@ -168,54 +112,6 @@ trait QueryTrait
         $condition = $this->filterCondition($condition);
         if ($condition !== []) {
             $this->where($condition);
-        }
-
-        return $this;
-    }
-
-    /**
-     * Adds an additional WHERE condition to the existing one but ignores [[isEmpty()|empty operands]].
-     * The new condition and the existing one will be joined using the 'AND' operator.
-     *
-     * This method is similar to [[andWhere()]]. The main difference is that this method will
-     * remove [[isEmpty()|empty query operands]]. As a result, this method is best suited
-     * for building query conditions based on filter values entered by users.
-     *
-     * @param array $condition the new WHERE condition. Please refer to [[where()]]
-     * on how to specify this parameter.
-     * @return $this the query object itself
-     * @see filterWhere()
-     * @see orFilterWhere()
-     */
-    public function andFilterWhere(array $condition)
-    {
-        $condition = $this->filterCondition($condition);
-        if ($condition !== []) {
-            $this->andWhere($condition);
-        }
-
-        return $this;
-    }
-
-    /**
-     * Adds an additional WHERE condition to the existing one but ignores [[isEmpty()|empty operands]].
-     * The new condition and the existing one will be joined using the 'OR' operator.
-     *
-     * This method is similar to [[orWhere()]]. The main difference is that this method will
-     * remove [[isEmpty()|empty query operands]]. As a result, this method is best suited
-     * for building query conditions based on filter values entered by users.
-     *
-     * @param array $condition the new WHERE condition. Please refer to [[where()]]
-     * on how to specify this parameter.
-     * @return $this the query object itself
-     * @see filterWhere()
-     * @see andFilterWhere()
-     */
-    public function orFilterWhere(array $condition)
-    {
-        $condition = $this->filterCondition($condition);
-        if ($condition !== []) {
-            $this->orWhere($condition);
         }
 
         return $this;
@@ -304,6 +200,110 @@ trait QueryTrait
     }
 
     /**
+     * Sets the WHERE part of the query.
+     *
+     * See [[QueryInterface::where()]] for detailed documentation.
+     *
+     * @param array $condition the conditions that should be put in the WHERE part.
+     * @return $this the query object itself
+     * @see andWhere()
+     * @see orWhere()
+     */
+    public function where($condition)
+    {
+        $this->where = $condition;
+        return $this;
+    }
+
+    /**
+     * Adds an additional WHERE condition to the existing one but ignores [[isEmpty()|empty operands]].
+     * The new condition and the existing one will be joined using the 'AND' operator.
+     *
+     * This method is similar to [[andWhere()]]. The main difference is that this method will
+     * remove [[isEmpty()|empty query operands]]. As a result, this method is best suited
+     * for building query conditions based on filter values entered by users.
+     *
+     * @param array $condition the new WHERE condition. Please refer to [[where()]]
+     * on how to specify this parameter.
+     * @return $this the query object itself
+     * @see filterWhere()
+     * @see orFilterWhere()
+     */
+    public function andFilterWhere(array $condition)
+    {
+        $condition = $this->filterCondition($condition);
+        if ($condition !== []) {
+            $this->andWhere($condition);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Adds an additional WHERE condition to the existing one.
+     * The new condition and the existing one will be joined using the 'AND' operator.
+     * @param array $condition the new WHERE condition. Please refer to [[where()]]
+     * on how to specify this parameter.
+     * @return $this the query object itself
+     * @see where()
+     * @see orWhere()
+     */
+    public function andWhere($condition)
+    {
+        if ($this->where === null) {
+            $this->where = $condition;
+        } else {
+            $this->where = ['and', $this->where, $condition];
+        }
+
+        return $this;
+    }
+
+    /**
+     * Adds an additional WHERE condition to the existing one but ignores [[isEmpty()|empty operands]].
+     * The new condition and the existing one will be joined using the 'OR' operator.
+     *
+     * This method is similar to [[orWhere()]]. The main difference is that this method will
+     * remove [[isEmpty()|empty query operands]]. As a result, this method is best suited
+     * for building query conditions based on filter values entered by users.
+     *
+     * @param array $condition the new WHERE condition. Please refer to [[where()]]
+     * on how to specify this parameter.
+     * @return $this the query object itself
+     * @see filterWhere()
+     * @see andFilterWhere()
+     */
+    public function orFilterWhere(array $condition)
+    {
+        $condition = $this->filterCondition($condition);
+        if ($condition !== []) {
+            $this->orWhere($condition);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Adds an additional WHERE condition to the existing one.
+     * The new condition and the existing one will be joined using the 'OR' operator.
+     * @param array $condition the new WHERE condition. Please refer to [[where()]]
+     * on how to specify this parameter.
+     * @return $this the query object itself
+     * @see where()
+     * @see andWhere()
+     */
+    public function orWhere($condition)
+    {
+        if ($this->where === null) {
+            $this->where = $condition;
+        } else {
+            $this->where = ['or', $this->where, $condition];
+        }
+
+        return $this;
+    }
+
+    /**
      * Sets the ORDER BY part of the query.
      * @param string|array|ExpressionInterface $columns the columns (and the directions) to be ordered by.
      * Columns can be specified in either a string (e.g. `"id ASC, name DESC"`) or an array
@@ -324,6 +324,33 @@ trait QueryTrait
     {
         $this->orderBy = $this->normalizeOrderBy($columns);
         return $this;
+    }
+
+    /**
+     * Normalizes format of ORDER BY data.
+     *
+     * @param array|string|ExpressionInterface $columns the columns value to normalize. See [[orderBy]] and [[addOrderBy]].
+     * @return array
+     */
+    protected function normalizeOrderBy($columns)
+    {
+        if ($columns instanceof ExpressionInterface) {
+            return [$columns];
+        } elseif (is_array($columns)) {
+            return $columns;
+        }
+
+        $columns = preg_split('/\s*,\s*/', trim($columns), -1, PREG_SPLIT_NO_EMPTY);
+        $result = [];
+        foreach ($columns as $column) {
+            if (preg_match('/^(.*?)\s+(asc|desc)$/i', $column, $matches)) {
+                $result[$matches[1]] = strcasecmp($matches[2], 'desc') ? SORT_ASC : SORT_DESC;
+            } else {
+                $result[$column] = SORT_ASC;
+            }
+        }
+
+        return $result;
     }
 
     /**
@@ -353,33 +380,6 @@ trait QueryTrait
         }
 
         return $this;
-    }
-
-    /**
-     * Normalizes format of ORDER BY data.
-     *
-     * @param array|string|ExpressionInterface $columns the columns value to normalize. See [[orderBy]] and [[addOrderBy]].
-     * @return array
-     */
-    protected function normalizeOrderBy($columns)
-    {
-        if ($columns instanceof ExpressionInterface) {
-            return [$columns];
-        } elseif (is_array($columns)) {
-            return $columns;
-        }
-
-        $columns = preg_split('/\s*,\s*/', trim($columns), -1, PREG_SPLIT_NO_EMPTY);
-        $result = [];
-        foreach ($columns as $column) {
-            if (preg_match('/^(.*?)\s+(asc|desc)$/i', $column, $matches)) {
-                $result[$matches[1]] = strcasecmp($matches[2], 'desc') ? SORT_ASC : SORT_DESC;
-            } else {
-                $result[$column] = SORT_ASC;
-            }
-        }
-
-        return $result;
     }
 
     /**

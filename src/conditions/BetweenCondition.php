@@ -50,6 +50,19 @@ class BetweenCondition implements ConditionInterface
     }
 
     /**
+     * {@inheritdoc}
+     * @throws InvalidArgumentException if wrong number of operands have been given.
+     */
+    public static function fromArrayDefinition($operator, $operands)
+    {
+        if (!isset($operands[0], $operands[1], $operands[2])) {
+            throw new \InvalidArgumentException("Operator '$operator' requires three operands.");
+        }
+
+        return new static($operands[0], $operator, $operands[1], $operands[2]);
+    }
+
+    /**
      * @return string
      */
     public function getOperator()
@@ -79,18 +92,5 @@ class BetweenCondition implements ConditionInterface
     public function getIntervalEnd()
     {
         return $this->intervalEnd;
-    }
-
-    /**
-     * {@inheritdoc}
-     * @throws InvalidArgumentException if wrong number of operands have been given.
-     */
-    public static function fromArrayDefinition($operator, $operands)
-    {
-        if (!isset($operands[0], $operands[1], $operands[2])) {
-            throw new \InvalidArgumentException("Operator '$operator' requires three operands.");
-        }
-
-        return new static($operands[0], $operator, $operands[1], $operands[2]);
     }
 }

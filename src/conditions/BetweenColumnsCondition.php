@@ -74,6 +74,19 @@ class BetweenColumnsCondition implements ConditionInterface
     }
 
     /**
+     * {@inheritdoc}
+     * @throws InvalidArgumentException if wrong number of operands have been given.
+     */
+    public static function fromArrayDefinition($operator, $operands)
+    {
+        if (!isset($operands[0], $operands[1], $operands[2])) {
+            throw new \InvalidArgumentException("Operator '$operator' requires three operands.");
+        }
+
+        return new static($operands[0], $operator, $operands[1], $operands[2]);
+    }
+
+    /**
      * @return string
      */
     public function getOperator()
@@ -103,18 +116,5 @@ class BetweenColumnsCondition implements ConditionInterface
     public function getIntervalEndColumn()
     {
         return $this->intervalEndColumn;
-    }
-
-    /**
-     * {@inheritdoc}
-     * @throws InvalidArgumentException if wrong number of operands have been given.
-     */
-    public static function fromArrayDefinition($operator, $operands)
-    {
-        if (!isset($operands[0], $operands[1], $operands[2])) {
-            throw new \InvalidArgumentException("Operator '$operator' requires three operands.");
-        }
-
-        return new static($operands[0], $operator, $operands[1], $operands[2]);
     }
 }

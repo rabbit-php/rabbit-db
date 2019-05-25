@@ -36,27 +36,6 @@ class LikeCondition extends SimpleCondition
     }
 
     /**
-     * This method allows to specify how to escape special characters in the value(s).
-     *
-     * @param array an array of mappings from the special characters to their escaped counterparts.
-     * You may use `false` or an empty array to indicate the values are already escaped and no escape
-     * should be applied. Note that when using an escape mapping (or the third operand is not provided),
-     * the values will be automatically enclosed within a pair of percentage characters.
-     */
-    public function setEscapingReplacements($escapingReplacements)
-    {
-        $this->escapingReplacements = $escapingReplacements;
-    }
-
-    /**
-     * @return array|false
-     */
-    public function getEscapingReplacements()
-    {
-        return $this->escapingReplacements;
-    }
-
-    /**
      * {@inheritdoc}
      * @throws InvalidArgumentException if wrong number of operands have been given.
      */
@@ -72,5 +51,26 @@ class LikeCondition extends SimpleCondition
         }
 
         return $condition;
+    }
+
+    /**
+     * @return array|false
+     */
+    public function getEscapingReplacements()
+    {
+        return $this->escapingReplacements;
+    }
+
+    /**
+     * This method allows to specify how to escape special characters in the value(s).
+     *
+     * @param array an array of mappings from the special characters to their escaped counterparts.
+     * You may use `false` or an empty array to indicate the values are already escaped and no escape
+     * should be applied. Note that when using an escape mapping (or the third operand is not provided),
+     * the values will be automatically enclosed within a pair of percentage characters.
+     */
+    public function setEscapingReplacements($escapingReplacements)
+    {
+        $this->escapingReplacements = $escapingReplacements;
     }
 }

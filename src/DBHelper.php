@@ -12,21 +12,6 @@ class DBHelper
 {
     /**
      * @param Query $query
-     * @param array|null $filter
-     * @return Query
-     */
-    public static function Search(Query $query, array $filter = null): Query
-    {
-        if (!empty($filter)) {
-            foreach ($filter as $k => $v) {
-                $query->$k($v);
-            }
-        }
-        return $query;
-    }
-
-    /**
-     * @param Query $query
      * @param array $filter
      * @param $handle
      * @param $db
@@ -42,6 +27,21 @@ class DBHelper
             $result = $query->$handle($db);
         }
         return $result;
+    }
+
+    /**
+     * @param Query $query
+     * @param array|null $filter
+     * @return Query
+     */
+    public static function Search(Query $query, array $filter = null): Query
+    {
+        if (!empty($filter)) {
+            foreach ($filter as $k => $v) {
+                $query->$k($v);
+            }
+        }
+        return $query;
     }
 
     /**

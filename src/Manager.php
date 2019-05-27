@@ -72,6 +72,15 @@ class Manager implements ReleaseInterface
     }
 
     /**
+     * @param string $name
+     * @return bool
+     */
+    public function hasConnection(string $name): bool
+    {
+        return isset($this->connections[$name]);
+    }
+
+    /**
      *
      */
     public function release(): void

@@ -50,10 +50,10 @@ class DBHelper
      * @param int $page
      * @return array
      */
-    public static function SearchList(Query $query, array $filter = null, int $page = 0): array
+    public static function SearchList(Query $query, array $filter = [], int $page = 0): array
     {
         $limit = ArrayHelper::remove($filter, 'limit', 20);
-        $offset = ArrayHelper::remove($filter, 'offset', $page * (int)$limit);
+        $offset = ArrayHelper::remove($filter, 'offset', $page ? ($page - 1) : 0 * (int)$limit);
         $count = ArrayHelper::remove($filter, 'count', '1');
 
         $queryRes = $filter === [] || !$filter ? $query : static::Search($query, $filter);

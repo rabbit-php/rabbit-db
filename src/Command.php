@@ -395,7 +395,7 @@ class Command extends BaseObject
         }
         $sql = '';
         foreach (explode('?', $this->_sql) as $i => $part) {
-            $sql .= ($params[$i] ?? '') . $part;
+            $sql .= $part . ($params[$i] ?? '');
         }
 
         return $sql;

@@ -1307,4 +1307,28 @@ PATTERN;
     {
         return serialize($this);
     }
+
+    /**
+     * @param $name
+     * @param $arguments
+     */
+    public function __call($name, $arguments)
+    {
+        $arguments = array_shift($arguments);
+        if (strpos($name, '@') !== false && substr_count($name, '@') === 1) {
+            [$method, $function] = explode('@', $name);
+            if (in_array($method, ['select', 'where'])) {
+                switch ($method) {
+                    case 'select':
+                        $this->$method = array_merge($this->$method ?? [],
+                            [sprintf("%s(%s)", $function, implode(',', $arguments))]);
+                        break;
+                    case 'where':
+                        $this->{'and' . $method}(sprintf("%s(%s)", $function, implode(',', $arguments)));
+                        break;
+                }
+            }
+        }
+        return $this;
+    }
 }

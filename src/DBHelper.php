@@ -2,6 +2,7 @@
 
 namespace rabbit\db;
 
+use rabbit\activerecord\BaseActiveRecord;
 use rabbit\helper\ArrayHelper;
 
 /**
@@ -50,23 +51,27 @@ class DBHelper
      * @param int $page
      * @return array
      */
-    public static function SearchList(Query $query, array $filter = [], int $page = 0): array
-    {
+    public static function SearchList(
+        Query $query,
+        array $filter = [],
+        ConnectionInterface $db = null,
+        int $page = 0
+    ): array {
         $limit = ArrayHelper::remove($filter, 'limit', 20);
         $offset = ArrayHelper::remove($filter, 'offset', ($page ? ($page - 1) : 0) * (int)$limit);
         $count = ArrayHelper::remove($filter, 'count', '1');
 
         $queryRes = $filter === [] || !$filter ? $query : static::Search($query, $filter);
 
-        if ($query instanceof \rabbit\activerecord\ActiveQuery) {
-            $rows = $queryRes->limit($limit ?: null)->offset($offset)->asArray()->all();
+        if ($query instanceof BaseActiveRecord) {
+            $rows = $queryRes->limit($limit ?: null)->offset($offset)->asArray()->all($db);
         } else {
-            $rows = $queryRes->limit($limit ?: null)->offset($offset)->all();
+            $rows = $queryRes->limit($limit ?: null)->offset($offset)->all($db);
         }
         if ($limit) {
             $query->limit = null;
             $query->offset = null;
-            $total = $queryRes->count($count);
+            $total = $queryRes->count($count, $db);
         } else {
             $total = count($rows);
         }

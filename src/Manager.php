@@ -53,10 +53,13 @@ class Manager implements ReleaseInterface
      * @param string $name
      * @return Connection
      */
-    public function getConnection(string $name = 'db'): Connection
+    public function getConnection(string $name = 'db'): ?Connection
     {
         if (($connection = DbContext::get($name)) === null) {
             /** @var PdoPool $pool */
+            if (!isset($this->connections[$name])) {
+                return null;
+            }
             $pool = $this->connections[$name];
             $connection = $pool->getConnection();
             DbContext::set($name, $connection);

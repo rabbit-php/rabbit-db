@@ -37,7 +37,7 @@ class Manager implements ReleaseInterface
      * Manager constructor.
      * @param array $configs
      */
-    public function __construct(array $configs)
+    public function __construct(array $configs = [])
     {
         $this->addConnection($configs);
     }

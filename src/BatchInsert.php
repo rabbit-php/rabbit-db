@@ -98,7 +98,6 @@ class BatchInsert
     {
         $this->sql = 'INSERT INTO ' . $this->schema->quoteTableName($this->table);
         $this->hasRows = 0;
-        $this->schema = $this->db->getSchema();
     }
 
     /**

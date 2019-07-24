@@ -78,9 +78,9 @@ class Manager implements ReleaseInterface
             if (($cid = CoroHelper::getId()) !== -1 && !array_key_exists($cid, $this->deferList)) {
                 defer(function () use ($cid) {
                     DbContext::release();
-                    unset($this->deferList[$cid]);
+                    $this->deferList = array_values(array_diff($names, [$cid]));
                 });
-                $this->deferList[$cid] = true;
+                $this->deferList[] = $cid;
             }
         }
         return $connection;

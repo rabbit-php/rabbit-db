@@ -177,6 +177,8 @@ class Connection extends BaseObject implements ConnectionInterface
      * Will result in the DSN string `mysql:host=127.0.0.1;dbname=demo`.
      */
     public $dsn;
+    /** @var string */
+    public $shortDsn;
     /**
      * @var string the username for establishing DB connection. Defaults to `null` meaning no username to use.
      */
@@ -424,6 +426,12 @@ class Connection extends BaseObject implements ConnectionInterface
      */
     private $_queryCacheInfo = [];
 
+    public function __construct(string $dsn)
+    {
+        $this->dsn = $dsn;
+        $this->makeShortDsn();
+    }
+
     /**
      * Returns a value indicating whether the DB connection is established.
      * @return bool whether the DB connection is established
@@ -563,7 +571,7 @@ class Connection extends BaseObject implements ConnectionInterface
         }
 
         if ($this->pdo !== null) {
-            App::debug('Closing DB connection: ' . $this->dsn, "db");
+            App::warning('Closing DB connection: ' . $this->shortDsn, "db");
             $this->pdo = null;
             $this->_schema = null;
             $this->_transaction = null;
@@ -753,15 +761,23 @@ class Connection extends BaseObject implements ConnectionInterface
             throw new \InvalidArgumentException('Connection::dsn cannot be empty.');
         }
 
-        $token = 'Opening DB connection: ' . $this->dsn;
-        try {
-            App::info($token, "db");
-
-            $this->pdo = $this->createPdoInstance();
-            $this->initConnection();
-        } catch (\PDOException $e) {
-            throw new Exception($e->getMessage(), $e->errorInfo, (int)$e->getCode(), $e);
+        $token = 'Opening DB connection: ' . $this->shortDsn;
+        $attempt = 0;
+        while (true) {
+            try {
+                ++$attempt;
+                App::info($token, "db");
+                $this->pdo = $this->createPdoInstance();
+                $this->initConnection();
+                break;
+            } catch (\Exception $e) {
+                $e = $this->getSchema()->convertException($e, $token);
+                if ($retryHandler === null || !$retryHandler->handle($this, $e, $attempt)) {
+                    throw $e;
+                }
+            }
         }
+
     }
 
     /**
@@ -1116,5 +1132,20 @@ class Connection extends BaseObject implements ConnectionInterface
             // reset PDO connection, unless its sqlite in-memory, which can only have one connection
             $this->pdo = null;
         }
+    }
+
+    private function makeShortDsn(): void
+    {
+        $parsed = parse_url($this->dsn);
+        if (!isset($parsed['path'])) {
+            $parsed['path'] = '/';
+        }
+        $this->shortDsn = (isset($parsed['scheme']) ? $parsed['scheme'] : 'http')
+            . '://'
+            . $parsed['host']
+            . (!empty($parsed['port']) ? ':' . $parsed['port'] : '')
+            . $parsed['path']
+            . '?'
+            . $parsed['query'];
     }
 }

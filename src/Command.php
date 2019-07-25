@@ -106,6 +106,15 @@ class Command extends BaseObject
      */
     private $_retryHandler;
 
+    /**
+     * Command constructor.
+     * @throws \Exception
+     */
+    public function __construct()
+    {
+        $this->_retryHandler = getDI('db.retryHandler', false);
+    }
+
 
     /**
      * Enables query cache for this command.
@@ -197,18 +206,12 @@ class Command extends BaseObject
             try {
                 $this->pdoStatement = $pdo->prepare($sql);
                 $this->bindPendingParams();
-                if ($this->_retryHandler !== null) {
-                    $this->_retryHandler->setTotalCount(0);
-                }
                 break;
             } catch (\Exception $e) {
                 $message = $e->getMessage() . "\nFailed to prepare SQL: $sql";
                 $errorInfo = $e instanceof \PDOException ? $e->errorInfo : null;
                 $e = new Exception($message, $errorInfo, (int)$e->getCode(), $e);
-                if ($this->_retryHandler === null) {
-                    $this->_retryHandler = clone getDI('db.retryHandler');
-                }
-                if (!$this->_retryHandler->handle($this, $e, $attempt)) {
+                if ($this->_retryHandler === null || !$this->_retryHandler->handle($this->db, $e, $attempt)) {
                     throw $e;
                 }
             }
@@ -426,18 +429,12 @@ class Command extends BaseObject
                     }, $this->_isolationLevel);
                 } else {
                     $this->pdoStatement->execute();
-                    if ($this->_retryHandler !== null) {
-                        $this->_retryHandler->setTotalCount(0);
-                    }
                 }
                 break;
             } catch (\Exception $e) {
                 $rawSql = $rawSql ?: $this->getRawSql();
                 $e = $this->db->getSchema()->convertException($e, $rawSql);
-                if ($this->_retryHandler === null) {
-                    $this->_retryHandler = clone getDI('db.retryHandler');
-                }
-                if (!$this->_retryHandler->handle($this, $e, $attempt)) {
+                if ($this->_retryHandler === null || !$this->_retryHandler->handle($this->db, $e, $attempt)) {
                     throw $e;
                 }
             }
@@ -648,7 +645,6 @@ class Command extends BaseObject
         $this->params = [];
         $this->_refreshTableName = null;
         $this->_isolationLevel = false;
-        $this->_retryHandler = null;
     }
 
     /**

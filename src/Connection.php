@@ -772,6 +772,7 @@ class Connection extends BaseObject implements ConnectionInterface
                 break;
             } catch (\Exception $e) {
                 $e = $this->getSchema()->convertException($e, $token);
+                $retryHandler = getDI('db.retryHandler', false);
                 if ($retryHandler === null || !$retryHandler->handle($this, $e, $attempt)) {
                     throw $e;
                 }

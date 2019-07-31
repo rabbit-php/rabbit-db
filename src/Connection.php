@@ -737,11 +737,11 @@ class Connection extends BaseObject implements ConnectionInterface
     }
 
     /**
-     * Establishes a DB connection.
-     * It does nothing if a DB connection has already been established.
-     * @throws Exception if connection fails
+     * @param int $attempt
+     * @throws Exception
+     * @throws NotSupportedException
      */
-    public function open()
+    public function open(int $attempt = 0)
     {
         if ($this->pdo !== null) {
             return;
@@ -762,23 +762,17 @@ class Connection extends BaseObject implements ConnectionInterface
         }
 
         $token = 'Opening DB connection: ' . $this->shortDsn;
-        $attempt = 0;
-        while (true) {
-            try {
-                ++$attempt;
-                App::info($token, "db");
-                $this->pdo = $this->createPdoInstance();
-                $this->initConnection();
-                break;
-            } catch (\Exception $e) {
-                $e = $this->getSchema()->convertException($e, $token);
-                $retryHandler = getDI('db.retryHandler', false);
-                if ($retryHandler === null || !$retryHandler->handle($this, $e, $attempt)) {
-                    throw $e;
-                }
+        try {
+            App::info($token, "db");
+            $this->pdo = $this->createPdoInstance();
+            $this->initConnection();
+        } catch (\Exception $e) {
+            $e = $this->getSchema()->convertException($e, $token);
+            $retryHandler = getDI('db.retryHandler', false);
+            if ($retryHandler === null || !$retryHandler->handle($this, $e, $attempt)) {
+                throw $e;
             }
         }
-
     }
 
     /**

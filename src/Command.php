@@ -102,18 +102,9 @@ class Command extends BaseObject
      */
     private $_isolationLevel = false;
     /**
-     * @var RetryHandlerInterface
+     * @var RetryHandlerInterface|null
      */
-    private $_retryHandler;
-
-    /**
-     * Command constructor.
-     * @throws \Exception
-     */
-    public function __construct()
-    {
-        $this->_retryHandler = getDI('db.retryHandler', false);
-    }
+    private $retryHandler=null;
 
 
     /**
@@ -211,7 +202,7 @@ class Command extends BaseObject
                 $message = $e->getMessage() . "\nFailed to prepare SQL: $sql";
                 $errorInfo = $e instanceof \PDOException ? $e->errorInfo : null;
                 $e = new Exception($message, $errorInfo, (int)$e->getCode(), $e);
-                if ($this->_retryHandler === null || !$this->_retryHandler->handle($this->db, $e, $attempt)) {
+                if ($this->retryHandler === null || !$this->retryHandler->handle($this->db, $e, $attempt)) {
                     throw $e;
                 }
             }
@@ -434,7 +425,7 @@ class Command extends BaseObject
             } catch (\Exception $e) {
                 $rawSql = $rawSql ?: $this->getRawSql();
                 $e = $this->db->getSchema()->convertException($e, $rawSql);
-                if ($this->_retryHandler === null || !$this->_retryHandler->handle($this->db, $e, $attempt)) {
+                if ($this->retryHandler === null || !$this->retryHandler->handle($this->db, $e, $attempt)) {
                     throw $e;
                 }
             }

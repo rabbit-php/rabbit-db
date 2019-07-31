@@ -425,6 +425,8 @@ class Connection extends BaseObject implements ConnectionInterface
      * @var array query cache parameters for the [[cache()]] calls
      */
     private $_queryCacheInfo = [];
+    /** @var RetryHandlerInterface|null */
+    private $retryHandler = null;
 
     public function __construct(string $dsn)
     {
@@ -592,7 +594,7 @@ class Connection extends BaseObject implements ConnectionInterface
     public function createCommand($sql = null, $params = [])
     {
         $driver = $this->getDriverName();
-        $config = ['class' => Command::class];
+        $config = ['class' => Command::class, 'retryHandler' => $this->retryHandler];
         if (isset($this->commandMap[$driver])) {
             $config = !is_array($this->commandMap[$driver]) ? ['class' => $this->commandMap[$driver]] : $this->commandMap[$driver];
         }
@@ -768,8 +770,7 @@ class Connection extends BaseObject implements ConnectionInterface
             $this->initConnection();
         } catch (\Exception $e) {
             $e = $this->getSchema()->convertException($e, $token);
-            $retryHandler = getDI('db.retryHandler', false);
-            if ($retryHandler === null || !$retryHandler->handle($this, $e, $attempt)) {
+            if ($this->retryHandler === null || !$this->retryHandler->handle($this, $e, ++$attempt)) {
                 throw $e;
             }
         }

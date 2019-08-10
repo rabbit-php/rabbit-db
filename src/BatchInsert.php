@@ -12,18 +12,18 @@ use rabbit\helper\StringHelper;
 class BatchInsert
 {
     /** @var string */
-    private $table;
+    protected $table;
     /** @var array */
-    private $columnSchemas = [];
+    protected $columnSchemas = [];
     /** @var */
-    private $sql;
+    protected $sql;
     /** @var ConnectionInterface */
-    private $db;
+    protected $db;
     /** @var bool */
-    private $hasRows = 0;
-    private $schema;
+    protected $hasRows = 0;
+    protected $schema;
     /** @var array */
-    private $columns = [];
+    protected $columns = [];
 
     /**
      * BatchInsert constructor.
@@ -74,8 +74,8 @@ class BatchInsert
         $this->hasRows++;
         if ($checkFields) {
             foreach ($rows as $i => $value) {
-                if (isset($this->columns[$i], $this->columnSchemas[$this->columns[$i]])) {
-                    $value = $this->columnSchemas[$this->columns[$i]]->dbTypecast($value);
+                if (isset($this->columns[$i], $this->columnSchemas[trim($this->columns[$i], '`')])) {
+                    $value = $this->columnSchemas[trim($this->columns[$i], '`')]->dbTypecast($value);
                 }
                 if (is_string($value)) {
                     $value = $this->schema->quoteValue($value);
@@ -85,7 +85,7 @@ class BatchInsert
                 } elseif ($value === false) {
                     $value = 0;
                 } elseif ($value === null) {
-                    $value = 'NULL';
+                    $value = '';
                 }
                 $rows[$i] = $value;
             }

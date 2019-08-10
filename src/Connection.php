@@ -404,34 +404,42 @@ class Connection extends BaseObject implements ConnectionInterface
     /**
      * @var Transaction the currently active transaction
      */
-    private $_transaction;
+    protected $_transaction;
     /**
      * @var Schema the database schema
      */
-    private $_schema;
+    protected $_schema;
     /**
      * @var string driver name
      */
-    private $_driverName;
+    protected $_driverName;
     /**
      * @var Connection|false the currently active master connection
      */
-    private $_master = false;
+    protected $_master = false;
     /**
      * @var Connection|false the currently active slave connection
      */
-    private $_slave = false;
+    protected $_slave = false;
     /**
      * @var array query cache parameters for the [[cache()]] calls
      */
-    private $_queryCacheInfo = [];
+    protected $_queryCacheInfo = [];
     /** @var RetryHandlerInterface|null */
-    private $retryHandler = null;
+    protected $retryHandler = null;
 
     public function __construct(string $dsn)
     {
         $this->dsn = $dsn;
         $this->makeShortDsn();
+    }
+
+    /**
+     * @return RetryHandlerInterface|null
+     */
+    public function getRetryHandler(): ?RetryHandlerInterface
+    {
+        return $this->retryHandler;
     }
 
     /**

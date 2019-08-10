@@ -101,10 +101,6 @@ class Command extends BaseObject
      * See [[Transaction::begin()]] for details.
      */
     private $_isolationLevel = false;
-    /**
-     * @var RetryHandlerInterface|null
-     */
-    private $retryHandler=null;
 
 
     /**
@@ -202,7 +198,8 @@ class Command extends BaseObject
                 $message = $e->getMessage() . "\nFailed to prepare SQL: $sql";
                 $errorInfo = $e instanceof \PDOException ? $e->errorInfo : null;
                 $e = new Exception($message, $errorInfo, (int)$e->getCode(), $e);
-                if ($this->retryHandler === null || !$this->retryHandler->handle($this->db, $e, $attempt)) {
+                if (($retryHandler = $this->db->getRetryHandler()) === null || !$retryHandler->handle($this->db, $e,
+                        $attempt)) {
                     throw $e;
                 }
             }
@@ -218,7 +215,6 @@ class Command extends BaseObject
         foreach ($this->_pendingParams as $name => $value) {
             $this->pdoStatement->bindValue($name, $value[0], $value[1]);
         }
-        $this->_pendingParams = [];
     }
 
     /**
@@ -318,8 +314,6 @@ class Command extends BaseObject
             }
         }
 
-        $this->prepare(true);
-
         try {
             $this->internalExecute($rawSql);
 
@@ -410,6 +404,7 @@ class Command extends BaseObject
         $attempt = 0;
         while (true) {
             try {
+                $this->prepare(true);
                 if (
                     ++$attempt === 1
                     && $this->_isolationLevel !== false
@@ -421,11 +416,14 @@ class Command extends BaseObject
                 } else {
                     $this->pdoStatement->execute();
                 }
+                $this->_pendingParams = [];
                 break;
             } catch (\Exception $e) {
                 $rawSql = $rawSql ?: $this->getRawSql();
                 $e = $this->db->getSchema()->convertException($e, $rawSql);
-                if ($this->retryHandler === null || !$this->retryHandler->handle($this->db, $e, $attempt)) {
+                $this->pdoStatement = null;
+                if (($retryHandler = $this->db->getRetryHandler()) === null || !$retryHandler->handle($this->db, $e,
+                        $attempt)) {
                     throw $e;
                 }
             }
@@ -1206,10 +1204,7 @@ class Command extends BaseObject
             return 0;
         }
 
-        $this->prepare(false);
-
         try {
-
             $this->internalExecute($rawSql);
             $n = $this->pdoStatement->rowCount();
 

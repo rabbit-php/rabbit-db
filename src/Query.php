@@ -7,6 +7,7 @@
 
 namespace rabbit\db;
 
+use Psr\SimpleCache\CacheInterface;
 use rabbit\core\BaseObject;
 use rabbit\core\ObjectFactory;
 use rabbit\helper\ArrayHelper;
@@ -122,6 +123,8 @@ class Query extends BaseObject implements QueryInterface, ExpressionInterface
      * @since 2.0.14
      */
     public $queryCacheDuration;
+    /** @var CacheInterface|null */
+    protected $cache = null;
 
     /**
      * Constructor for query object
@@ -276,7 +279,7 @@ class Query extends BaseObject implements QueryInterface, ExpressionInterface
     {
         if ($this->queryCacheDuration !== null) {
             $duration = $this->queryCacheDuration === true ? null : $this->queryCacheDuration;
-            $command->cache($duration);
+            $command->cache($duration, $this->cache);
         }
 
         return $command;
@@ -1282,9 +1285,10 @@ PATTERN;
      * @return $this the Query object itself
      * @since 2.0.14
      */
-    public function cache($duration = true)
+    public function cache($duration = true, ?CacheInterface $cache = null)
     {
         $this->queryCacheDuration = $duration;
+        $this->cache = $cache;
         return $this;
     }
 

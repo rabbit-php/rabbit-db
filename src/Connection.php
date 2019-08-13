@@ -538,7 +538,7 @@ class Connection extends BaseObject implements ConnectionInterface
      * @return array the current query cache information, or null if query cache is not enabled.
      * @internal
      */
-    public function getQueryCacheInfo($duration)
+    public function getQueryCacheInfo($duration, ?CacheInterface $cache = null)
     {
         if (!$this->enableQueryCache) {
             return null;
@@ -552,10 +552,12 @@ class Connection extends BaseObject implements ConnectionInterface
         }
 
         if ($duration === 0 || $duration > 0) {
-            if (is_string($this->queryCache)) {
-                $cache = getDI($this->queryCache, false);
-            } else {
-                $cache = $this->queryCache;
+            if ($cache === null) {
+                if (!is_string($this->queryCache)) {
+                    $cache = getDI($this->queryCache, false);
+                } else {
+                    $cache = $this->queryCache;
+                }
             }
             if ($cache instanceof CacheInterface) {
                 return [$cache, $duration];

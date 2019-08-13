@@ -101,7 +101,8 @@ class Command extends BaseObject
      * See [[Transaction::begin()]] for details.
      */
     private $_isolationLevel = false;
-
+    /** @var CacheInterface|null */
+    protected $cache = null;
 
     /**
      * Enables query cache for this command.
@@ -110,9 +111,10 @@ class Command extends BaseObject
      * Use 0 to indicate that the cached data will never expire.
      * @return $this the command object itself
      */
-    public function cache($duration = null)
+    public function cache($duration = null, ?CacheInterface $cache = null)
     {
         $this->queryCacheDuration = $duration === null ? $this->db->queryCacheDuration : $duration;
+        $this->cache = $cache;
         return $this;
     }
 
@@ -294,7 +296,7 @@ class Command extends BaseObject
         $rawSql = $this->logQuery();
 
         if ($method !== '') {
-            $info = $this->db->getQueryCacheInfo($this->queryCacheDuration);
+            $info = $this->db->getQueryCacheInfo($this->queryCacheDuration, $this->cache);
             if (is_array($info)) {
                 /* @var $cache CacheInterface */
                 $cache = $info[0];

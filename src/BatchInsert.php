@@ -40,6 +40,14 @@ class BatchInsert
     }
 
     /**
+     * @return int
+     */
+    public function getRows(): int
+    {
+        return $this->hasRows;
+    }
+
+    /**
      * @param array $columns
      * @return bool
      */

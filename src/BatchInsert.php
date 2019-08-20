@@ -19,7 +19,7 @@ class BatchInsert
     protected $sql;
     /** @var ConnectionInterface */
     protected $db;
-    /** @var bool */
+    /** @var int */
     protected $hasRows = 0;
     protected $schema;
     /** @var array */
@@ -111,7 +111,7 @@ class BatchInsert
     /**
      * @return mixed
      */
-    public function execute()
+    public function execute(): int
     {
         if ($this->hasRows) {
             $this->sql = rtrim($this->sql, ',');

@@ -308,7 +308,7 @@ class Command extends BaseObject
                     $this->db->username,
                     $rawSql ?: $rawSql = $this->getRawSql(),
                 ];
-                $result = $cache->get($cacheKey);
+                $result = unserialize($cache->get($cacheKey));
                 if (is_array($result) && isset($result[0])) {
                     App::debug('Query result served from cache', 'db');
                     return $result[0];
@@ -333,7 +333,7 @@ class Command extends BaseObject
         }
 
         if (isset($cache, $cacheKey, $info)) {
-            $cache->set($cacheKey, [$result], $info[1]) && App::debug('Saved query result in cache', 'db');
+            $cache->set($cacheKey, serialize([$result]), $info[1]) && App::debug('Saved query result in cache', 'db');
         }
 
         return $result;

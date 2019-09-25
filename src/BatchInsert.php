@@ -109,7 +109,7 @@ class BatchInsert
     }
 
     /**
-     * @return mixed
+     * @return int
      */
     public function execute(): int
     {

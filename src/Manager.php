@@ -52,7 +52,6 @@ class Manager implements ReleaseInterface
                 /** @var PdoPool $pool */
                 $pool = ArrayHelper::remove($config, 'pool');
                 $pool->getPoolConfig()->setConfig($config);
-                $pool->getPoolConfig()->setName($name);
                 $this->connections[$name] = $pool;
             }
         }

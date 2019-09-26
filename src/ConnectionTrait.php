@@ -10,6 +10,7 @@ namespace rabbit\db;
 
 use rabbit\exception\NotSupportedException;
 use rabbit\pool\PoolInterface;
+use rabbit\pool\PoolManager;
 
 /**
  * Trait ConnectionTrait
@@ -18,9 +19,9 @@ use rabbit\pool\PoolInterface;
 trait ConnectionTrait
 {
     /**
-     * @var PoolInterface
+     * @var string
      */
-    protected $pool;
+    protected $poolKey;
 
     /**
      * @var int
@@ -98,7 +99,7 @@ trait ConnectionTrait
     public function release($release = false): void
     {
         if ($this->isAutoRelease() || $release) {
-            $this->pool->release($this);
+            PoolManager::getPool($this->poolKey)->release($this);
         }
     }
 

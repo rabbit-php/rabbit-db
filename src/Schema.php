@@ -707,11 +707,11 @@ abstract class Schema extends BaseObject
     /**
      * Converts a DB exception to a more concrete one if possible.
      *
-     * @param \Exception $e
+     * @param \Throwable $e
      * @param string $rawSql SQL that produced exception
      * @return Exception
      */
-    public function convertException(\Exception $e, $rawSql)
+    public function convertException(\Throwable $e, $rawSql)
     {
         if ($e instanceof Exception) {
             return $e;

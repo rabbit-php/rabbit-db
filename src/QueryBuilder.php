@@ -731,8 +731,8 @@ class QueryBuilder
      */
     public function bindParam($value, &$params)
     {
-        $phName = self::PARAM_PREFIX . count($params);
-        $params[$phName] = $value;
+        $phName = '?';
+        $params[] = $value;
 
         return $phName;
     }

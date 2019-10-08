@@ -29,7 +29,7 @@ class Exception extends \rabbit\core\Exception
      * @param int $code PDO error code
      * @param \Exception $previous The previous exception used for the exception chaining.
      */
-    public function __construct($message, $errorInfo = [], $code = 0, \Exception $previous = null)
+    public function __construct($message, $errorInfo = [], $code = 0, \Throwable $previous = null)
     {
         $this->errorInfo = $errorInfo;
         parent::__construct($message, $code, $previous);

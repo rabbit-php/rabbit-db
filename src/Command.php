@@ -87,20 +87,20 @@ class Command extends BaseObject
     /**
      * @var array pending parameters to be bound to the current PDO statement.
      */
-    private $_pendingParams = [];
+    protected $_pendingParams = [];
     /**
      * @var string the SQL statement that this command represents
      */
-    private $_sql;
+    protected $_sql;
     /**
      * @var string name of the table, which schema, should be refreshed after command execution.
      */
-    private $_refreshTableName;
+    protected $_refreshTableName;
     /**
      * @var string|false|null the isolation level to use for this transaction.
      * See [[Transaction::begin()]] for details.
      */
-    private $_isolationLevel = false;
+    protected $_isolationLevel = false;
     /** @var CacheInterface|null */
     protected $cache = null;
 
@@ -215,7 +215,7 @@ class Command extends BaseObject
     protected function bindPendingParams()
     {
         foreach ($this->_pendingParams as $name => $value) {
-            $this->pdoStatement->bindValue($name, $value[0], $value[1]);
+            $this->pdoStatement->bindValue(is_int($name) ? $name + 1 : $name, $value[0], $value[1]);
         }
     }
 
@@ -343,7 +343,7 @@ class Command extends BaseObject
      * @return string
      * @throws \Exception
      */
-    private function logQuery(): string
+    protected function logQuery(): string
     {
         if ($this->db->enableLogging) {
             $rawSql = $this->getRawSql();
@@ -379,7 +379,7 @@ class Command extends BaseObject
                 $params[$name] = $value;
             }
         }
-        if (!isset($params[1])) {
+        if (!isset($params[0])) {
             return strtr($this->_sql, $params);
         }
         $sql = '';

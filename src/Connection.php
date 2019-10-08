@@ -778,7 +778,7 @@ class Connection extends BaseObject implements ConnectionInterface
             App::info($token, "db");
             $this->pdo = $this->createPdoInstance();
             $this->initConnection();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $e = $this->getSchema()->convertException($e, $token);
             if ($this->retryHandler === null || !$this->retryHandler->handle($this, $e, ++$attempt)) {
                 throw $e;

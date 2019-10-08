@@ -328,7 +328,7 @@ class Command extends BaseObject
                 $result = call_user_func_array([$this->pdoStatement, $method], (array)$fetchMode);
                 $this->pdoStatement->closeCursor();
             }
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             throw $e;
         }
 

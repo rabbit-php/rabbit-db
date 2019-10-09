@@ -54,10 +54,10 @@ class DataReader implements \Iterator, \Countable
     /**
      * @var \PDOStatement the PDOStatement associated with the command
      */
-    private $_statement;
-    private $_closed = false;
-    private $_row;
-    private $_index = -1;
+    protected $_statement;
+    protected $_closed = false;
+    protected $_row;
+    protected $_index = -1;
 
 
     /**

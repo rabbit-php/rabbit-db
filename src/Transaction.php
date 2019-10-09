@@ -73,7 +73,7 @@ class Transaction
     /**
      * @var int the nesting level of the transaction. 0 means the outermost level.
      */
-    private $_level = 0;
+    protected $_level = 0;
 
 
     public function __construct(Connection $db)

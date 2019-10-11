@@ -551,7 +551,7 @@ class Connection extends BaseObject implements ConnectionInterface
             }
         }
 
-        if ($duration >= 0) {
+        if ($duration === 0 || $duration > 0) {
             if ($cache === null) {
                 if (is_string($this->queryCache)) {
                     $cache = getDI($this->queryCache, false);

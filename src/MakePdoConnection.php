@@ -39,7 +39,8 @@ class MakePdoConnection
                             'class' => \rabbit\db\pool\PdoPoolConfig::class,
                             'minActive' => intval($pool['min'] / swoole_cpu_num()),
                             'maxActive' => intval($pool['max'] / swoole_cpu_num()),
-                            'maxWait' => $pool['wait']
+                            'maxWait' => $pool['wait'],
+                            'maxReconnect' => $pool['retry']
                         ], [], false)
                     ], [], false)
                 ]

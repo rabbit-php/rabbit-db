@@ -135,8 +135,10 @@ class InConditionBuilder implements ExpressionBuilderInterface
 
         $sqlColumns = [];
         foreach ($columns as $i => $column) {
-            $sqlColumns[] = strpos($column,
-                '(') === false ? $this->queryBuilder->db->quoteColumnName($column) : $column;
+            $sqlColumns[] = strpos(
+                $column,
+                '('
+            ) === false ? $this->queryBuilder->db->quoteColumnName($column) : $column;
         }
 
         return '(' . implode(', ', $sqlColumns) . ") $operator (" . implode(', ', $vss) . ')';

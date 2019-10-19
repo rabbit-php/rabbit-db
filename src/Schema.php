@@ -472,8 +472,10 @@ abstract class Schema extends BaseObject
     {
         $cache = null;
         if ($this->db->enableSchemaCache && !in_array($name, $this->db->schemaCacheExclude, true)) {
-            $schemaCache = is_string($this->db->schemaCache) ? getDI($this->db->schemaCache,
-                false) : $this->db->schemaCache;
+            $schemaCache = is_string($this->db->schemaCache) ? getDI(
+                $this->db->schemaCache,
+                false
+            ) : $this->db->schemaCache;
             if ($schemaCache instanceof CacheInterface) {
                 $cache = $schemaCache;
             }
@@ -664,8 +666,10 @@ abstract class Schema extends BaseObject
         } else {
             [$startingCharacter, $endingCharacter] = $this->columnQuoteCharacter;
         }
-        return $name === '*' || strpos($name,
-            $startingCharacter) !== false ? $name : $startingCharacter . $name . $endingCharacter;
+        return $name === '*' || strpos(
+            $name,
+            $startingCharacter
+        ) !== false ? $name : $startingCharacter . $name . $endingCharacter;
     }
 
     /**

@@ -8,7 +8,6 @@
 
 namespace rabbit\db;
 
-
 use rabbit\core\Context;
 
 /**

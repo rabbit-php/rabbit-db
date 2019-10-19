@@ -7,7 +7,6 @@
 
 namespace rabbit\db\conditions;
 
-
 /**
  * Condition that inverts passed [[condition]].
  *

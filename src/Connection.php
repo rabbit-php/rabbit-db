@@ -715,8 +715,10 @@ class Connection extends BaseObject implements ConnectionInterface
             $sharedConfig['class'] = get_class($this);
         }
 
-        $cache = is_string($this->serverStatusCache) ? getDI($this->serverStatusCache,
-            false) : $this->serverStatusCache;
+        $cache = is_string($this->serverStatusCache) ? getDI(
+            $this->serverStatusCache,
+            false
+        ) : $this->serverStatusCache;
 
         foreach ($pool as $config) {
             $config = array_merge($sharedConfig, $config);
@@ -819,8 +821,12 @@ class Connection extends BaseObject implements ConnectionInterface
 
         $parsed = parse_url($this->dsn);
         isset($parsed['query']) ? parse_str($parsed['query'], $parsed['query']) : $parsed['query'] = [];
-        [$driver, $host, $port, $this->username, $this->password, $query] = ArrayHelper::getValueByArray($parsed,
-            ['scheme', 'host', 'port', 'user', 'pass', 'query'], null, ['mysql', 'localhost', '3306', '', '', []]);
+        [$driver, $host, $port, $this->username, $this->password, $query] = ArrayHelper::getValueByArray(
+            $parsed,
+            ['scheme', 'host', 'port', 'user', 'pass', 'query'],
+            null,
+            ['mysql', 'localhost', '3306', '', '', []]
+        );
         $parts = [];
         foreach ($query as $key => $value) {
             $parts[] = "$key=$value";

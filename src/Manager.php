@@ -12,7 +12,6 @@ use rabbit\contract\ReleaseInterface;
 use rabbit\core\ObjectFactory;
 use rabbit\db\pool\PdoPool;
 use rabbit\helper\ArrayHelper;
-use rabbit\helper\CoroHelper;
 
 /**
  * Class Manager
@@ -74,7 +73,7 @@ class Manager implements ReleaseInterface
             $pool = $this->connections[$name];
             $connection = $pool->getConnection();
             DbContext::set($name, $connection);
-            if (($cid = CoroHelper::getId()) !== -1 && !array_key_exists($cid, $this->deferList)) {
+            if (($cid = \Co::getCid()) !== -1 && !array_key_exists($cid, $this->deferList)) {
                 defer(function () use ($cid) {
                     DbContext::release();
                     $this->deferList = array_values(array_diff($this->deferList, [$cid]));
@@ -111,9 +110,14 @@ class Manager implements ReleaseInterface
                         !class_exists($dbconfig['class']) || !$dbconfig['class'] instanceof ConnectionInterface) {
                         throw new Exception("The DB class and dsn must be set current class in $fileName");
                     }
-                    [$min, $max, $wait] = ArrayHelper::getValueByArray(ArrayHelper::getValue($dbconfig, 'pool', []),
-                        ['min', 'max', 'wait'], null,
-                        $this->min, $this->max, $this->wait);
+                    [$min, $max, $wait] = ArrayHelper::getValueByArray(
+                        ArrayHelper::getValue($dbconfig, 'pool', []),
+                        ['min', 'max', 'wait'],
+                        null,
+                        $this->min,
+                        $this->max,
+                        $this->wait
+                    );
                     ArrayHelper::removeKeys($dbconfig, 'class', 'dsn', 'pool');
                     $this->connections[$name] = ObjectFactory::createObject([
                         'class' => $dbconfig['class'],

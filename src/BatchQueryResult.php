@@ -7,7 +7,6 @@
 
 namespace rabbit\db;
 
-
 use rabbit\core\BaseObject;
 
 /**

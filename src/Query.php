@@ -1324,8 +1324,10 @@ PATTERN;
             if (in_array($method, ['select', 'where'])) {
                 switch ($method) {
                     case 'select':
-                        $this->$method = array_merge($this->$method ?? [],
-                            [sprintf("%s(%s)", $function, implode(',', $arguments))]);
+                        $this->$method = array_merge(
+                            $this->$method ?? [],
+                            [sprintf("%s(%s)", $function, implode(',', $arguments))]
+                        );
                         break;
                     case 'where':
                         $this->{'and' . $method}(sprintf("%s(%s)", $function, implode(',', $arguments)));

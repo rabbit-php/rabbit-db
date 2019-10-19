@@ -200,8 +200,11 @@ class Command extends BaseObject
                 $message = $e->getMessage() . "\nFailed to prepare SQL: $sql";
                 $errorInfo = $e instanceof \PDOException ? $e->errorInfo : null;
                 $e = new Exception($message, $errorInfo, (int)$e->getCode(), $e);
-                if (($retryHandler = $this->db->getRetryHandler()) === null || !$retryHandler->handle($this->db, $e,
-                        $attempt)) {
+                if (($retryHandler = $this->db->getRetryHandler()) === null || !$retryHandler->handle(
+                    $this->db,
+                    $e,
+                    $attempt
+                )) {
                     throw $e;
                 }
             }
@@ -423,8 +426,11 @@ class Command extends BaseObject
                 $rawSql = $rawSql ?: $this->getRawSql();
                 $e = $this->db->getSchema()->convertException($e, $rawSql);
                 $this->pdoStatement = null;
-                if (($retryHandler = $this->db->getRetryHandler()) === null || !$retryHandler->handle($this->db, $e,
-                        $attempt)) {
+                if (($retryHandler = $this->db->getRetryHandler()) === null || !$retryHandler->handle(
+                    $this->db,
+                    $e,
+                    $attempt
+                )) {
                     throw $e;
                 }
             }
@@ -915,8 +921,15 @@ class Command extends BaseObject
      */
     public function addForeignKey($name, $table, $columns, $refTable, $refColumns, $delete = null, $update = null)
     {
-        $sql = $this->db->getQueryBuilder()->addForeignKey($name, $table, $columns, $refTable, $refColumns, $delete,
-            $update);
+        $sql = $this->db->getQueryBuilder()->addForeignKey(
+            $name,
+            $table,
+            $columns,
+            $refTable,
+            $refColumns,
+            $delete,
+            $update
+        );
 
         return $this->setSql($sql)->requireTableSchemaRefresh($table);
     }

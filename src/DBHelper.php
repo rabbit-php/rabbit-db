@@ -79,5 +79,4 @@ class DBHelper
         unset($queryRes);
         return ['total' => $total, 'data' => $rows];
     }
-
 }

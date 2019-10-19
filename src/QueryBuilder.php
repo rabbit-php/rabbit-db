@@ -887,7 +887,6 @@ class QueryBuilder
         $columnSchemas = $tableSchema !== null ? $tableSchema->columns : [];
         $sets = [];
         foreach ($columns as $name => $value) {
-
             $value = isset($columnSchemas[$name]) ? $columnSchemas[$name]->dbTypecast($value) : $value;
             if ($value instanceof ExpressionInterface) {
                 $placeholder = $this->buildExpression($value, $params);
@@ -1550,7 +1549,8 @@ class QueryBuilder
         }, $constraints), $constraints);
         $columnNames = [];
         // Remove all constraints which do not cover the specified column list
-        $constraints = array_values(array_filter($constraints,
+        $constraints = array_values(array_filter(
+            $constraints,
             function (Constraint $constraint) use ($schema, $columns, &$columnNames) {
                 $constraintColumnNames = array_map([$schema, 'quoteColumnName'], $constraint->columnNames);
                 $result = !array_diff($constraintColumnNames, $columns);
@@ -1558,7 +1558,8 @@ class QueryBuilder
                     $columnNames = array_merge($columnNames, $constraintColumnNames);
                 }
                 return $result;
-            }));
+            }
+        ));
         return array_unique($columnNames);
     }
 }

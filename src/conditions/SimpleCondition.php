@@ -7,7 +7,6 @@
 
 namespace rabbit\db\conditions;
 
-
 /**
  * Class SimpleCondition represents a simple condition like `"column" operator value`.
  *

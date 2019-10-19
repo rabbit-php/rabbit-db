@@ -296,7 +296,7 @@ class Command extends BaseObject
      */
     protected function queryInternal($method, $fetchMode = null)
     {
-        $rawSql = $this->logQuery();
+        $rawSql = $this->getRawSql();
 
         if ($method !== '') {
             $info = $this->db->getQueryCacheInfo($this->queryCacheDuration, $this->cache);
@@ -313,7 +313,7 @@ class Command extends BaseObject
                 ];
                 $result = unserialize($cache->get($cacheKey));
                 if (is_array($result) && isset($result[0])) {
-                    App::debug('Query result served from cache', 'db');
+                    $this->logQuery($rawSql . '; [Query result served from cache]');
                     return $result[0];
                 }
             }
@@ -346,14 +346,11 @@ class Command extends BaseObject
      * @return string
      * @throws \Exception
      */
-    protected function logQuery(): string
+    protected function logQuery(string $rawSql, string $module = 'db'): void
     {
         if ($this->db->enableLogging) {
-            $rawSql = $this->getRawSql();
-            App::info($rawSql, "db");
+            App::info($rawSql, $module);
         }
-
-        return $rawSql ?? $this->getRawSql();
     }
 
     /**
@@ -1212,8 +1209,8 @@ class Command extends BaseObject
     public function execute()
     {
         $sql = $this->getSql();
-        $rawSql = $this->logQuery();
-
+        $rawSql = $this->getRawSql();
+        $this->logQuery($rawSql);
         if ($sql == '') {
             return 0;
         }

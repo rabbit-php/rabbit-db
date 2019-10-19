@@ -111,7 +111,7 @@ class Command extends BaseObject
      * Use 0 to indicate that the cached data will never expire.
      * @return $this the command object itself
      */
-    public function cache($duration = null, ?CacheInterface $cache = null)
+    public function cache(?int $duration = null, ?CacheInterface $cache = null)
     {
         $this->queryCacheDuration = $duration === null ? $this->db->queryCacheDuration : $duration;
         $this->cache = $cache;

@@ -38,8 +38,14 @@ class DBHelper
     public static function Search(Query $query, array $filter = null): Query
     {
         if (!empty($filter)) {
-            foreach ($filter as $k => $v) {
-                $query->$k($v);
+            foreach ($filter as $method => $value) {
+                if (is_int($method)) {
+                    foreach ($method as $m => $item) {
+                        $query->$m($item);
+                    }
+                } else {
+                    $query->$method($value);
+                }
             }
         }
         return $query;

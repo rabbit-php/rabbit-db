@@ -33,11 +33,6 @@ use rabbit\helper\StringHelper;
 class QueryBuilder
 {
     /**
-     * The prefix for automatically generated query binding parameters.
-     */
-    const PARAM_PREFIX = ':qp';
-
-    /**
      * @var Connection the database connection.
      */
     public $db;
@@ -721,7 +716,6 @@ class QueryBuilder
     }
 
     /**
-     * Helper method to add $value to $params array using [[PARAM_PREFIX]].
      *
      * @param string|null $value
      * @param array $params passed by reference
@@ -732,7 +726,7 @@ class QueryBuilder
     public function bindParam($value, &$params)
     {
         $phName = '?';
-        $params[] = $value;
+        $params[count($params)] = $value;
 
         return $phName;
     }

@@ -776,16 +776,9 @@ class Connection extends BaseObject implements ConnectionInterface
         }
 
         $token = 'Opening DB connection: ' . $this->shortDsn;
-        try {
-            App::info($token, "db");
-            $this->pdo = $this->createPdoInstance();
-            $this->initConnection();
-        } catch (\Throwable $e) {
-            $e = $this->getSchema()->convertException($e, $token);
-            if ($this->retryHandler === null || !$this->retryHandler->handle($this, $e, ++$attempt)) {
-                throw $e;
-            }
-        }
+        App::info($token, "db");
+        $this->pdo = $this->createPdoInstance();
+        $this->initConnection();
     }
 
     /**

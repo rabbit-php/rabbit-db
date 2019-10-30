@@ -319,6 +319,8 @@ class Command extends BaseObject
             }
         }
 
+        $this->logQuery($rawSql);
+
         try {
             $this->internalExecute($rawSql);
 

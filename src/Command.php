@@ -200,13 +200,7 @@ class Command extends BaseObject
                 $message = $e->getMessage() . "\nFailed to prepare SQL: $sql";
                 $errorInfo = $e instanceof \PDOException ? $e->errorInfo : null;
                 $e = new Exception($message, $errorInfo, (int)$e->getCode(), $e);
-                if (($retryHandler = $this->db->getRetryHandler()) === null || !$retryHandler->handle(
-                    $this->db,
-                    $e,
-                    $attempt
-                )) {
-                    throw $e;
-                }
+                throw $e;
             }
         }
     }

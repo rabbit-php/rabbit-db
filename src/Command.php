@@ -184,24 +184,19 @@ class Command extends BaseObject
             $forRead = false;
         }
 
-        $attempt = 0;
-        while (true) {
-            ++$attempt;
-            if ($forRead || $forRead === null && $this->db->getSchema()->isReadQuery($sql)) {
-                $pdo = $this->db->getSlavePdo();
-            } else {
-                $pdo = $this->db->getMasterPdo();
-            }
-            try {
-                $this->pdoStatement = $pdo->prepare($sql);
-                $this->bindPendingParams();
-                break;
-            } catch (\Exception $e) {
-                $message = $e->getMessage() . "\nFailed to prepare SQL: $sql";
-                $errorInfo = $e instanceof \PDOException ? $e->errorInfo : null;
-                $e = new Exception($message, $errorInfo, (int)$e->getCode(), $e);
-                throw $e;
-            }
+        if ($forRead || $forRead === null && $this->db->getSchema()->isReadQuery($sql)) {
+            $pdo = $this->db->getSlavePdo();
+        } else {
+            $pdo = $this->db->getMasterPdo();
+        }
+        try {
+            $this->pdoStatement = $pdo->prepare($sql);
+            $this->bindPendingParams();
+        } catch (\Exception $e) {
+            $message = $e->getMessage() . "\nFailed to prepare SQL: $sql";
+            $errorInfo = $e instanceof \PDOException ? $e->errorInfo : null;
+            $e = new Exception($message, $errorInfo, (int)$e->getCode(), $e);
+            throw $e;
         }
     }
 
@@ -419,13 +414,10 @@ class Command extends BaseObject
                 $rawSql = $rawSql ?: $this->getRawSql();
                 $e = $this->db->getSchema()->convertException($e, $rawSql);
                 $this->pdoStatement = null;
-                if (($retryHandler = $this->db->getRetryHandler()) === null || !$retryHandler->handle(
-                    $this->db,
-                    $e,
-                    $attempt
-                )) {
+                if (($retryHandler = $this->db->getRetryHandler()) === null || !$retryHandler->handle($e, $attempt)) {
                     throw $e;
                 }
+                $this->db->reconnect($attempt);
             }
         }
     }

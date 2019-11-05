@@ -26,5 +26,5 @@ abstract class RetryHandlerInterface
      * @param int $count
      * @return bool
      */
-    abstract public function handle(ConnectionInterface $db, \Throwable $e, int $count): bool;
+    abstract public function handle(\Throwable $e, int $count): bool;
 }

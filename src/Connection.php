@@ -400,7 +400,8 @@ class Connection extends BaseObject implements ConnectionInterface
      * @see enableProfiling
      */
     public $enableLogging = true;
-
+    /** @var int */
+    public $maxLog = 1024;
     /**
      * @var Transaction the currently active transaction
      */

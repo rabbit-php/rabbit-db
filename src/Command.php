@@ -339,7 +339,7 @@ class Command extends BaseObject
      */
     protected function logQuery(string $rawSql, string $module = 'db'): void
     {
-        if ($this->db->enableLogging) {
+        if ($this->db->enableLogging && ($this->db->maxLog === 0 || ($this->db->maxLog > 0 && strlen($rawSql) < $this->db->maxLog))) {
             App::info($rawSql, $module);
         }
     }

@@ -48,6 +48,14 @@ class BatchInsert
     }
 
     /**
+     * @return array
+     */
+    public function getColumns(): array
+    {
+        return $this->columns;
+    }
+
+    /**
      * @param array $columns
      * @return bool
      */

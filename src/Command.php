@@ -192,8 +192,8 @@ class Command extends BaseObject
         try {
             $this->pdoStatement = $pdo->prepare($sql);
             $this->bindPendingParams();
-        } catch (\Exception $e) {
-            $message = $e->getMessage() . "\nFailed to prepare SQL: $sql";
+        } catch (\Throwable $e) {
+            $message = $e->getMessage() . " Failed to prepare SQL: $sql";
             $errorInfo = $e instanceof \PDOException ? $e->errorInfo : null;
             $e = new Exception($message, $errorInfo, (int)$e->getCode(), $e);
             throw $e;

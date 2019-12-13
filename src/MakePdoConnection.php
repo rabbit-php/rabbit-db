@@ -4,6 +4,7 @@
 namespace rabbit\db;
 
 use rabbit\core\ObjectFactory;
+use rabbit\db\mysql\RetryHandler;
 
 /**
  * Class MakePdoConnection
@@ -24,12 +25,14 @@ class MakePdoConnection
         string $name,
         string $dsn,
         array $pool,
+        array $retryHandler = [],
         array $config = null
-    ): void {
+    ): void
+    {
         /** @var Manager $manager */
         $manager = getDI('db');
         if (!$manager->hasConnection($name)) {
-            $manager->addConnection([
+            $conn = [
                 $name => [
                     'class' => $class,
                     'dsn' => $dsn,
@@ -44,7 +47,13 @@ class MakePdoConnection
                         ], [], false)
                     ], [], false)
                 ]
-            ]);
+            ];
+            if (!empty($retryHandler)) {
+                $conn[$name]['retryHandler'] = ObjectFactory::createObject($retryHandler);
+            } else {
+                $conn[$name]['retryHandler'] = getDI(RetryHandler::class);
+            }
+            $manager->addConnection($conn);
         }
     }
 }

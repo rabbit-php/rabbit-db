@@ -299,21 +299,7 @@ class Connection extends BaseObject implements ConnectionInterface
      * @see pdo
      */
     public $pdoClass;
-    /**
-     * @var array mapping between PDO driver names and [[Command]] classes.
-     * The keys of the array are PDO driver names while the values are either the corresponding
-     * command class names or configurations. Please refer to [[Yii::createObject()]] for
-     * details on how to specify a configuration.
-     *
-     * This property is mainly used by [[createCommand()]] to create new database [[Command]] objects.
-     * You normally do not need to set this property unless you want to use your own
-     * [[Command]] class or support DBMS that is not supported by Yii.
-     * @since 2.0.14
-     */
-    public $commandMap = [
-        'mysqli' => Command::class, // MySQL
-        'mysql' => Command::class, // MySQL
-    ];
+
     /**
      * @var bool whether to enable [savepoint](http://en.wikipedia.org/wiki/Savepoint).
      * Note that if the underlying DBMS does not support savepoint, setting this property to be true will have no effect.
@@ -428,11 +414,18 @@ class Connection extends BaseObject implements ConnectionInterface
     protected $_queryCacheInfo = [];
     /** @var RetryHandlerInterface|null */
     protected $retryHandler = null;
+    /** @var bool */
+    protected $hasOrm = false;
+    /** @var string */
+    protected $commandClass = Command::class;
 
     public function __construct(string $dsn)
     {
         $this->dsn = $dsn;
         $this->makeShortDsn();
+        if (extension_loaded('swoole_orm')) {
+            $this->hasOrm = true;
+        }
     }
 
     /**
@@ -604,16 +597,40 @@ class Connection extends BaseObject implements ConnectionInterface
      */
     public function createCommand($sql = null, $params = [])
     {
-        $driver = $this->getDriverName();
-        $config = ['class' => Command::class, 'retryHandler' => $this->retryHandler];
-        if (isset($this->commandMap[$driver])) {
-            $config = !is_array($this->commandMap[$driver]) ? ['class' => $this->commandMap[$driver]] : $this->commandMap[$driver];
-        }
+        $config = ['class' => $this->commandClass, 'retryHandler' => $this->retryHandler];
         $config['db'] = $this;
         $config['sql'] = $sql;
         /** @var Command $command */
         $command = ObjectFactory::createObject($config, [], false);
         return $command->bindValues($params);
+    }
+
+    /**
+     * @param array $array
+     * @return Command
+     * @throws \DI\DependencyException
+     * @throws \DI\NotFoundException
+     */
+    public function createCommandExt(array $array): Command
+    {
+        if (!$this->hasOrm) {
+            throw new Exception("You must install swoole_orm extension");
+        }
+        if (count($array) !== 2) {
+            throw new Exception("The argument must be set two item");
+        }
+        [$method, $data] = $array;
+        if (!is_array($data)) {
+            throw new Exception("The second argument must an array");
+        }
+        $array = \swoole_orm::$method(...$data);
+        $driver = $this->getDriverName();
+        $config = ['class' => $this->commandClass, 'retryHandler' => $this->retryHandler];
+        $config['db'] = $this;
+        $config['sql'] = $array['sql'];
+        /** @var Command $command */
+        $command = ObjectFactory::createObject($config, [], false);
+        return $command->bindValues($array['bind_value']);
     }
 
     /**

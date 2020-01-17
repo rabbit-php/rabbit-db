@@ -327,7 +327,7 @@ class Command extends BaseObject
         }
 
         if (isset($cache, $cacheKey, $info)) {
-            $cache->set($cacheKey, serialize([$result]), $info[1]) && App::debug('Saved query result in cache', 'db');
+            $cache->set($cacheKey, serialize([$result]), $info[1]) && $this->logQuery('Saved query result in cache');
         }
 
         return $result;

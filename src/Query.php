@@ -50,6 +50,7 @@ use rabbit\helper\ArrayHelper;
 class Query extends BaseObject implements QueryInterface, ExpressionInterface
 {
     use QueryTrait;
+    use QueryTraitExt;
 
     /**
      * @var array the columns being selected. For example, `['id', 'name']`.

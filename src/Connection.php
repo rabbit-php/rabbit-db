@@ -210,7 +210,7 @@ class Connection extends BaseObject implements ConnectionInterface
      * @see schemaCacheExclude
      * @see schemaCache
      */
-    public $enableSchemaCache = false;
+    public $enableSchemaCache = true;
     /**
      * @var int number of seconds that table metadata can remain valid in cache.
      * Use 0 to indicate that the cached data will never expire.

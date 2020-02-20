@@ -9,7 +9,7 @@ use rabbit\helper\StringHelper;
  * Class BatchInsert
  * @package rabbit\db
  */
-class BatchInsert
+class BatchInsert implements BatchInterface
 {
     /** @var string */
     protected $table;

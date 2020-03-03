@@ -418,6 +418,8 @@ class Connection extends BaseObject implements ConnectionInterface
     protected $hasOrm = false;
     /** @var string */
     protected $commandClass = Command::class;
+    /** @var string */
+    protected $poolName = 'db';
 
     public function __construct(string $dsn)
     {

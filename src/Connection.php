@@ -419,7 +419,7 @@ class Connection extends BaseObject implements ConnectionInterface
     /** @var string */
     protected $commandClass = Command::class;
     /** @var string */
-    protected $poolName = 'db';
+    public $poolName = 'db';
 
     public function __construct(string $dsn)
     {
@@ -1173,4 +1173,15 @@ class Connection extends BaseObject implements ConnectionInterface
             . '?'
             . $parsed['query'];
     }
+
+    /**
+     * @param bool $release
+     * @throws Exception
+     */
+    public function release($release = false): void
+    {
+        throw new Exception("This driver not need release");
+    }
+
+
 }

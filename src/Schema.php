@@ -9,6 +9,7 @@ namespace rabbit\db;
 
 use Psr\SimpleCache\CacheInterface;
 use rabbit\core\BaseObject;
+use rabbit\core\Context;
 use rabbit\core\ObjectFactory;
 use rabbit\exception\InvalidCallException;
 use rabbit\exception\NotSupportedException;
@@ -556,7 +557,7 @@ abstract class Schema extends BaseObject
     public function getLastInsertID($sequenceName = '')
     {
         if ($this->db->isActive) {
-            return $this->db->pdo->lastInsertId($sequenceName === '' ? null : $this->quoteTableName($sequenceName));
+            return Context::get($this->db->poolName . '.id');
         }
 
         throw new InvalidCallException('DB Connection is not active.');

@@ -75,6 +75,7 @@ class BatchQueryResult extends BaseObject implements \Iterator
     {
         // make sure cursor is closed
         $this->reset();
+        $this->db->release();
     }
 
     /**

@@ -80,12 +80,9 @@ class DbContext extends Context
     {
         $context = \Co::getContext();
         if (isset($context['database'])) {
-            /**
-             * @var  $name
-             * @var \rabbit\db\mysql\Connection $connection
-             */
-            foreach ($context['database'] as $name => $connection) {
-                $connection->release(true, $name);
+            /** @var ConnectionInterface $connection */
+            foreach ($context['database'] as $connection) {
+                $connection->release(true);
             }
         }
     }

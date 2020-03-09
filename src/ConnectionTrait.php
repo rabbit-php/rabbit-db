@@ -74,7 +74,7 @@ trait ConnectionTrait
      */
     public function getPool(): PoolInterface
     {
-        return $this->pool;
+        return PoolManager::getPool($this->poolKey);
     }
 
     /**

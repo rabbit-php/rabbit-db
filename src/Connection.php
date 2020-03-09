@@ -599,6 +599,13 @@ class Connection extends BaseObject implements ConnectionInterface
      */
     public function createCommand($sql = null, $params = [])
     {
+        $stack = \Co::getBackTrace(\Co::getCid(), DEBUG_BACKTRACE_IGNORE_ARGS, 3);
+        $stack = end($stack);
+        if (strpos($stack['class'], 'Schema') !== false) {
+            $this->setAutoRelease(false);
+        } else {
+            $this->setAutoRelease(true);
+        }
         $config = ['class' => $this->commandClass, 'retryHandler' => $this->retryHandler];
         $config['db'] = $this;
         $config['sql'] = $sql;

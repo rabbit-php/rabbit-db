@@ -1209,7 +1209,7 @@ class Command extends BaseObject
             $n = $this->pdoStatement->rowCount();
 
             $this->refreshTableSchema();
-
+            $this->db->release();
             return $n;
         } catch (Exception $e) {
             throw $e;

@@ -147,7 +147,7 @@ class Transaction
         if ($this->_level === 0) {
             App::debug('Commit transaction', "db");
             $this->db->pdo->commit();
-            $this->db->release();
+            $this->db->release(true);
             return;
         }
 
@@ -185,7 +185,7 @@ class Transaction
         if ($this->_level === 0) {
             App::debug('Roll back transaction', "db");
             $this->db->pdo->rollBack();
-            $this->db->release();
+            $this->db->release(true);
             return;
         }
 

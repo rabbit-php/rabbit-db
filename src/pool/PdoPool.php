@@ -27,7 +27,6 @@ class PdoPool extends ConnectionPool
     {
         $config = $this->getPoolConfig()->getConfig();
         $config['poolKey'] = $this->getPoolConfig()->getName();
-        $config['init()'] = [];
         return ObjectFactory::createObject($config, [], false);
     }
 }

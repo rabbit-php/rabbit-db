@@ -74,7 +74,7 @@ class Manager implements ReleaseInterface
             $pool = $this->connections[$name];
             $connection = $pool->getConnection();
             DbContext::set($name, $connection);
-            if (($cid = \Co::getCid()) !== -1 && !array_key_exists($cid, $this->deferList)) {
+            if (($cid = \Co::getCid()) !== -1 && !in_array($cid, $this->deferList)) {
                 defer(function () use ($cid) {
                     DbContext::release();
                     $this->deferList = array_values(array_diff($this->deferList, [$cid]));

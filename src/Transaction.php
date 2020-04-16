@@ -8,6 +8,7 @@
 namespace rabbit\db;
 
 use rabbit\App;
+use rabbit\core\BaseObject;
 use rabbit\exception\NotSupportedException;
 
 /**
@@ -42,7 +43,7 @@ use rabbit\exception\NotSupportedException;
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @since 2.0
  */
-class Transaction
+class Transaction extends BaseObject
 {
     /**
      * A constant representing the transaction isolation level `READ UNCOMMITTED`.

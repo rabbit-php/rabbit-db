@@ -601,7 +601,7 @@ class Connection extends BaseObject implements ConnectionInterface
     {
         $stack = \Co::getBackTrace(\Co::getCid(), DEBUG_BACKTRACE_IGNORE_ARGS, 3);
         $stack = end($stack);
-        if (strpos($stack['class'], 'Schema') !== false) {
+        if (strpos($stack['class'], 'Schema') !== false && $stack['function'] !== 'insert') {
             $this->setAutoRelease(false);
         } else {
             $this->setAutoRelease(true);

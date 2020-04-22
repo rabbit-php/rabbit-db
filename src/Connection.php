@@ -632,7 +632,9 @@ class Connection extends BaseObject implements ConnectionInterface
         if (!is_array($data)) {
             throw new Exception("The second argument must an array");
         }
-        $array = \swoole_orm::$method(...$data);
+        if (false === $array = \swoole_orm::$method(...$data)) {
+            throw new Exception("Can not build sql");
+        }
         $driver = $this->getDriverName();
         $config = ['class' => $this->commandClass, 'retryHandler' => $this->retryHandler];
         $config['db'] = $this;

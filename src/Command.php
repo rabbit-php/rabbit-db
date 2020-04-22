@@ -433,7 +433,11 @@ class Command extends BaseObject
      */
     public function queryAll($fetchMode = null)
     {
-        return $this->queryInternal('fetchAll', $fetchMode);
+        $res = $this->queryInternal('fetchAll', $fetchMode);
+        if ($res === false) {
+            return [];
+        }
+        return $res;
     }
 
     /**

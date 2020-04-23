@@ -292,14 +292,13 @@ class Command extends BaseObject
             if (is_array($info)) {
                 /* @var $cache CacheInterface */
                 $cache = $info[0];
-                $cacheKey = [
+                $cacheKey = array_filter([
                     __CLASS__,
                     $method,
                     $fetchMode,
                     $this->db->dsn,
-                    $this->db->username,
                     $rawSql ?: $rawSql = $this->getRawSql(),
-                ];
+                ]);
                 $result = unserialize($cache->get($cacheKey));
                 if (is_array($result) && isset($result[0])) {
                     $this->logQuery($rawSql . '; [Query result served from cache]');

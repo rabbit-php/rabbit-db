@@ -287,42 +287,6 @@ class Query extends BaseObject implements QueryInterface, ExpressionInterface
     }
 
     /**
-     * Converts the raw query results into the format as specified by this query.
-     * This method is internally used to convert the data fetched from database
-     * into the format as required by this query.
-     * @param array $rows the raw query result from database
-     * @return array the converted query result
-     */
-    public function populate($rows)
-    {
-        if ($this->indexBy === null) {
-            return $rows;
-        }
-        $result = [];
-        foreach ($rows as $row) {
-            $result[ArrayHelper::getValue($row, $this->indexBy)] = $row;
-        }
-
-        return $result;
-    }
-
-    /**
-     * Executes the query and returns a single row of result.
-     * @param Connection $db the database connection used to generate the SQL statement.
-     * If this parameter is not given, the `db` application component will be used.
-     * @return array|bool the first row (in terms of an array) of the query result. False is returned if the query
-     * results in nothing.
-     */
-    public function one($db = null)
-    {
-        if ($this->emulateExecution) {
-            return false;
-        }
-
-        return $this->createCommand($db)->queryOne();
-    }
-
-    /**
      * Returns the query result as a scalar value.
      * The value returned will be the first column in the first row of the query results.
      * @param Connection $db the database connection used to generate the SQL statement.

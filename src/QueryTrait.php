@@ -327,33 +327,6 @@ trait QueryTrait
     }
 
     /**
-     * Normalizes format of ORDER BY data.
-     *
-     * @param array|string|ExpressionInterface $columns the columns value to normalize. See [[orderBy]] and [[addOrderBy]].
-     * @return array
-     */
-    protected function normalizeOrderBy($columns)
-    {
-        if ($columns instanceof ExpressionInterface) {
-            return [$columns];
-        } elseif (is_array($columns)) {
-            return $columns;
-        }
-
-        $columns = preg_split('/\s*,\s*/', trim($columns), -1, PREG_SPLIT_NO_EMPTY);
-        $result = [];
-        foreach ($columns as $column) {
-            if (preg_match('/^(.*?)\s+(asc|desc)$/i', $column, $matches)) {
-                $result[$matches[1]] = strcasecmp($matches[2], 'desc') ? SORT_ASC : SORT_DESC;
-            } else {
-                $result[$column] = SORT_ASC;
-            }
-        }
-
-        return $result;
-    }
-
-    /**
      * Adds additional ORDER BY columns to the query.
      * @param string|array|ExpressionInterface $columns the columns (and the directions) to be ordered by.
      * Columns can be specified in either a string (e.g. "id ASC, name DESC") or an array

@@ -2,7 +2,7 @@
 
 namespace rabbit\db;
 
-use rabbit\activerecord\BaseActiveRecord;
+use Psr\SimpleCache\CacheInterface;
 use rabbit\helper\ArrayHelper;
 
 /**
@@ -60,29 +60,24 @@ class DBHelper
     public static function SearchList(
         Query $query,
         array $filter = [],
-        ConnectionInterface $db = null,
-        int $page = 0
-    ): array {
+        int $page = 0,
+        int $duration = -1,
+        ?CacheInterface $cache = null,
+        ConnectionInterface $db = null
+    ): array
+    {
         $limit = ArrayHelper::remove($filter, 'limit', 20);
         $offset = ArrayHelper::remove($filter, 'offset', ($page ? ($page - 1) : 0) * (int)$limit);
         $count = ArrayHelper::remove($filter, 'count', '1');
-
         $queryRes = $filter === [] || !$filter ? $query : static::Search($query, $filter);
-
-        if ($query instanceof BaseActiveRecord) {
-            $rows = $queryRes->limit($limit ?: null)->offset($offset)->asArray()->all($db);
-        } else {
-            $rows = $queryRes->limit($limit ?: null)->offset($offset)->all($db);
-        }
+        $rows = $queryRes->cache($duration, $cache)->limit($limit ?: null)->offset($offset)->all($db);
         if ($limit) {
             $query->limit = null;
             $query->offset = null;
-            $total = $queryRes->count($count, $db);
+            $total = $queryRes->cache($duration, $cache)->count($count, $db);
         } else {
             $total = count($rows);
         }
-        unset($query);
-        unset($queryRes);
         return ['total' => $total, 'data' => $rows];
     }
 }

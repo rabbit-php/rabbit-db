@@ -26,6 +26,7 @@ class PdoPool extends ConnectionPool
     public function createConnection(): ConnectionInterface
     {
         $config = $this->getPoolConfig()->getConfig();
+        $this->getPoolConfig()->setUri($config['dsn']);
         $config['poolKey'] = $this->getPoolConfig()->getName();
         return ObjectFactory::createObject($config, [], false);
     }

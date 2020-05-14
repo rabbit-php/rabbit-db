@@ -9,7 +9,6 @@
 namespace rabbit\db;
 
 use rabbit\contract\ReleaseInterface;
-use rabbit\core\ObjectFactory;
 use rabbit\db\pool\PdoPool;
 use rabbit\helper\ArrayHelper;
 
@@ -50,6 +49,7 @@ class Manager implements ReleaseInterface
                 $pool = ArrayHelper::remove($config, 'pool');
                 $config['poolName'] = $name;
                 $pool->getPoolConfig()->setConfig($config);
+                $pool->getPoolConfig()->setUri($config['dsn']);
                 $this->connections[$name] = $pool;
             }
         }

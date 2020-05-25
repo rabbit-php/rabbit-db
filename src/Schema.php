@@ -430,11 +430,11 @@ abstract class Schema extends BaseObject
      */
     public function insert($table, $columns)
     {
+        $tableSchema = $this->getTableSchema($table);
         $command = $this->db->createCommand()->insert($table, $columns);
         if (!$command->execute()) {
             return false;
         }
-        $tableSchema = $this->getTableSchema($table);
         $result = [];
         foreach ($tableSchema->primaryKey as $name) {
             if ($tableSchema->columns[$name]->autoIncrement) {

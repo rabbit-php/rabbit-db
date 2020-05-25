@@ -488,6 +488,8 @@ abstract class Schema extends BaseObject
         if ($refresh || !array_key_exists($type, $this->_tableMetadata[$rawName])) {
             $this->_tableMetadata[$rawName][$type] = $this->{'loadTable' . ucfirst($type)}($rawName);
             $this->saveTableMetadataToCache($cache, $rawName);
+        } else {
+            $this->db->release(true);
         }
 
         return $this->_tableMetadata[$rawName][$type];

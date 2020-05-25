@@ -6,11 +6,11 @@
  * Time: 9:25
  */
 
-if (!function_exists('DbRelease')) {
-    function DbRelease()
+if (!function_exists('DBRelease')) {
+    function DBRelease(callable $callback)
     {
-        /** @var \rabbit\db\Manager $db */
-        $db = getDI('db');
-        $db->release();
+        $result = call_user_func($callback);
+        \rabbit\db\DbContext::release();
+        return $result;
     }
 }

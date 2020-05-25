@@ -10,7 +10,6 @@ namespace rabbit\db;
 use Psr\SimpleCache\CacheInterface;
 use rabbit\core\BaseObject;
 use rabbit\core\ObjectFactory;
-use rabbit\helper\ArrayHelper;
 
 /**
  * Query represents a SELECT SQL statement in a way that is independent of DBMS.
@@ -247,7 +246,9 @@ class Query extends BaseObject implements QueryInterface, ExpressionInterface
             return [];
         }
         $rows = $this->createCommand($db)->queryAll();
-        return $this->populate($rows);
+        $rows = $this->populate($rows);
+        DbContext::release();
+        return $rows;
     }
 
     /**

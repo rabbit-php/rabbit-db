@@ -216,7 +216,7 @@ class Connection extends BaseObject implements ConnectionInterface
      * Use 0 to indicate that the cached data will never expire.
      * @see enableSchemaCache
      */
-    public $schemaCacheDuration = 3600;
+    public $schemaCacheDuration;
     /**
      * @var array list of tables whose metadata should NOT be cached. Defaults to empty array.
      * The table names may contain schema prefix, if any. Do not quote the table names.

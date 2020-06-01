@@ -58,7 +58,8 @@ class DataReader implements \Iterator, \Countable
     protected $_closed = false;
     protected $_row;
     protected $_index = -1;
-
+    /** @var Command */
+    protected $command;
 
     /**
      * Constructor.
@@ -67,6 +68,7 @@ class DataReader implements \Iterator, \Countable
      */
     public function __construct(Command $command, $config = [])
     {
+        $this->command = $command;
         $this->_statement = $command->pdoStatement;
         $this->_statement->setFetchMode(\PDO::FETCH_ASSOC);
 

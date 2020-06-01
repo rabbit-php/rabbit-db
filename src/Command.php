@@ -104,6 +104,11 @@ class Command extends BaseObject
     /** @var CacheInterface|null */
     protected $cache = null;
 
+    public function __destruct()
+    {
+        $this->db && $this->db->release();
+    }
+
     /**
      * Enables query cache for this command.
      * @param int $duration the number of seconds that query result of this command can remain valid in the cache.
@@ -320,7 +325,6 @@ class Command extends BaseObject
                 }
                 $result = call_user_func_array([$this->pdoStatement, $method], (array)$fetchMode);
                 $this->pdoStatement->closeCursor();
-                $this->db->release();
             }
         } catch (\Throwable $e) {
             throw $e;
@@ -1212,7 +1216,6 @@ class Command extends BaseObject
             $n = $this->pdoStatement->rowCount();
 
             $this->refreshTableSchema();
-            $this->db->release();
             return $n;
         } catch (Exception $e) {
             throw $e;

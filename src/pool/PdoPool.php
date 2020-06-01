@@ -8,7 +8,7 @@
 
 namespace rabbit\db\pool;
 
-use rabbit\core\ObjectFactory;
+use rabbit\db\DbContext;
 use rabbit\pool\ConnectionInterface;
 use rabbit\pool\ConnectionPool;
 
@@ -27,7 +27,9 @@ class PdoPool extends ConnectionPool
     {
         $poolConfig = $this->getPoolConfig();
         $config = $poolConfig->getConfig();
-        $config['poolKey'] = $poolConfig->getName();
-        return ObjectFactory::createObject($config, [], false);
+        $conn = $config['conn'];
+        $pdo = $conn->createPdoInstance();
+        DbContext::set($conn->poolName, $pdo, $conn->driver);
+        return $conn;
     }
 }

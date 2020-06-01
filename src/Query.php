@@ -247,7 +247,6 @@ class Query extends BaseObject implements QueryInterface, ExpressionInterface
         }
         $rows = $this->createCommand($db)->queryAll();
         $rows = $this->populate($rows);
-        DbContext::release();
         return $rows;
     }
 

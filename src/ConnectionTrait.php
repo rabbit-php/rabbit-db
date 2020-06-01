@@ -8,6 +8,7 @@
 
 namespace rabbit\db;
 
+use rabbit\core\Context;
 use rabbit\exception\NotSupportedException;
 use rabbit\pool\PoolInterface;
 use rabbit\pool\PoolManager;
@@ -62,6 +63,13 @@ trait ConnectionTrait
     }
 
     /**
+     * @throws Exception
+     */
+    public function createConnection(): void
+    {
+    }
+
+    /**
      * @return string
      */
     public function getConnectionId(): string
@@ -98,9 +106,25 @@ trait ConnectionTrait
      */
     public function release($release = false): void
     {
-        if ($this->isAutoRelease() || $release) {
-            PoolManager::getPool($this->poolKey)->release($this);
+        if (null !== $conn = DbContext::get($this->poolName, $this->driver)) {
+            $this->setInsertId($conn);
+            $transaction = $this->getTransaction();
+            if (!empty($transaction) && $transaction->getIsActive()) {//事务里面不释放连接
+                return;
+            }
+            if ($this->isAutoRelease() || $release) {
+                $this->getPool()->release($conn);
+                DbContext::delete($this->poolName, $this->driver);
+            }
         }
+    }
+
+    /**
+     * @param $conn
+     */
+    protected function setInsertId($conn): void
+    {
+        Context::set($this->poolName . '.id', $conn->lastInsertId());
     }
 
     /**

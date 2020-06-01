@@ -8,7 +8,7 @@
 
 namespace rabbit\db;
 
-use rabbit\contract\ReleaseInterface;
+use rabbit\core\ObjectFactory;
 use rabbit\db\pool\PdoPool;
 use rabbit\helper\ArrayHelper;
 
@@ -16,16 +16,16 @@ use rabbit\helper\ArrayHelper;
  * Class Manager
  * @package rabbit\db
  */
-class Manager implements ReleaseInterface
+class Manager
 {
     /** @var PdoPool[] */
-    private $connections = [];
+    protected $connections = [];
     /** @var int */
-    private $min = 48;
+    protected $min = 5;
     /** @var int */
-    private $max = 56;
+    protected $max = 6;
     /** @var int */
-    private $wait = 0;
+    protected $wait = 0;
 
     /**
      * Manager constructor.
@@ -45,10 +45,13 @@ class Manager implements ReleaseInterface
             if (!isset($this->connections[$name])) {
                 /** @var PdoPool $pool */
                 $pool = ArrayHelper::remove($config, 'pool');
+                $poolConfig = $pool->getPoolConfig();
+                $poolConfig->setUri($config['dsn']);
                 $config['poolName'] = $name;
-                $pool->getPoolConfig()->setConfig($config);
-                $pool->getPoolConfig()->setUri($config['dsn']);
-                $this->connections[$name] = $pool;
+                $config['poolKey'] = $poolConfig->getName();
+                $conn = ObjectFactory::createObject($config, [], false);
+                $poolConfig->setConfig(['conn' => $conn]);
+                $this->connections[$name] = $conn;
             }
         }
     }
@@ -59,12 +62,10 @@ class Manager implements ReleaseInterface
      */
     public function getConnection(string $name = 'db'): ?Connection
     {
-        if (($connection = DbContext::get($name)) === null) {
-            $pool = $this->connections[$name];
-            $connection = $pool->getConnection();
-            DbContext::set($name, $connection);
+        if (!isset($this->connections[$name])) {
+            return null;
         }
-        return $connection;
+        return $this->connections[$name];
     }
 
     /**
@@ -74,13 +75,5 @@ class Manager implements ReleaseInterface
     public function hasConnection(string $name): bool
     {
         return isset($this->connections[$name]);
-    }
-
-    /**
-     *
-     */
-    public function release(): void
-    {
-        DbContext::release();
     }
 }

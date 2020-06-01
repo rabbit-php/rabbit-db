@@ -117,7 +117,7 @@ class Transaction extends BaseObject
                 $this->db->getSchema()->setTransactionIsolationLevel($isolationLevel);
             }
             App::debug('Begin transaction' . ($isolationLevel ? ' with isolation level ' . $isolationLevel : ''), "db");
-            $this->db->pdo->beginTransaction();
+            $this->db->getConn()->beginTransaction();
             $this->_level = 1;
 
             return;
@@ -147,7 +147,7 @@ class Transaction extends BaseObject
         $this->_level--;
         if ($this->_level === 0) {
             App::debug('Commit transaction', "db");
-            $this->db->pdo->commit();
+            $this->db->getConn()->commit();
             $this->db->release(true);
             return;
         }
@@ -185,7 +185,7 @@ class Transaction extends BaseObject
         $this->_level--;
         if ($this->_level === 0) {
             App::debug('Roll back transaction', "db");
-            $this->db->pdo->rollBack();
+            $this->db->getConn()->rollBack();
             $this->db->release(true);
             return;
         }

@@ -17,9 +17,6 @@
   "autoload": {
     "psr-4": {
       "rabbit\\db\\": "src/"
-    },
-    "files": [
-      "src/functions.php"
-    ]
+    }
   }
 }

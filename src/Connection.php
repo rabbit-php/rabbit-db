@@ -153,6 +153,8 @@ use rabbit\helper\ArrayHelper;
  */
 class Connection extends BaseObject implements ConnectionInterface
 {
+    use ConnectionTrait;
+
     /**
      * @var string|array the Data Source Name, or DSN, contains the information required to connect to the database.
      * Please refer to the [PHP manual](http://php.net/manual/en/pdo.construct.php) on
@@ -194,14 +196,6 @@ class Connection extends BaseObject implements ConnectionInterface
      * details about available attributes.
      */
     public $attributes;
-    /**
-     * @var PDO the PHP PDO instance associated with this DB connection.
-     * This property is mainly managed by [[open()]] and [[close()]] methods.
-     * When a DB connection is active, this property will represent a PDO instance;
-     * otherwise, it will be null.
-     * @see pdoClass
-     */
-    public $pdo;
     /**
      * @var bool whether to enable schema caching.
      * Note that in order to enable truly schema caching, a valid cache component as specified
@@ -420,7 +414,13 @@ class Connection extends BaseObject implements ConnectionInterface
     protected $commandClass = Command::class;
     /** @var string */
     public $poolName = 'db';
+    /** @var string */
+    public $driver = 'pdo';
 
+    /**
+     * Connection constructor.
+     * @param string $dsn
+     */
     public function __construct(string $dsn)
     {
         $this->dsn = $dsn;
@@ -428,6 +428,16 @@ class Connection extends BaseObject implements ConnectionInterface
         if (extension_loaded('swoole_orm')) {
             $this->hasOrm = true;
         }
+        $this->lastTime = time();
+        $this->connectionId = uniqid();
+    }
+
+    /**
+     * @return mixed|null
+     */
+    public function getConn()
+    {
+        return DbContext::get($this->poolName, $this->driver);
     }
 
     /**
@@ -444,7 +454,7 @@ class Connection extends BaseObject implements ConnectionInterface
      */
     public function getIsActive()
     {
-        return $this->pdo !== null;
+        return DbContext::get($this->poolName, $this->driver) !== null;
     }
 
     /**
@@ -569,18 +579,19 @@ class Connection extends BaseObject implements ConnectionInterface
      */
     public function close()
     {
+        $pdo = DbContext::get($this->poolName, $this->driver);
         if ($this->_master) {
-            if ($this->pdo === $this->_master->pdo) {
-                $this->pdo = null;
+            if ($pdo === $this->_master->getConn()) {
+                DbContext::delete($this->poolName, $this->driver);
             }
 
             $this->_master->close();
             $this->_master = false;
         }
 
-        if ($this->pdo !== null) {
+        if ($pdo !== null) {
             App::warning('Closing DB connection: ' . $this->shortDsn, "db");
-            $this->pdo = null;
+            DbContext::delete($this->poolName, $this->driver);
             $this->_schema = null;
             $this->_transaction = null;
         }
@@ -599,13 +610,6 @@ class Connection extends BaseObject implements ConnectionInterface
      */
     public function createCommand($sql = null, $params = [])
     {
-        $stack = \Co::getBackTrace(\Co::getCid(), DEBUG_BACKTRACE_IGNORE_ARGS, 3);
-        $stack = end($stack);
-        if (isset($stack['class']) && strpos($stack['class'], 'Schema') !== false && $stack['function'] !== 'insert') {
-            $this->setAutoRelease(false);
-        } else {
-            $this->setAutoRelease(true);
-        }
         $config = ['class' => $this->commandClass, 'retryHandler' => $this->retryHandler];
         $config['db'] = $this;
         $config['sql'] = $sql;
@@ -686,7 +690,7 @@ class Connection extends BaseObject implements ConnectionInterface
             return $fallbackToMaster ? $this->getMasterPdo() : null;
         }
 
-        return $db->pdo;
+        return $db->getConn();
     }
 
     /**
@@ -762,7 +766,7 @@ class Connection extends BaseObject implements ConnectionInterface
             }
 
             /* @var $db Connection */
-            $db = ObjectFactory::createObject($config, [], false);
+            $db = ObjectFactory::createObject($config, []);
 
             try {
                 $db->open();
@@ -786,14 +790,14 @@ class Connection extends BaseObject implements ConnectionInterface
      */
     public function open(int $attempt = 0)
     {
-        if ($this->pdo !== null) {
+        if (DbContext::has($this->poolName, $this->driver) === true) {
             return;
         }
 
         if (!empty($this->masters)) {
             $db = $this->getMaster();
             if ($db !== null) {
-                $this->pdo = $db->pdo;
+                DbContext::set($this->poolName, $db, $this->driver);
                 return;
             }
 
@@ -804,10 +808,12 @@ class Connection extends BaseObject implements ConnectionInterface
             throw new \InvalidArgumentException('Connection::dsn cannot be empty.');
         }
 
-        $token = 'Opening DB connection: ' . $this->shortDsn;
-        App::info($token, "db");
-        $this->pdo = $this->createPdoInstance();
-        $this->initConnection();
+        $pdo = $this->getPool()->getConnection();
+        if (!$pdo instanceof ConnectionInterface) {
+            DbContext::set($this->poolName, $pdo, $this->driver);
+        } else {
+            $attempt === 0 && ($token = 'Opening DB connection: ' . $this->shortDsn) && App::info($token, "db");
+        }
     }
 
     /**
@@ -834,7 +840,7 @@ class Connection extends BaseObject implements ConnectionInterface
      * You may override this method if the default PDO needs to be adapted for certain DBMS.
      * @return PDO the pdo instance
      */
-    protected function createPdoInstance()
+    public function createPdoInstance()
     {
         $pdoClass = $this->pdoClass;
         if ($pdoClass === null) {
@@ -854,25 +860,15 @@ class Connection extends BaseObject implements ConnectionInterface
             $parts[] = "$key=$value";
         }
         $dsn = "$driver:host=$host;port=$port;" . implode(';', $parts);
-        return new $pdoClass($dsn, $this->username, $this->password, $this->attributes);
-    }
-
-    /**
-     * Initializes the DB connection.
-     * This method is invoked right after the DB connection is established.
-     * The default implementation turns on `PDO::ATTR_EMULATE_PREPARES`
-     * if [[emulatePrepare]] is true.
-     * It then triggers an [[EVENT_AFTER_OPEN]] event.
-     */
-    protected function initConnection()
-    {
-        $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $pdo = new $pdoClass($dsn, $this->username, $this->password, $this->attributes);
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         if ($this->emulatePrepare !== null && constant('PDO::ATTR_EMULATE_PREPARES')) {
-            $this->pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, $this->emulatePrepare);
+            $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, $this->emulatePrepare);
         }
         if ($this->charset !== null && in_array($this->getDriverName(), ['pgsql', 'mysql', 'mysqli', 'cubrid'], true)) {
-            $this->pdo->exec('SET NAMES ' . $this->pdo->quote($this->charset));
+            $pdo->exec('SET NAMES ' . $pdo->quote($this->charset));
         }
+        return $pdo;
     }
 
     /**
@@ -883,7 +879,7 @@ class Connection extends BaseObject implements ConnectionInterface
     public function getMasterPdo()
     {
         $this->open();
-        return $this->pdo;
+        return DbContext::get($this->poolName, $this->driver);
     }
 
     /**
@@ -1164,7 +1160,7 @@ class Connection extends BaseObject implements ConnectionInterface
         $this->_transaction = null;
         if (strncmp($this->dsn, 'sqlite::memory:', 15) !== 0) {
             // reset PDO connection, unless its sqlite in-memory, which can only have one connection
-            $this->pdo = null;
+            DbContext::delete($this->poolName, $this->driver);
         }
     }
 
@@ -1182,15 +1178,4 @@ class Connection extends BaseObject implements ConnectionInterface
             . '?'
             . $parsed['query'];
     }
-
-    /**
-     * @param bool $release
-     * @throws Exception
-     */
-    public function release($release = false): void
-    {
-        throw new Exception("This driver not need release");
-    }
-
-
 }

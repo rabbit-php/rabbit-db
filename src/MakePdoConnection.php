@@ -40,8 +40,8 @@ class MakePdoConnection
                         'class' => \rabbit\db\pool\PdoPool::class,
                         'poolConfig' => ObjectFactory::createObject([
                             'class' => \rabbit\db\pool\PdoPoolConfig::class,
-                            'minActive' => intval($pool['min'] / swoole_cpu_num()),
-                            'maxActive' => intval($pool['max'] / swoole_cpu_num()),
+                            'minActive' => intval($pool['min'] ),
+                            'maxActive' => intval( $pool['max']),
                             'maxWait' => $pool['wait'],
                             'maxReconnect' => $pool['retry']
                         ], [], false)

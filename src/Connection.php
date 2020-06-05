@@ -11,6 +11,7 @@ use PDO;
 use Psr\SimpleCache\CacheInterface;
 use rabbit\App;
 use rabbit\core\BaseObject;
+use rabbit\core\Context;
 use rabbit\core\ObjectFactory;
 use rabbit\exception\NotSupportedException;
 use rabbit\helper\ArrayHelper;
@@ -382,10 +383,8 @@ class Connection extends BaseObject implements ConnectionInterface
     public $enableLogging = true;
     /** @var int */
     public $maxLog = 1024;
-    /**
-     * @var Transaction the currently active transaction
-     */
-    protected $_transaction;
+    /** @var string | Transaction */
+    protected $transactionClass = Transaction::class;
     /**
      * @var Schema the database schema
      */
@@ -593,7 +592,6 @@ class Connection extends BaseObject implements ConnectionInterface
             App::warning('Closing DB connection: ' . $this->shortDsn, "db");
             DbContext::delete($this->poolName, $this->driver);
             $this->_schema = null;
-            $this->_transaction = null;
         }
 
         if ($this->_slave) {
@@ -910,17 +908,18 @@ class Connection extends BaseObject implements ConnectionInterface
     }
 
     /**
-     * Starts a transaction.
-     * @param string|null $isolationLevel The isolation level to use for this transaction.
-     * See [[Transaction::begin()]] for details.
-     * @return Transaction the transaction initiated
+     * @param null $isolationLevel
+     * @return mixed|Transaction|null
+     * @throws Exception
+     * @throws NotSupportedException
      */
     public function beginTransaction($isolationLevel = null)
     {
         $this->open();
 
         if (($transaction = $this->getTransaction()) === null) {
-            $transaction = $this->_transaction = new Transaction($this);
+            $transaction = new $this->transactionClass($this);
+            Context::set('transaction', $transaction, $this->poolName);
         }
         $transaction->begin($isolationLevel);
 
@@ -933,7 +932,8 @@ class Connection extends BaseObject implements ConnectionInterface
      */
     public function getTransaction()
     {
-        return $this->_transaction && $this->_transaction->getIsActive() ? $this->_transaction : null;
+        $transaction = Context::get('transaction', $this->poolName);
+        return $transaction && $transaction->getIsActive() ? $transaction : null;
     }
 
     /**
@@ -1157,7 +1157,6 @@ class Connection extends BaseObject implements ConnectionInterface
         $this->_master = false;
         $this->_slave = false;
         $this->_schema = null;
-        $this->_transaction = null;
         if (strncmp($this->dsn, 'sqlite::memory:', 15) !== 0) {
             // reset PDO connection, unless its sqlite in-memory, which can only have one connection
             DbContext::delete($this->poolName, $this->driver);

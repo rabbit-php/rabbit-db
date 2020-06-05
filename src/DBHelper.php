@@ -35,18 +35,10 @@ class DBHelper
      * @param array|null $filter
      * @return Query
      */
-    public static function Search(Query $query, array $filter = null): Query
+    public static function Search(Query $query, array $filter = []): Query
     {
-        if (!empty($filter)) {
-            foreach ($filter as $method => $value) {
-                if (is_int($method)) {
-                    foreach ($method as $m => $item) {
-                        $query->$m($item);
-                    }
-                } else {
-                    $query->$method($value);
-                }
-            }
+        foreach ($filter as $method => $value) {
+            $query->$method($value);
         }
         return $query;
     }

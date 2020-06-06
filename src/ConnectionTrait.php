@@ -8,6 +8,7 @@
 
 namespace rabbit\db;
 
+use rabbit\App;
 use rabbit\core\Context;
 use rabbit\exception\NotSupportedException;
 use rabbit\pool\PoolInterface;
@@ -150,5 +151,16 @@ trait ConnectionTrait
     public function setDefer($defer = true): bool
     {
         throw new NotSupportedException('can not call ' . __METHOD__);
+    }
+
+    /**
+     * @param int $attempt
+     * @throws \Exception
+     */
+    public function reconnect(int $attempt = 0): void
+    {
+        DbContext::delete(DbContext::has($this->poolName, $this->driver));
+        App::warning("The $attempt times to Reconnect DB connection: " . $this->shortDsn, 'db');
+        $this->open($attempt);
     }
 }

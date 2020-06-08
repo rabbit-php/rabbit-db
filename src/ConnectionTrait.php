@@ -159,7 +159,7 @@ trait ConnectionTrait
      */
     public function reconnect(int $attempt = 0): void
     {
-        DbContext::delete(DbContext::get($this->poolName, $this->driver));
+        DbContext::delete($this->poolName, $this->driver);
         App::warning("The $attempt times to Reconnect DB connection: " . $this->shortDsn, 'db');
         $this->open($attempt);
     }

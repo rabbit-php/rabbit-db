@@ -117,9 +117,8 @@ class Transaction extends BaseObject
                 $this->db->getSchema()->setTransactionIsolationLevel($isolationLevel);
             }
             App::debug('Begin transaction' . ($isolationLevel ? ' with isolation level ' . $isolationLevel : ''), "db");
-            $this->db->getConn()->beginTransaction();
             $this->_level = 1;
-
+            $this->db->getConn()->beginTransaction();
             return;
         }
 

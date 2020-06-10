@@ -96,12 +96,17 @@ class BatchInsert implements BatchInterface
                 if (is_string($value)) {
                     $value = $this->schema->quoteValue($value);
                 } elseif (is_float($value)) {
-                    // ensure type cast always has . as decimal separator in all locales
                     $value = StringHelper::floatToString($value);
                 } elseif ($value === false) {
                     $value = 0;
                 } elseif ($value === null) {
                     $value = '';
+                } elseif (is_array($value)) {
+                    $value = json_encode($value, JSON_UNESCAPED_UNICODE);
+                    $value = "CAST('$value' as JSON)";
+                } elseif ($value instanceof JsonExpression) {
+                    $value = json_encode($value->getValue(), JSON_UNESCAPED_UNICODE);
+                    $value = "CAST('$value' as JSON)";
                 }
                 $rows[$i] = $value;
             }
@@ -123,7 +128,9 @@ class BatchInsert implements BatchInterface
     {
         if ($this->hasRows) {
             $this->sql = rtrim($this->sql, ',');
-            $this->db->createCommand($this->sql)->execute();
+            if (!$this->db->createCommand($this->sql)->execute()) {
+                throw new Exception("Insert failed with unkonw reason!");
+            }
         }
         return $this->hasRows;
     }

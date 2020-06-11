@@ -401,10 +401,6 @@ class Connection extends BaseObject implements ConnectionInterface
      * @var Connection|false the currently active slave connection
      */
     protected $_slave = false;
-    /**
-     * @var array query cache parameters for the [[cache()]] calls
-     */
-    protected $_queryCacheInfo = [];
     /** @var RetryHandlerInterface|null */
     protected $retryHandler = null;
     /** @var bool */
@@ -457,86 +453,6 @@ class Connection extends BaseObject implements ConnectionInterface
     }
 
     /**
-     * Uses query cache for the queries performed with the callable.
-     *
-     * When query caching is enabled ([[enableQueryCache]] is true and [[queryCache]] refers to a valid cache),
-     * queries performed within the callable will be cached and their results will be fetched from cache if available.
-     * For example,
-     *
-     * ```php
-     * // The customer will be fetched from cache if available.
-     * // If not, the query will be made against DB and cached for use next time.
-     * $customer = $db->cache(function (Connection $db) {
-     *     return $db->createCommand('SELECT * FROM customer WHERE id=1')->queryOne();
-     * });
-     * ```
-     *
-     * Note that query cache is only meaningful for queries that return results. For queries performed with
-     * [[Command::execute()]], query cache will not be used.
-     *
-     * @param callable $callable a PHP callable that contains DB queries which will make use of query cache.
-     * The signature of the callable is `function (Connection $db)`.
-     * @param int $duration the number of seconds that query results can remain valid in the cache. If this is
-     * not set, the value of [[queryCacheDuration]] will be used instead.
-     * Use 0 to indicate that the cached data will never expire.
-     * @return mixed the return result of the callable
-     * @throws \Throwable if there is any exception during query
-     * @see enableQueryCache
-     * @see queryCache
-     * @see noCache()
-     */
-    public function cache(callable $callable, $duration = null)
-    {
-        $this->_queryCacheInfo[] = [$duration === null ? $this->queryCacheDuration : $duration];
-        try {
-            $result = call_user_func($callable, $this);
-            array_pop($this->_queryCacheInfo);
-            return $result;
-        } catch (\Throwable $e) {
-            array_pop($this->_queryCacheInfo);
-            throw $e;
-        }
-    }
-
-    /**
-     * Disables query cache temporarily.
-     *
-     * Queries performed within the callable will not use query cache at all. For example,
-     *
-     * ```php
-     * $db->cache(function (Connection $db) {
-     *
-     *     // ... queries that use query cache ...
-     *
-     *     return $db->noCache(function (Connection $db) {
-     *         // this query will not use query cache
-     *         return $db->createCommand('SELECT * FROM customer WHERE id=1')->queryOne();
-     *     });
-     * });
-     * ```
-     *
-     * @param callable $callable a PHP callable that contains DB queries which should not use query cache.
-     * The signature of the callable is `function (Connection $db)`.
-     * @return mixed the return result of the callable
-     * @throws \Throwable if there is any exception during query
-     * @see enableQueryCache
-     * @see queryCache
-     * @see cache()
-     */
-    public function noCache(callable $callable)
-    {
-        $this->_queryCacheInfo[] = false;
-        try {
-            $result = call_user_func($callable, $this);
-            array_pop($this->_queryCacheInfo);
-            return $result;
-        } catch (\Throwable $e) {
-            array_pop($this->_queryCacheInfo);
-            throw $e;
-        }
-    }
-
-    /**
      * Returns the current query cache information.
      * This method is used internally by [[Command]].
      * @param int $duration the preferred caching duration. If null, it will be ignored.
@@ -547,13 +463,6 @@ class Connection extends BaseObject implements ConnectionInterface
     {
         if (!$this->enableQueryCache) {
             return null;
-        }
-
-        $info = end($this->_queryCacheInfo);
-        if (is_array($info)) {
-            if ($duration === null) {
-                $duration = $info[0];
-            }
         }
 
         if ($duration >= 0) {

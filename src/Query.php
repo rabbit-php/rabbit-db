@@ -142,8 +142,11 @@ class Query extends BaseObject implements QueryInterface, ExpressionInterface
      * @param Query $from the source query object
      * @return Query the new Query object
      */
-    public static function create($from)
+    public static function create($from = null)
     {
+        if ($from === null) {
+            return new self();
+        }
         return new self([
             'where' => $from->where,
             'limit' => $from->limit,

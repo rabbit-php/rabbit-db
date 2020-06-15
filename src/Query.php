@@ -1241,16 +1241,11 @@ PATTERN;
     }
 
     /**
-     * Enables query cache for this Query.
-     * @param int|true $duration the number of seconds that query results can remain valid in cache.
-     * Use 0 to indicate that the cached data will never expire.
-     * Use a negative number to indicate that query cache should not be used.
-     * Use boolean `true` to indicate that [[Connection::queryCacheDuration]] should be used.
-     * Defaults to `true`.
-     * @return $this the Query object itself
-     * @since 2.0.14
+     * @param int $duration
+     * @param CacheInterface|null $cache
+     * @return $this
      */
-    public function cache($duration = true, ?CacheInterface $cache = null)
+    public function cache(int $duration = 0, ?CacheInterface $cache = null)
     {
         $this->queryCacheDuration = $duration;
         $this->cache = $cache;
@@ -1264,7 +1259,7 @@ PATTERN;
      */
     public function noCache()
     {
-        $this->queryCacheDuration = -1;
+        $this->queryCacheDuration = null;
         return $this;
     }
 

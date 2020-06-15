@@ -110,15 +110,13 @@ class Command extends BaseObject
     }
 
     /**
-     * Enables query cache for this command.
-     * @param int $duration the number of seconds that query result of this command can remain valid in the cache.
-     * If this is not set, the value of [[Connection::queryCacheDuration]] will be used instead.
-     * Use 0 to indicate that the cached data will never expire.
-     * @return $this the command object itself
+     * @param int $duration
+     * @param CacheInterface|null $cache
+     * @return $this
      */
-    public function cache(?int $duration = null, ?CacheInterface $cache = null)
+    public function cache(int $duration = 0, ?CacheInterface $cache = null)
     {
-        $this->queryCacheDuration = $duration === null ? $this->db->queryCacheDuration : $duration;
+        $this->queryCacheDuration = $duration;
         $this->cache = $cache;
         return $this;
     }

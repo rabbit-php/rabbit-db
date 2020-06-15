@@ -241,7 +241,7 @@ class Connection extends BaseObject implements ConnectionInterface
      * @see enableQueryCache
      * @see cache()
      */
-    public $queryCacheDuration = 0;
+    public $queryCacheDuration;
     /**
      * @var CacheInterface|string the cache object or the ID of the cache application component
      * that is used for query caching.

@@ -1214,7 +1214,7 @@ class Command extends BaseObject
         try {
             $this->internalExecute($rawSql);
             $n = $this->pdoStatement->rowCount();
-
+            $this->db->setInsertId();
             $this->refreshTableSchema();
             return $n;
         } catch (Exception $e) {

@@ -108,7 +108,6 @@ trait ConnectionTrait
     public function release($release = false): void
     {
         if (null !== $conn = DbContext::get($this->poolName, $this->driver)) {
-            $this->setInsertId($conn);
             $transaction = $this->getTransaction();
             if (!empty($transaction) && $transaction->getIsActive()) {//事务里面不释放连接
                 return;
@@ -123,9 +122,12 @@ trait ConnectionTrait
     /**
      * @param $conn
      */
-    protected function setInsertId($conn): void
+    public function setInsertId($conn = null): void
     {
-        Context::set($this->poolName . '.id', $conn->lastInsertId());
+        $conn = $conn ?? DbContext::get($this->poolName, $this->driver);
+        if ($conn !== null) {
+            Context::set($this->poolName . '.id', $conn->lastInsertId());
+        }
     }
 
     /**

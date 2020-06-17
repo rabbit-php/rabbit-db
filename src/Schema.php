@@ -807,12 +807,6 @@ abstract class Schema extends BaseObject
             self::TYPE_JSON => 'array',
         ];
         if (isset($typeMap[$column->type])) {
-//            if ($column->type === 'bigint') {
-//                return PHP_INT_SIZE === 8 && !$column->unsigned ? 'integer' : 'string';
-//            } elseif ($column->type === 'integer') {
-//                return PHP_INT_SIZE === 4 && $column->unsigned ? 'string' : 'integer';
-//            }
-
             return $typeMap[$column->type];
         }
 

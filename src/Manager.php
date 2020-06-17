@@ -11,31 +11,14 @@ namespace rabbit\db;
 use rabbit\core\ObjectFactory;
 use rabbit\db\pool\PdoPool;
 use rabbit\helper\ArrayHelper;
+use rabbit\pool\BaseManager;
 
 /**
  * Class Manager
  * @package rabbit\db
  */
-class Manager
+class Manager extends BaseManager
 {
-    /** @var PdoPool[] */
-    protected $connections = [];
-    /** @var int */
-    protected $min = 5;
-    /** @var int */
-    protected $max = 6;
-    /** @var int */
-    protected $wait = 0;
-
-    /**
-     * Manager constructor.
-     * @param array $configs
-     */
-    public function __construct(array $configs = [])
-    {
-        $this->addConnection($configs);
-    }
-
     /**
      * @param array $configs
      */
@@ -54,26 +37,5 @@ class Manager
                 $this->connections[$name] = $conn;
             }
         }
-    }
-
-    /**
-     * @param string $name
-     * @return Connection
-     */
-    public function getConnection(string $name = 'db'): ?Connection
-    {
-        if (!isset($this->connections[$name])) {
-            return null;
-        }
-        return $this->connections[$name];
-    }
-
-    /**
-     * @param string $name
-     * @return bool
-     */
-    public function hasConnection(string $name): bool
-    {
-        return isset($this->connections[$name]);
     }
 }

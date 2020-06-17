@@ -15,6 +15,7 @@ use rabbit\core\Context;
 use rabbit\core\ObjectFactory;
 use rabbit\exception\NotSupportedException;
 use rabbit\helper\ArrayHelper;
+use rabbit\helper\UrlHelper;
 
 /**
  * Connection represents a connection to a database via [PDO](http://php.net/manual/en/book.pdo.php).
@@ -400,9 +401,11 @@ class Connection extends BaseObject implements ConnectionInterface
     /** @var string */
     protected $commandClass = Command::class;
     /** @var string */
-    public $poolName = 'db';
+    public $poolName = 'default';
     /** @var string */
     public $driver = 'pdo';
+    /** @var array */
+    protected $parseDsn = [];
 
     /**
      * Connection constructor.
@@ -415,8 +418,6 @@ class Connection extends BaseObject implements ConnectionInterface
         if (extension_loaded('swoole_orm')) {
             $this->hasOrm = true;
         }
-        $this->lastTime = time();
-        $this->connectionId = uniqid();
     }
 
     /**
@@ -746,7 +747,7 @@ class Connection extends BaseObject implements ConnectionInterface
             $pdoClass = 'PDO';
         }
 
-        $parsed = parse_url($this->dsn);
+        $parsed = $this->parseDsn;
         isset($parsed['query']) ? parse_str($parsed['query'], $parsed['query']) : $parsed['query'] = [];
         [$driver, $host, $port, $this->username, $this->password, $query] = ArrayHelper::getValueByArray(
             $parsed,
@@ -1064,18 +1065,13 @@ class Connection extends BaseObject implements ConnectionInterface
         }
     }
 
-    private function makeShortDsn(): void
+    protected function makeShortDsn(): void
     {
         $parsed = parse_url($this->dsn);
+        $this->parseDsn = $parsed;
         if (!isset($parsed['path'])) {
             $parsed['path'] = '/';
         }
-        $this->shortDsn = (isset($parsed['scheme']) ? $parsed['scheme'] : 'http')
-            . '://'
-            . $parsed['host']
-            . (!empty($parsed['port']) ? ':' . $parsed['port'] : '')
-            . $parsed['path']
-            . '?'
-            . $parsed['query'];
+        $this->shortDsn = UrlHelper::unparse_url($parsed, false);
     }
 }

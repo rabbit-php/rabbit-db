@@ -26,16 +26,6 @@ trait ConnectionTrait
     protected $poolKey;
 
     /**
-     * @var int
-     */
-    protected $lastTime;
-
-    /**
-     * @var string
-     */
-    protected $connectionId;
-
-    /**
      * @var bool
      */
     protected $autoRelease = true;
@@ -48,34 +38,10 @@ trait ConnectionTrait
     protected $recv = true;
 
     /**
-     * @return int
-     */
-    public function getLastTime(): int
-    {
-        return $this->lastTime;
-    }
-
-    /**
-     * Update last time
-     */
-    public function updateLastTime(): void
-    {
-        $this->lastTime = time();
-    }
-
-    /**
      * @throws Exception
      */
     public function createConnection(): void
     {
-    }
-
-    /**
-     * @return string
-     */
-    public function getConnectionId(): string
-    {
-        return $this->connectionId;
     }
 
     /**
@@ -84,22 +50,6 @@ trait ConnectionTrait
     public function getPool(): PoolInterface
     {
         return PoolManager::getPool($this->poolKey);
-    }
-
-    /**
-     * @return bool
-     */
-    public function isRecv(): bool
-    {
-        return $this->recv;
-    }
-
-    /**
-     * @param bool $recv
-     */
-    public function setRecv(bool $recv): void
-    {
-        $this->recv = $recv;
     }
 
     /**
@@ -144,15 +94,6 @@ trait ConnectionTrait
     public function setAutoRelease(bool $autoRelease): void
     {
         $this->autoRelease = $autoRelease;
-    }
-
-    /**
-     * @param bool $defer
-     * @throws NotSupportedException
-     */
-    public function setDefer($defer = true): bool
-    {
-        throw new NotSupportedException('can not call ' . __METHOD__);
     }
 
     /**

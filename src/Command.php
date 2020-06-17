@@ -344,7 +344,7 @@ class Command extends BaseObject
     protected function logQuery(string $rawSql, string $module = 'db'): void
     {
         if ($this->db->enableLogging && ($this->db->maxLog === 0 || ($this->db->maxLog > 0 && strlen($rawSql) < $this->db->maxLog))) {
-            App::info($this->db->shortDsn . '=>' . $rawSql, $module);
+            App::info($this->db->shortDsn . PHP_EOL . $rawSql, $module);
         }
     }
 
@@ -411,8 +411,8 @@ class Command extends BaseObject
                     }, $this->_isolationLevel);
                 } else {
                     $this->pdoStatement->execute();
-                    if ($this->pdoStatement->errorCode() !== 00000) {
-                        throw new Exception($this->pdoStatement->errorInfo()[2]);
+                    if ($this->pdoStatement->errorCode() !== '00000') {
+                        throw new Exception(implode(PHP_EOL, $this->pdoStatement->errorInfo()));
                     }
                 }
                 $this->_pendingParams = [];

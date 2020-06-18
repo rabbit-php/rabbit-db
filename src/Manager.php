@@ -25,7 +25,7 @@ class Manager extends BaseManager
     public function add(array $configs): void
     {
         foreach ($configs as $name => $config) {
-            if (!isset($this->connections[$name])) {
+            if (!isset($this->items[$name])) {
                 /** @var PdoPool $pool */
                 $pool = ArrayHelper::remove($config, 'pool');
                 $poolConfig = $pool->getPoolConfig();
@@ -34,7 +34,7 @@ class Manager extends BaseManager
                 $config['poolKey'] = $poolConfig->getName();
                 $conn = ObjectFactory::createObject($config, [], false);
                 $poolConfig->setConfig(['conn' => $conn]);
-                $this->connections[$name] = $conn;
+                $this->items[$name] = $conn;
             }
         }
     }

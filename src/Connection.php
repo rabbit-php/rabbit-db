@@ -708,7 +708,7 @@ class Connection extends BaseObject implements ConnectionInterface
             throw new \InvalidArgumentException('Connection::dsn cannot be empty.');
         }
 
-        $pdo = $this->getPool()->getConnection();
+        $pdo = $this->getPool()->get();
         if (!$pdo instanceof ConnectionInterface) {
             DbContext::set($this->poolName, $pdo, $this->driver);
         } else {

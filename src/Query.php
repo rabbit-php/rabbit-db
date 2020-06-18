@@ -262,7 +262,7 @@ class Query extends BaseObject implements QueryInterface, ExpressionInterface
     public function createCommand($db = null)
     {
         if ($db === null) {
-            $db = getDI('db')->getConnection();
+            $db = getDI('db')->get();
         }
         [$sql, $params] = $db->getQueryBuilder()->build($this);
 

@@ -22,7 +22,7 @@ class Manager extends BaseManager
     /**
      * @param array $configs
      */
-    public function addConnection(array $configs): void
+    public function add(array $configs): void
     {
         foreach ($configs as $name => $config) {
             if (!isset($this->connections[$name])) {

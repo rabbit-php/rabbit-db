@@ -31,7 +31,7 @@ class MakePdoConnection
     {
         /** @var Manager $manager */
         $manager = getDI('db');
-        if (!$manager->hasConnection($name)) {
+        if (!$manager->has($name)) {
             $conn = [
                 $name => [
                     'class' => $class,
@@ -53,7 +53,7 @@ class MakePdoConnection
             } else {
                 $conn[$name]['retryHandler'] = getDI(RetryHandler::class);
             }
-            $manager->addConnection($conn);
+            $manager->add($conn);
         }
     }
 }

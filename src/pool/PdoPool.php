@@ -19,11 +19,9 @@ use rabbit\pool\ConnectionPool;
 class PdoPool extends ConnectionPool
 {
     /**
-     * @return ConnectionInterface
-     * @throws \DI\DependencyException
-     * @throws \DI\NotFoundException
+     * @return mixed
      */
-    public function createConnection(): ConnectionInterface
+    public function create()
     {
         $poolConfig = $this->getPoolConfig();
         $config = $poolConfig->getConfig();

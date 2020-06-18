@@ -43,7 +43,7 @@ class MakePdoConnection
                             'minActive' => intval($pool['min'] ),
                             'maxActive' => intval( $pool['max']),
                             'maxWait' => $pool['wait'],
-                            'maxReconnect' => $pool['retry']
+                            'maxRetry' => $pool['retry']
                         ], [], false)
                     ], [], false)
                 ]

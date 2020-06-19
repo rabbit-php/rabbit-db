@@ -5,6 +5,7 @@ namespace rabbit\db;
 
 use rabbit\core\ObjectFactory;
 use rabbit\db\mysql\RetryHandler;
+use rabbit\pool\PoolProperties;
 
 /**
  * Class MakePdoConnection
@@ -39,9 +40,9 @@ class MakePdoConnection
                     'pool' => ObjectFactory::createObject([
                         'class' => \rabbit\db\pool\PdoPool::class,
                         'poolConfig' => ObjectFactory::createObject([
-                            'class' => \rabbit\db\pool\PdoPoolConfig::class,
-                            'minActive' => intval($pool['min'] ),
-                            'maxActive' => intval( $pool['max']),
+                            'class' => PoolProperties::class,
+                            'minActive' => intval($pool['min']),
+                            'maxActive' => intval($pool['max']),
                             'maxWait' => $pool['wait'],
                             'maxRetry' => $pool['retry']
                         ], [], false)

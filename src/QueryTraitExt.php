@@ -13,7 +13,7 @@ use Throwable;
 trait QueryTraitExt
 {
     /** @var array */
-    protected ?array $joinWith;
+    protected ?array $joinWith = null;
     /** @var bool */
     protected bool $flag = false;
 

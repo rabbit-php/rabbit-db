@@ -123,17 +123,17 @@ class QueryBuilder
             Query::class => QueryExpressionBuilder::class,
             PdoValue::class => PdoValueBuilder::class,
             Expression::class => ExpressionBuilder::class,
-            conditions\ConjunctionCondition::class => conditions\ConjunctionConditionBuilder::class,
-            conditions\NotCondition::class => conditions\NotConditionBuilder::class,
-            conditions\AndCondition::class => conditions\ConjunctionConditionBuilder::class,
-            conditions\OrCondition::class => conditions\ConjunctionConditionBuilder::class,
-            conditions\BetweenCondition::class => conditions\BetweenConditionBuilder::class,
-            conditions\InCondition::class => conditions\InConditionBuilder::class,
-            conditions\LikeCondition::class => conditions\LikeConditionBuilder::class,
-            conditions\ExistsCondition::class => conditions\ExistsConditionBuilder::class,
-            conditions\SimpleCondition::class => conditions\SimpleConditionBuilder::class,
-            conditions\HashCondition::class => conditions\HashConditionBuilder::class,
-            conditions\BetweenColumnsCondition::class => conditions\BetweenColumnsConditionBuilder::class,
+            Conditions\ConjunctionCondition::class => Conditions\ConjunctionConditionBuilder::class,
+            Conditions\NotCondition::class => Conditions\NotConditionBuilder::class,
+            Conditions\AndCondition::class => Conditions\ConjunctionConditionBuilder::class,
+            Conditions\OrCondition::class => Conditions\ConjunctionConditionBuilder::class,
+            Conditions\BetweenCondition::class => Conditions\BetweenConditionBuilder::class,
+            Conditions\InCondition::class => Conditions\InConditionBuilder::class,
+            Conditions\LikeCondition::class => Conditions\LikeConditionBuilder::class,
+            Conditions\ExistsCondition::class => Conditions\ExistsConditionBuilder::class,
+            Conditions\SimpleCondition::class => Conditions\SimpleConditionBuilder::class,
+            Conditions\HashCondition::class => Conditions\HashConditionBuilder::class,
+            Conditions\BetweenColumnsCondition::class => Conditions\BetweenColumnsConditionBuilder::class,
         ];
     }
 
@@ -148,19 +148,19 @@ class QueryBuilder
     protected function defaultConditionClasses(): array
     {
         return [
-            'NOT' => conditions\NotCondition::class,
-            'AND' => conditions\AndCondition::class,
-            'OR' => conditions\OrCondition::class,
-            'BETWEEN' => conditions\BetweenCondition::class,
-            'NOT BETWEEN' => conditions\BetweenCondition::class,
-            'IN' => conditions\InCondition::class,
-            'NOT IN' => conditions\InCondition::class,
-            'LIKE' => conditions\LikeCondition::class,
-            'NOT LIKE' => conditions\LikeCondition::class,
-            'OR LIKE' => conditions\LikeCondition::class,
-            'OR NOT LIKE' => conditions\LikeCondition::class,
-            'EXISTS' => conditions\ExistsCondition::class,
-            'NOT EXISTS' => conditions\ExistsCondition::class,
+            'NOT' => Conditions\NotCondition::class,
+            'AND' => Conditions\AndCondition::class,
+            'OR' => Conditions\OrCondition::class,
+            'BETWEEN' => Conditions\BetweenCondition::class,
+            'NOT BETWEEN' => Conditions\BetweenCondition::class,
+            'IN' => Conditions\InCondition::class,
+            'NOT IN' => Conditions\InCondition::class,
+            'LIKE' => Conditions\LikeCondition::class,
+            'NOT LIKE' => Conditions\LikeCondition::class,
+            'OR LIKE' => Conditions\LikeCondition::class,
+            'OR NOT LIKE' => Conditions\LikeCondition::class,
+            'EXISTS' => Conditions\ExistsCondition::class,
+            'NOT EXISTS' => Conditions\ExistsCondition::class,
         ];
     }
 
@@ -617,13 +617,13 @@ class QueryBuilder
     /**
      * Builds the ORDER BY and LIMIT/OFFSET clauses and appends them to the given SQL.
      * @param string $sql the existing SQL (without ORDER BY/LIMIT/OFFSET)
-     * @param array $orderBy the order by columns. See [[Query::orderBy]] for more details on how to specify this parameter.
-     * @param int $limit the limit number. See [[Query::limit]] for more details.
-     * @param int $offset the offset number. See [[Query::offset]] for more details.
+     * @param array|null $orderBy the order by columns. See [[Query::orderBy]] for more details on how to specify this parameter.
+     * @param int|null $limit the limit number. See [[Query::limit]] for more details.
+     * @param int|null $offset the offset number. See [[Query::offset]] for more details.
      * @param array $params the binding parameters to be populated
      * @return string the SQL completed with ORDER BY/LIMIT/OFFSET (if any)
      */
-    public function buildOrderByAndLimit(string $sql, array $orderBy, int $limit, int $offset, array &$params): string
+    public function buildOrderByAndLimit(string $sql, ?array $orderBy, ?int $limit, ?int $offset, array &$params): string
     {
         $orderBy = $this->buildOrderBy($orderBy, $params);
         if ($orderBy !== '') {
@@ -638,11 +638,11 @@ class QueryBuilder
     }
 
     /**
-     * @param array $columns
+     * @param array|null $columns
      * @param array $params the binding parameters to be populated
      * @return string the ORDER BY clause built from [[Query::$orderBy]].
      */
-    public function buildOrderBy(array $columns, array &$params): string
+    public function buildOrderBy(?array $columns, array &$params): string
     {
         if (empty($columns)) {
             return '';
@@ -661,11 +661,11 @@ class QueryBuilder
     }
 
     /**
-     * @param int $limit
-     * @param int $offset
+     * @param int|null $limit
+     * @param int|null $offset
      * @return string the LIMIT and OFFSET clauses
      */
-    public function buildLimit(int $limit, int $offset): string
+    public function buildLimit(?int $limit, ?int $offset): string
     {
         $sql = '';
         if ($this->hasLimit($limit)) {
@@ -699,12 +699,12 @@ class QueryBuilder
     }
 
     /**
-     * @param array $unions
+     * @param array|null $unions
      * @param array $params the binding parameters to be populated
      * @return string the UNION clause built from [[Query::$union]].
      * @throws Exception
      */
-    public function buildUnion(array $unions, array &$params): string
+    public function buildUnion(?array $unions, array &$params): string
     {
         if (empty($unions)) {
             return '';

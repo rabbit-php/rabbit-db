@@ -259,10 +259,7 @@ class Connection extends BaseObject implements ConnectionInterface
      * You normally do not need to set this property unless you want to use your own
      * [[Schema]] class to support DBMS that is not supported by Yii.
      */
-    public array $schemaMap = [
-//        'mysqli' => mysql\Schema::class, // MySQL
-//        'mysql' => mysql\Schema::class, // MySQL
-    ];
+    public array $schemaMap = [];
     /**
      * @var string Custom PDO wrapper class. If not set, it will use [[PDO]] or [[\rabbit\db\mssql\PDO]] when MSSQL is used.
      * @see pdo
@@ -357,8 +354,8 @@ class Connection extends BaseObject implements ConnectionInterface
     public bool $enableLogging = true;
     /** @var int */
     public int $maxLog = 1024;
-    /** @var string | Transaction */
-    protected $transactionClass = Transaction::class;
+    /** @var string */
+    protected string $transactionClass = Transaction::class;
     /**
      * @var Schema the database schema
      */

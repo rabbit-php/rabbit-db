@@ -92,20 +92,20 @@ abstract class Schema extends BaseObject
      * @var string|array column schema class or class config
      * @since 2.0.11
      */
-    public $columnSchemaClass = ColumnSchema::class;
+    public string $columnSchemaClass = ColumnSchema::class;
 
     /**
-     * @var string|string[] character used to quote schema, table, etc. names.
+     * @var string character used to quote schema, table, etc. names.
      * An array of 2 characters can be used in case starting and ending characters are different.
      * @since 2.0.14
      */
-    protected $tableQuoteCharacter = "'";
+    protected string $tableQuoteCharacter = "'";
     /**
-     * @var string|string[] character used to quote column names.
+     * @var string character used to quote column names.
      * An array of 2 characters can be used in case starting and ending characters are different.
      * @since 2.0.14
      */
-    protected $columnQuoteCharacter = '"';
+    protected string $columnQuoteCharacter = '"';
 
     /**
      * @var array list of ALL schema names in the database, except system schemas
@@ -198,10 +198,10 @@ abstract class Schema extends BaseObject
      * This method should be overridden by child classes in order to support this feature
      * because the default implementation simply throws an exception.
      * @param string $schema the schema of the tables. Defaults to empty string, meaning the current or default schema.
-     * @return array all table names in the database. The names have NO schema name prefix.
+     * @return array|null all table names in the database. The names have NO schema name prefix.
      * @throws NotSupportedException if this method is not supported by the DBMS.
      */
-    protected function findTableNames(string $schema = ''): array
+    protected function findTableNames(string $schema = ''): ?array
     {
         throw new NotSupportedException(get_class($this) . ' does not support fetching all table names.');
     }
@@ -635,11 +635,7 @@ abstract class Schema extends BaseObject
      */
     public function quoteSimpleTableName(string $name): string
     {
-        if (is_string($this->tableQuoteCharacter)) {
-            $startingCharacter = $endingCharacter = $this->tableQuoteCharacter;
-        } else {
-            [$startingCharacter, $endingCharacter] = $this->tableQuoteCharacter;
-        }
+        $startingCharacter = $endingCharacter = $this->tableQuoteCharacter;
         return strpos($name, $startingCharacter) !== false ? $name : $startingCharacter . $name . $endingCharacter;
     }
 
@@ -654,10 +650,6 @@ abstract class Schema extends BaseObject
      */
     public function quoteValue(string $str): string
     {
-        if (!is_string($str)) {
-            return $str;
-        }
-
         if (($value = $this->db->getSlavePdo()->quote($str)) !== false) {
             return $value;
         }
@@ -702,11 +694,7 @@ abstract class Schema extends BaseObject
      */
     public function quoteSimpleColumnName(string $name): string
     {
-        if (is_string($this->tableQuoteCharacter)) {
-            $startingCharacter = $endingCharacter = $this->columnQuoteCharacter;
-        } else {
-            [$startingCharacter, $endingCharacter] = $this->columnQuoteCharacter;
-        }
+        $startingCharacter = $endingCharacter = $this->columnQuoteCharacter;
         return $name === '*' || strpos(
             $name,
             $startingCharacter
@@ -723,11 +711,7 @@ abstract class Schema extends BaseObject
      */
     public function unquoteSimpleTableName(string $name): string
     {
-        if (is_string($this->tableQuoteCharacter)) {
-            $startingCharacter = $this->tableQuoteCharacter;
-        } else {
-            $startingCharacter = $this->tableQuoteCharacter[0];
-        }
+        $startingCharacter = $this->tableQuoteCharacter;
         return strpos($name, $startingCharacter) === false ? $name : substr($name, 1, -1);
     }
 
@@ -741,11 +725,7 @@ abstract class Schema extends BaseObject
      */
     public function unquoteSimpleColumnName(string $name): string
     {
-        if (is_string($this->columnQuoteCharacter)) {
-            $startingCharacter = $this->columnQuoteCharacter;
-        } else {
-            $startingCharacter = $this->columnQuoteCharacter[0];
-        }
+        $startingCharacter = $this->columnQuoteCharacter;
         return strpos($name, $startingCharacter) === false ? $name : substr($name, 1, -1);
     }
 
@@ -816,7 +796,7 @@ abstract class Schema extends BaseObject
      * @param string $name table name
      * @return TableSchema|null DBMS-dependent table metadata, `null` if the table does not exist.
      */
-    abstract protected function loadTableSchema($name): ?TableSchema;
+    abstract protected function loadTableSchema(string $name): ?TableSchema;
 
     /**
      * Creates a column schema for the database.

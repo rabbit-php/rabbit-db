@@ -159,7 +159,7 @@ class DataReader implements \Iterator, \Countable
      * returned by the query. Not all DBMS support this feature.
      * @return bool Returns true on success or false on failure.
      */
-    public function nextResult(): bool
+    public function nextResult()
     {
         if (($result = $this->_statement->nextRowset()) !== false) {
             $this->_index = -1;

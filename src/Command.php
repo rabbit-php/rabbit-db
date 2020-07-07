@@ -16,6 +16,7 @@ use Psr\SimpleCache\InvalidArgumentException;
 use Rabbit\Base\App;
 use Rabbit\Base\Core\BaseObject;
 use Rabbit\Base\Exception\NotSupportedException;
+use Swoole\Coroutine\MySQL\Statement;
 use Throwable;
 
 /**
@@ -64,13 +65,13 @@ use Throwable;
 class Command extends BaseObject
 {
     /**
-     * @var Connection the DB connection that this command is associated with
+     * @var ConnectionInterface the DB connection that this command is associated with
      */
-    public ?Connection $db;
+    public ?ConnectionInterface $db;
     /**
-     * @var PDOStatement the PDOStatement object that this command is associated with
+     * @var PDOStatement|Statement the PDOStatement object that this command is associated with
      */
-    public ?PDOStatement $pdoStatement;
+    public $pdoStatement;
     /**
      * @var int the default fetch mode for this command.
      * @see http://www.php.net/manual/en/pdostatement.setfetchmode.php

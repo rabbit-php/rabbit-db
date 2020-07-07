@@ -45,7 +45,7 @@ trait QueryTrait
      * The array may also contain [[ExpressionInterface]] objects. If that is the case, the expressions
      * will be converted into strings without any change.
      */
-    public array $orderBy;
+    public ?array $orderBy = null;
     /**
      * @var string|callable the name of the column by which the query results should be indexed by.
      * This can also be a callable (e.g. anonymous function) that returns the index value based on the given

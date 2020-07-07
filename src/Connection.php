@@ -13,7 +13,7 @@ use DI\NotFoundException;
 use PDO;
 use Psr\SimpleCache\CacheInterface;
 use Psr\SimpleCache\InvalidArgumentException;
-use rabbit\App;
+use Rabbit\Base\App;
 use Rabbit\Base\Core\BaseObject;
 use Rabbit\Base\Core\Context;
 use Rabbit\Base\Exception\NotSupportedException;
@@ -359,11 +359,11 @@ class Connection extends BaseObject implements ConnectionInterface
     /**
      * @var Schema the database schema
      */
-    protected ?Schema $_schema;
+    protected ?Schema $_schema = null;
     /**
      * @var string driver name
      */
-    protected ?string $_driverName;
+    protected ?string $_driverName = null;
     /**
      * @var Connection the currently active master connection
      */

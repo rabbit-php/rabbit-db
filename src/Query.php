@@ -62,28 +62,28 @@ class Query extends BaseObject implements QueryInterface, ExpressionInterface
      * This is used to construct the SELECT clause in a SQL statement. If not set, it means selecting all columns.
      * @see select()
      */
-    public ?array $select;
+    public array $select = [];
     /**
      * @var string additional option that should be appended to the 'SELECT' keyword. For example,
      * in MySQL, the option 'SQL_CALC_FOUND_ROWS' can be used.
      */
-    public ?string $selectOption;
+    public ?string $selectOption = null;
     /**
      * @var bool whether to select distinct rows of data only. If this is set true,
      * the SELECT clause would be changed to SELECT DISTINCT.
      */
-    public ?bool $distinct;
+    public bool $distinct = false;
     /**
      * @var array the table(s) to be selected from. For example, `['user', 'post']`.
      * This is used to construct the FROM clause in a SQL statement.
      * @see from()
      */
-    public ?array $from;
+    public ?array $from = null;
     /**
      * @var array how to group the query results. For example, `['company', 'department']`.
      * This is used to construct the GROUP BY clause in a SQL statement.
      */
-    public ?array $groupBy;
+    public ?array $groupBy = null;
     /**
      * @var array how to join with other tables. Each array element represents the specification
      * of one join which has the following structure:
@@ -101,7 +101,7 @@ class Query extends BaseObject implements QueryInterface, ExpressionInterface
      * ]
      * ```
      */
-    public ?array $join;
+    public ?array $join = null;
     /**
      * @var string|array|ExpressionInterface the condition to be applied in the GROUP BY clause.
      * It can be either a string or an array. Please refer to [[where()]] on how to specify the condition.
@@ -114,7 +114,7 @@ class Query extends BaseObject implements QueryInterface, ExpressionInterface
      * - `query`: either a string or a [[Query]] object representing a query
      * - `all`: boolean, whether it should be `UNION ALL` or `UNION`
      */
-    public ?array $union;
+    public ?array $union = null;
     /**
      * @var array list of query parameter values indexed by parameter placeholders.
      * For example, `[':name' => 'Dan', ':age' => 31]`.

@@ -110,7 +110,7 @@ abstract class Schema extends BaseObject
     /**
      * @var array list of ALL schema names in the database, except system schemas
      */
-    private array $_schemaNames;
+    private ?array $_schemaNames = null;
     /**
      * @var array list of ALL table names in the database
      */
@@ -122,11 +122,11 @@ abstract class Schema extends BaseObject
     /**
      * @var QueryBuilder the query builder for this database
      */
-    private QueryBuilder $_builder;
+    private ?QueryBuilder $_builder = null;
     /**
      * @var string server version as a string.
      */
-    private string $_serverVersion;
+    private ?string $_serverVersion = null;
 
 
     public function __construct(Connection $db)

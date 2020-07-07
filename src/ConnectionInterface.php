@@ -12,7 +12,7 @@ namespace Rabbit\DB;
  * DataBase connection interface.
  * XXX TODO to be continued...
  */
-interface ConnectionInterface
+interface ConnectionInterface extends \Rabbit\Pool\ConnectionInterface
 {
     /**
      * @param bool $release

@@ -79,7 +79,7 @@ trait QueryTraitExt
      * @throws InvalidArgumentException
      * @throws Throwable
      */
-    public function one(ConnectionInterface $db = null): ?array
+    public function one(ConnectionInterface $db = null)
     {
         if ($this->emulateExecution) {
             return null;

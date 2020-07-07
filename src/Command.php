@@ -89,7 +89,7 @@ class Command extends BaseObject
      * query cache should not be used.
      * @see cache()
      */
-    public ?int $queryCacheDuration;
+    public ?int $queryCacheDuration = null;
 
     /**
      * @var array pending parameters to be bound to the current PDO statement.
@@ -98,7 +98,7 @@ class Command extends BaseObject
     /**
      * @var string the SQL statement that this command represents
      */
-    protected ?string $_sql;
+    protected ?string $_sql = null;
     /**
      * @var string name of the table, which schema, should be refreshed after command execution.
      */
@@ -247,7 +247,7 @@ class Command extends BaseObject
      * @see reset()
      * @see cancel()
      */
-    public function setSql(string $sql): self
+    public function setSql(?string $sql): self
     {
         if ($sql !== $this->_sql) {
             $this->cancel();

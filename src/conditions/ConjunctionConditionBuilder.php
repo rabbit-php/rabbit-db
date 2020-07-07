@@ -1,15 +1,16 @@
 <?php
+declare(strict_types=1);
 /**
  * @link http://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
-namespace rabbit\db\conditions;
+namespace Rabbit\DB\Conditions;
 
-use rabbit\db\ExpressionBuilderInterface;
-use rabbit\db\ExpressionBuilderTrait;
-use rabbit\db\ExpressionInterface;
+use Rabbit\DB\ExpressionBuilderInterface;
+use Rabbit\DB\ExpressionBuilderTrait;
+use Rabbit\DB\ExpressionInterface;
 
 /**
  * Class ConjunctionConditionBuilder builds objects of abstract class [[ConjunctionCondition]]
@@ -30,7 +31,7 @@ class ConjunctionConditionBuilder implements ExpressionBuilderInterface
      * @param array $params the binding parameters.
      * @return string the raw SQL that will not be additionally escaped or quoted.
      */
-    public function build(ExpressionInterface $condition, array &$params = [])
+    public function build(ExpressionInterface $condition, array &$params = []): string
     {
         $parts = $this->buildExpressionsFrom($condition, $params);
 
@@ -52,7 +53,7 @@ class ConjunctionConditionBuilder implements ExpressionBuilderInterface
      * @param array $params the binding parameters.
      * @return string[]
      */
-    private function buildExpressionsFrom(ExpressionInterface $condition, &$params = [])
+    private function buildExpressionsFrom(ExpressionInterface $condition, &$params = []): array
     {
         $parts = [];
         foreach ($condition->getExpressions() as $condition) {

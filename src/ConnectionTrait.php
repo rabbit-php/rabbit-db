@@ -1,45 +1,37 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Administrator
- * Date: 2018/10/29
- * Time: 10:57
- */
+declare(strict_types=1);
 
-namespace rabbit\db;
+namespace Rabbit\DB;
 
-use rabbit\App;
-use rabbit\core\Context;
-use rabbit\exception\NotSupportedException;
-use rabbit\pool\PoolInterface;
-use rabbit\pool\PoolManager;
+use Rabbit\Base\App;
+use Rabbit\Base\Core\Context;
+use Rabbit\Pool\PoolInterface;
+use Rabbit\Pool\PoolManager;
+use Throwable;
 
 /**
  * Trait ConnectionTrait
- * @package rabbit\db
+ * @package Rabbit\DB
  */
 trait ConnectionTrait
 {
     /**
      * @var string
      */
-    protected $poolKey;
+    protected string $poolKey;
 
     /**
      * @var bool
      */
-    protected $autoRelease = true;
+    protected bool $autoRelease = true;
 
     /**
      * Whether or not the package has been recv,default true
      *
      * @var bool
      */
-    protected $recv = true;
+    protected bool $recv = true;
 
-    /**
-     * @throws Exception
-     */
     public function createConnection(): void
     {
     }
@@ -98,7 +90,7 @@ trait ConnectionTrait
 
     /**
      * @param int $attempt
-     * @throws \Exception
+     * @throws Throwable
      */
     public function reconnect(int $attempt = 0): void
     {

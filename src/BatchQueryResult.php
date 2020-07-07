@@ -1,13 +1,14 @@
 <?php
+declare(strict_types=1);
 /**
  * @link http://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
-namespace rabbit\db;
+namespace Rabbit\DB;
 
-use rabbit\core\BaseObject;
+use Rabbit\Base\Core\BaseObject;
 
 /**
  * BatchQueryResult represents a batch query from which you can retrieve data in batches.
@@ -34,38 +35,38 @@ class BatchQueryResult extends BaseObject implements \Iterator
      * @var Connection the DB connection to be used when performing batch query.
      * If null, the "db" application component will be used.
      */
-    public $db;
+    public Connection $db;
     /**
      * @var Query the query object associated with this batch query.
      * Do not modify this property directly unless after [[reset()]] is called explicitly.
      */
-    public $query;
+    public Query $query;
     /**
      * @var int the number of rows to be returned in each batch.
      */
-    public $batchSize = 100;
+    public int $batchSize = 100;
     /**
      * @var bool whether to return a single row during each iteration.
      * If false, a whole batch of rows will be returned in each iteration.
      */
-    public $each = false;
+    public bool $each = false;
 
     /**
      * @var DataReader the data reader associated with this batch query.
      */
-    private $_dataReader;
+    private ?DataReader $_dataReader;
     /**
      * @var array the data retrieved in the current batch
      */
-    private $_batch;
+    private ?array $_batch;
     /**
      * @var mixed the value for the current iteration
      */
     private $_value;
     /**
-     * @var string|int the key for the current iteration
+     * @var int the key for the current iteration
      */
-    private $_key;
+    private ?int $_key;
 
 
     /**
@@ -81,7 +82,7 @@ class BatchQueryResult extends BaseObject implements \Iterator
      * Resets the batch query.
      * This method will clean up the existing batch query so that a new batch query can be performed.
      */
-    public function reset()
+    public function reset(): void
     {
         if ($this->_dataReader !== null) {
             $this->_dataReader->close();
@@ -131,6 +132,7 @@ class BatchQueryResult extends BaseObject implements \Iterator
     /**
      * Fetches the next batch of data.
      * @return array the data fetched
+     * @throws Exception
      */
     protected function fetchData()
     {

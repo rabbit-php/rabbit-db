@@ -1,16 +1,17 @@
 <?php
+declare(strict_types=1);
 /**
  * @link http://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
-namespace rabbit\db\conditions;
+namespace Rabbit\DB\Conditions;
 
-use rabbit\db\ExpressionBuilderInterface;
-use rabbit\db\ExpressionBuilderTrait;
-use rabbit\db\ExpressionInterface;
-use rabbit\db\Query;
+use Rabbit\DB\ExpressionBuilderInterface;
+use Rabbit\DB\ExpressionBuilderTrait;
+use Rabbit\DB\ExpressionInterface;
+use Rabbit\DB\Query;
 
 /**
  * Class BetweenColumnsConditionBuilder builds objects of [[BetweenColumnsCondition]]
@@ -31,7 +32,7 @@ class BetweenColumnsConditionBuilder implements ExpressionBuilderInterface
      * @param array $params the binding parameters.
      * @return string the raw SQL that will not be additionally escaped or quoted.
      */
-    public function build(ExpressionInterface $expression, array &$params = [])
+    public function build(ExpressionInterface $expression, array &$params = []): string
     {
         $operator = $expression->getOperator();
 
@@ -49,7 +50,7 @@ class BetweenColumnsConditionBuilder implements ExpressionBuilderInterface
      * @param array $params the binding parameters.
      * @return string
      */
-    protected function escapeColumnName($columnName, &$params = [])
+    protected function escapeColumnName($columnName, array &$params = []): string
     {
         if ($columnName instanceof Query) {
             [$sql, $params] = $this->queryBuilder->build($columnName, $params);
@@ -70,7 +71,7 @@ class BetweenColumnsConditionBuilder implements ExpressionBuilderInterface
      * @param array $params passed by reference
      * @return string
      */
-    protected function createPlaceholder($value, &$params)
+    protected function createPlaceholder($value, array &$params): string
     {
         if ($value instanceof ExpressionInterface) {
             return $this->queryBuilder->buildExpression($value, $params);

@@ -11,12 +11,20 @@
   ],
   "require": {
     "ext-pdo": "*",
-    "rabbit/framework": "^1.0",
-    "rabbit/pool": "^1.0"
+    "php": ">=7.4.0",
+    "ext-swoole": ">=4.5.0",
+    "rabbit/base": "dev-master",
+    "rabbit/pool": "dev-master",
+    "rabbit/cache": "dev-master",
+    "ext-json": "*"
+  },
+  "require-dev": {
+    "swoole/ide-helper": "@dev",
+    "phpunit/phpunit": "*"
   },
   "autoload": {
     "psr-4": {
-      "rabbit\\db\\": "src/"
+      "Rabbit\\DB\\": "src/"
     }
   }
 }

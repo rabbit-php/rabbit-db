@@ -1,11 +1,12 @@
 <?php
+declare(strict_types=1);
 /**
  * @link http://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
-namespace rabbit\db\conditions;
+namespace Rabbit\DB\Conditions;
 
 /**
  * Condition that connects two or more SQL expressions with the `AND` operator.
@@ -20,7 +21,7 @@ class AndCondition extends ConjunctionCondition
      *
      * @return string
      */
-    public function getOperator()
+    public function getOperator(): string
     {
         return 'AND';
     }

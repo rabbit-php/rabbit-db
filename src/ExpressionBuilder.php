@@ -1,11 +1,12 @@
 <?php
+declare(strict_types=1);
 /**
  * @link http://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
-namespace rabbit\db;
+namespace Rabbit\DB;
 
 /**
  * Class ExpressionBuilder builds objects of [[rabbit\db\Expression]] class.
@@ -22,7 +23,7 @@ class ExpressionBuilder implements ExpressionBuilderInterface
      * {@inheritdoc}
      * @param Expression|ExpressionInterface $expression the expression to be built
      */
-    public function build(ExpressionInterface $expression, array &$params = [])
+    public function build(ExpressionInterface $expression, array &$params = []): string
     {
         $params = array_merge($params, $expression->params);
         return $expression->__toString();

@@ -1,11 +1,12 @@
 <?php
+declare(strict_types=1);
 /**
  * @link http://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
-namespace rabbit\db;
+namespace Rabbit\DB;
 
 /**
  * The QueryInterface defines the minimum set of methods to be implemented by a database query.
@@ -24,37 +25,37 @@ interface QueryInterface
 {
     /**
      * Executes the query and returns all results as an array.
-     * @param Connection $db the database connection used to execute the query.
+     * @param ConnectionInterface $db the database connection used to execute the query.
      * If this parameter is not given, the `db` application component will be used.
      * @return array the query results. If the query results in nothing, an empty array will be returned.
      */
-    public function all($db = null);
+    public function all(ConnectionInterface $db = null): array;
 
     /**
      * Executes the query and returns a single row of result.
-     * @param Connection $db the database connection used to execute the query.
+     * @param ConnectionInterface $db the database connection used to execute the query.
      * If this parameter is not given, the `db` application component will be used.
      * @return array|bool the first row (in terms of an array) of the query result. False is returned if the query
      * results in nothing.
      */
-    public function one($db = null);
+    public function one(ConnectionInterface $db = null): ?array;
 
     /**
      * Returns the number of records.
      * @param string $q the COUNT expression. Defaults to '*'.
-     * @param Connection $db the database connection used to execute the query.
+     * @param ConnectionInterface $db the database connection used to execute the query.
      * If this parameter is not given, the `db` application component will be used.
      * @return int number of records.
      */
-    public function count($q = '*', $db = null);
+    public function count(string $q = '*', ConnectionInterface $db = null): int;
 
     /**
      * Returns a value indicating whether the query result contains any row of data.
-     * @param Connection $db the database connection used to execute the query.
+     * @param ConnectionInterface $db the database connection used to execute the query.
      * If this parameter is not given, the `db` application component will be used.
      * @return bool whether the query result contains any row of data.
      */
-    public function exists($db = null);
+    public function exists(ConnectionInterface $db = null): bool;
 
     /**
      * Sets the [[indexBy]] property.
@@ -71,7 +72,7 @@ interface QueryInterface
      *
      * @return $this the query object itself
      */
-    public function indexBy($column);
+    public function indexBy($column): self;
 
     /**
      * Sets the WHERE part of the query.
@@ -160,7 +161,7 @@ interface QueryInterface
      * @see andWhere()
      * @see orWhere()
      */
-    public function where($condition);
+    public function where($condition): self;
 
     /**
      * Adds an additional WHERE condition to the existing one.
@@ -171,7 +172,7 @@ interface QueryInterface
      * @see where()
      * @see orWhere()
      */
-    public function andWhere($condition);
+    public function andWhere($condition): self;
 
     /**
      * Adds an additional WHERE condition to the existing one.
@@ -182,7 +183,7 @@ interface QueryInterface
      * @see where()
      * @see andWhere()
      */
-    public function orWhere($condition);
+    public function orWhere($condition): self;
 
     /**
      * Sets the WHERE part of the query ignoring empty parameters.
@@ -193,7 +194,7 @@ interface QueryInterface
      * @see andFilterWhere()
      * @see orFilterWhere()
      */
-    public function filterWhere(array $condition);
+    public function filterWhere(array $condition): self;
 
     /**
      * Adds an additional WHERE condition to the existing one ignoring empty parameters.
@@ -204,7 +205,7 @@ interface QueryInterface
      * @see filterWhere()
      * @see orFilterWhere()
      */
-    public function andFilterWhere(array $condition);
+    public function andFilterWhere(array $condition): self;
 
     /**
      * Adds an additional WHERE condition to the existing one ignoring empty parameters.
@@ -215,7 +216,7 @@ interface QueryInterface
      * @see filterWhere()
      * @see andFilterWhere()
      */
-    public function orFilterWhere(array $condition);
+    public function orFilterWhere(array $condition): self;
 
     /**
      * Sets the ORDER BY part of the query.
@@ -227,7 +228,7 @@ interface QueryInterface
      * @return $this the query object itself
      * @see addOrderBy()
      */
-    public function orderBy($columns);
+    public function orderBy($columns): self;
 
     /**
      * Adds additional ORDER BY columns to the query.
@@ -239,21 +240,21 @@ interface QueryInterface
      * @return $this the query object itself
      * @see orderBy()
      */
-    public function addOrderBy($columns);
+    public function addOrderBy($columns): self;
 
     /**
      * Sets the LIMIT part of the query.
      * @param int|null $limit the limit. Use null or negative value to disable limit.
      * @return $this the query object itself
      */
-    public function limit($limit);
+    public function limit($limit): self;
 
     /**
      * Sets the OFFSET part of the query.
      * @param int|null $offset the offset. Use null or negative value to disable offset.
      * @return $this the query object itself
      */
-    public function offset($offset);
+    public function offset($offset): self;
 
     /**
      * Sets whether to emulate query execution, preventing any interaction with data storage.
@@ -265,5 +266,5 @@ interface QueryInterface
      * @return $this the query object itself.
      * @since 2.0.11
      */
-    public function emulateExecution($value = true);
+    public function emulateExecution(bool $value = true): self;
 }

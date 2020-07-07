@@ -1,17 +1,13 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Administrator
- * Date: 2019/1/23
- * Time: 14:52
- */
+declare(strict_types=1);
 
-namespace rabbit\db;
+namespace Rabbit\DB;
 
-use rabbit\core\ObjectFactory;
-use rabbit\db\pool\PdoPool;
-use rabbit\helper\ArrayHelper;
-use rabbit\pool\BaseManager;
+use DI\DependencyException;
+use DI\NotFoundException;
+use Rabbit\Base\Helper\ArrayHelper;
+use Rabbit\DB\Pool\PdoPool;
+use Rabbit\Pool\BaseManager;
 
 /**
  * Class Manager
@@ -21,6 +17,8 @@ class Manager extends BaseManager
 {
     /**
      * @param array $configs
+     * @throws DependencyException
+     * @throws NotFoundException
      */
     public function add(array $configs): void
     {
@@ -32,7 +30,7 @@ class Manager extends BaseManager
                 $poolConfig->setUri($config['dsn']);
                 $config['poolName'] = $name;
                 $config['poolKey'] = $poolConfig->getName();
-                $conn = ObjectFactory::createObject($config, [], false);
+                $conn = create($config, [], false);
                 $poolConfig->setConfig(['conn' => $conn]);
                 $this->items[$name] = $conn;
             }

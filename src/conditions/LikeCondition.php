@@ -1,11 +1,14 @@
 <?php
+declare(strict_types=1);
 /**
  * @link http://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
-namespace rabbit\db\conditions;
+namespace Rabbit\DB\Conditions;
+
+use Rabbit\Base\Exception\InvalidArgumentException;
 
 /**
  * Class LikeCondition represents a `LIKE` condition.
@@ -16,11 +19,11 @@ namespace rabbit\db\conditions;
 class LikeCondition extends SimpleCondition
 {
     /**
-     * @var array|false map of chars to their replacements, false if characters should not be escaped
+     * @var array map of chars to their replacements, false if characters should not be escaped
      * or either null or empty array if escaping is condition builder responsibility.
      * By default it's set to `null`.
      */
-    protected $escapingReplacements;
+    protected ?array $escapingReplacements;
 
 
     /**
@@ -30,7 +33,7 @@ class LikeCondition extends SimpleCondition
      * If it is an empty array the generated expression will  be a `false` value if operator is `LIKE` or `OR LIKE`
      * and empty if operator is `NOT LIKE` or `OR NOT LIKE`.
      */
-    public function __construct($column, $operator, $value)
+    public function __construct(string $column, string $operator, $value)
     {
         parent::__construct($column, $operator, $value);
     }
@@ -39,7 +42,7 @@ class LikeCondition extends SimpleCondition
      * {@inheritdoc}
      * @throws InvalidArgumentException if wrong number of operands have been given.
      */
-    public static function fromArrayDefinition($operator, $operands)
+    public static function fromArrayDefinition(string $operator, array $operands): self
     {
         if (!isset($operands[0], $operands[1])) {
             throw new \InvalidArgumentException("Operator '$operator' requires two operands.");
@@ -47,16 +50,16 @@ class LikeCondition extends SimpleCondition
 
         $condition = new static($operands[0], $operator, $operands[1]);
         if (isset($operands[2])) {
-            $condition->escapingReplacements = $operands[2];
+            $condition->escapingReplacements = $operands[2] === false ? null : $operands[2];
         }
 
         return $condition;
     }
 
     /**
-     * @return array|false
+     * @return array
      */
-    public function getEscapingReplacements()
+    public function getEscapingReplacements(): ?array
     {
         return $this->escapingReplacements;
     }
@@ -69,7 +72,7 @@ class LikeCondition extends SimpleCondition
      * should be applied. Note that when using an escape mapping (or the third operand is not provided),
      * the values will be automatically enclosed within a pair of percentage characters.
      */
-    public function setEscapingReplacements($escapingReplacements)
+    public function setEscapingReplacements(?array $escapingReplacements)
     {
         $this->escapingReplacements = $escapingReplacements;
     }

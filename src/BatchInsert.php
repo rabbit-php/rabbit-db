@@ -1,34 +1,35 @@
 <?php
+declare(strict_types=1);
+
+namespace Rabbit\DB;
 
 
-namespace rabbit\db;
+use Rabbit\Base\Helper\StringHelper;
 
-use rabbit\helper\StringHelper;
-
-/**'
+/**
  * Class BatchInsert
- * @package rabbit\db
+ * @package Rabbit\DB
  */
 class BatchInsert implements BatchInterface
 {
     /** @var string */
-    protected $table;
+    protected string $table;
     /** @var array */
-    protected $columnSchemas = [];
-    /** @var */
-    protected $sql;
+    protected array $columnSchemas = [];
+    /** @var string */
+    protected ?string $sql;
     /** @var ConnectionInterface */
-    protected $db;
+    protected ConnectionInterface $db;
     /** @var int */
-    protected $hasRows = 0;
-    protected $schema;
+    protected int $hasRows = 0;
+    /** @var Schema */
+    protected Schema $schema;
     /** @var array */
-    protected $columns = [];
+    protected array $columns = [];
 
     /**
      * BatchInsert constructor.
      * @param string $table
-     * @param array $columns
      * @param ConnectionInterface $db
      */
     public function __construct(string $table, ConnectionInterface $db)
@@ -123,6 +124,7 @@ class BatchInsert implements BatchInterface
 
     /**
      * @return int
+     * @throws Exception
      */
     public function execute(): int
     {

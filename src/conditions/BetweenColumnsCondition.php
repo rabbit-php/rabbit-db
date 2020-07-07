@@ -1,14 +1,16 @@
 <?php
+declare(strict_types=1);
 /**
  * @link http://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
-namespace rabbit\db\conditions;
+namespace Rabbit\DB\Conditions;
 
-use rabbit\db\ExpressionInterface;
-use rabbit\db\Query;
+use Rabbit\Base\Exception\InvalidArgumentException;
+use Rabbit\DB\ExpressionInterface;
+use Rabbit\DB\Query;
 
 /**
  * Class BetweenColumnCondition represents a `BETWEEN` condition where
@@ -42,7 +44,7 @@ class BetweenColumnsCondition implements ConditionInterface
     /**
      * @var string $operator the operator to use (e.g. `BETWEEN` or `NOT BETWEEN`)
      */
-    private $operator;
+    private string $operator;
     /**
      * @var mixed the value to compare against
      */
@@ -77,7 +79,7 @@ class BetweenColumnsCondition implements ConditionInterface
      * {@inheritdoc}
      * @throws InvalidArgumentException if wrong number of operands have been given.
      */
-    public static function fromArrayDefinition($operator, $operands)
+    public static function fromArrayDefinition(string $operator, array $operands): self
     {
         if (!isset($operands[0], $operands[1], $operands[2])) {
             throw new \InvalidArgumentException("Operator '$operator' requires three operands.");
@@ -89,7 +91,7 @@ class BetweenColumnsCondition implements ConditionInterface
     /**
      * @return string
      */
-    public function getOperator()
+    public function getOperator(): string
     {
         return $this->operator;
     }

@@ -1,15 +1,18 @@
 <?php
+declare(strict_types=1);
 /**
  * @link http://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
-namespace rabbit\db;
+namespace Rabbit\DB;
 
-use rabbit\App;
-use rabbit\core\BaseObject;
-use rabbit\exception\NotSupportedException;
+use Psr\SimpleCache\InvalidArgumentException;
+use Rabbit\Base\App;
+use Rabbit\Base\Core\BaseObject;
+use Rabbit\Base\Exception\NotSupportedException;
+use Throwable;
 
 /**
  * Transaction represents a DB transaction.
@@ -69,12 +72,12 @@ class Transaction extends BaseObject
     /**
      * @var Connection the database connection that this transaction is associated with.
      */
-    public $db;
+    public ?Connection $db;
 
     /**
      * @var int the nesting level of the transaction. 0 means the outermost level.
      */
-    protected $_level = 0;
+    protected int $_level = 0;
 
 
     public function __construct(Connection $db)
@@ -101,11 +104,11 @@ class Transaction extends BaseObject
      *
      * Starting from version 2.0.16, this method throws exception when beginning nested transaction and underlying DBMS
      * does not support savepoints.
-     * @throws \InvalidArgumentException if [[db]] is `null`
      * @throws NotSupportedException if the DBMS does not support nested transactions
-     * @throws Exception if DB connection fails
+     * @throws InvalidArgumentException
+     * @throws Throwable
      */
-    public function begin($isolationLevel = null)
+    public function begin(?string $isolationLevel = null): void
     {
         if ($this->db === null) {
             throw new \InvalidArgumentException('Transaction::db must be set.');
@@ -136,8 +139,10 @@ class Transaction extends BaseObject
     /**
      * Commits a transaction.
      * @throws Exception if the transaction is not active
+     * @throws NotSupportedException
+     * @throws Throwable|InvalidArgumentException
      */
-    public function commit()
+    public function commit(): void
     {
         if (!$this->getIsActive()) {
             throw new Exception('Failed to commit transaction: transaction was inactive.');
@@ -165,15 +170,16 @@ class Transaction extends BaseObject
      * @return bool whether this transaction is active. Only an active transaction
      * can [[commit()]] or [[rollBack()]].
      */
-    public function getIsActive()
+    public function getIsActive(): bool
     {
         return $this->_level > 0 && $this->db && $this->db->getIsActive();
     }
 
     /**
      * Rolls back a transaction.
+     * @throws Throwable|InvalidArgumentException
      */
-    public function rollBack()
+    public function rollBack(): void
     {
         if (!$this->getIsActive()) {
             // do nothing if transaction is not active: this could be the transaction is committed
@@ -208,9 +214,11 @@ class Transaction extends BaseObject
      * This can be one of [[READ_UNCOMMITTED]], [[READ_COMMITTED]], [[REPEATABLE_READ]] and [[SERIALIZABLE]] but
      * also a string containing DBMS specific syntax to be used after `SET TRANSACTION ISOLATION LEVEL`.
      * @throws Exception if the transaction is not active
+     * @throws NotSupportedException
+     * @throws Throwable|InvalidArgumentException
      * @see http://en.wikipedia.org/wiki/Isolation_%28database_systems%29#Isolation_levels
      */
-    public function setIsolationLevel($level)
+    public function setIsolationLevel(string $level): void
     {
         if (!$this->getIsActive()) {
             throw new Exception('Failed to set isolation level: transaction was inactive.');
@@ -223,7 +231,7 @@ class Transaction extends BaseObject
      * @return int The current nesting level of the transaction.
      * @since 2.0.8
      */
-    public function getLevel()
+    public function getLevel(): int
     {
         return $this->_level;
     }

@@ -1,18 +1,14 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Administrator
- * Date: 2018/10/29
- * Time: 19:52
- */
+declare(strict_types=1);
 
-namespace rabbit\db;
+namespace Rabbit\DB;
 
-use rabbit\core\Context;
+
+use Rabbit\Base\Core\Context;
 
 /**
  * Class DbContext
- * @package rabbit\illuminate\db
+ * @package Rabbit\DB
  */
 class DbContext extends Context
 {
@@ -37,7 +33,7 @@ class DbContext extends Context
     /**
      * @param string $name
      * @param string $key
-     * @return |null
+     * @return mixed|null
      */
     public static function get(string $name, ?string $key = 'database')
     {

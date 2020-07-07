@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace rabbit\db;
+namespace Rabbit\DB;
 
 /**
  * Interface BatchInterface
- * @package rabbit\db
+ * @package Rabbit\DB
  */
 interface BatchInterface
 {

@@ -1,11 +1,12 @@
 <?php
+declare(strict_types=1);
 /**
  * @link http://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
-namespace rabbit\db;
+namespace Rabbit\DB;
 
 /**
  * Class QueryExpressionBuilder is used internally to build [[Query]] object
@@ -26,8 +27,9 @@ class QueryExpressionBuilder implements ExpressionBuilderInterface
      * @param ExpressionInterface|Query $expression the expression to be built.
      * @param array $params the binding parameters.
      * @return string the raw SQL that will not be additionally escaped or quoted.
+     * @throws Exception
      */
-    public function build(ExpressionInterface $expression, array &$params = [])
+    public function build(ExpressionInterface $expression, array &$params = []): string
     {
         [$sql, $params] = $this->queryBuilder->build($expression, $params);
 

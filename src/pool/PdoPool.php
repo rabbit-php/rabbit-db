@@ -1,20 +1,14 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Administrator
- * Date: 2018/10/29
- * Time: 9:36
- */
+declare(strict_types=1);
 
-namespace rabbit\db\pool;
+namespace Rabbit\DB\Pool;
 
-use rabbit\db\DbContext;
-use rabbit\pool\ConnectionInterface;
-use rabbit\pool\ConnectionPool;
+use Rabbit\DB\DbContext;
+use Rabbit\Pool\ConnectionPool;
 
 /**
  * Class PdoPool
- * @package rabbit\illuminate\db\pool
+ * @package Rabbit\DB\Pool
  */
 class PdoPool extends ConnectionPool
 {

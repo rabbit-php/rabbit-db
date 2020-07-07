@@ -1,11 +1,13 @@
 <?php
+declare(strict_types=1);
 
+namespace Rabbit\DB;
 
-namespace rabbit\db;
-
-use rabbit\core\ObjectFactory;
-use rabbit\db\mysql\RetryHandler;
-use rabbit\pool\PoolProperties;
+use DI\DependencyException;
+use DI\NotFoundException;
+use Rabbit\DB\Pool\PdoPool;
+use Rabbit\Pool\PoolProperties;
+use Throwable;
 
 /**
  * Class MakePdoConnection
@@ -14,12 +16,15 @@ use rabbit\pool\PoolProperties;
 class MakePdoConnection
 {
     /**
+     * @param string $class
      * @param string $name
      * @param string $dsn
      * @param array $pool
+     * @param array $retryHandler
      * @param array $config
-     * @throws \DI\DependencyException
-     * @throws \DI\NotFoundException
+     * @throws DependencyException
+     * @throws NotFoundException
+     * @throws Throwable
      */
     public static function addConnection(
         string $class,
@@ -37,9 +42,9 @@ class MakePdoConnection
                 $name => [
                     'class' => $class,
                     'dsn' => $dsn,
-                    'pool' => ObjectFactory::createObject([
-                        'class' => \rabbit\db\pool\PdoPool::class,
-                        'poolConfig' => ObjectFactory::createObject([
+                    'pool' => create([
+                        'class' => PdoPool::class,
+                        'poolConfig' => create([
                             'class' => PoolProperties::class,
                             'minActive' => intval($pool['min']),
                             'maxActive' => intval($pool['max']),
@@ -50,9 +55,9 @@ class MakePdoConnection
                 ]
             ];
             if (!empty($retryHandler)) {
-                $conn[$name]['retryHandler'] = ObjectFactory::createObject($retryHandler);
+                $conn[$name]['retryHandler'] = create($retryHandler);
             } else {
-                $conn[$name]['retryHandler'] = getDI(RetryHandler::class);
+                $conn[$name]['retryHandler'] = getDI(RetryHandlerInterface::class);
             }
             $manager->add($conn);
         }

@@ -1,11 +1,14 @@
 <?php
+declare(strict_types=1);
 /**
  * @link http://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
-namespace rabbit\db\conditions;
+namespace Rabbit\DB\Conditions;
+
+use Rabbit\Base\Exception\InvalidArgumentException;
 
 /**
  * Condition that inverts passed [[condition]].
@@ -35,7 +38,7 @@ class NotCondition implements ConditionInterface
      * {@inheritdoc}
      * @throws InvalidArgumentException if wrong number of operands have been given.
      */
-    public static function fromArrayDefinition($operator, $operands)
+    public static function fromArrayDefinition(string $operator, array $operands): self
     {
         if (count($operands) !== 1) {
             throw new \InvalidArgumentException("Operator '$operator' requires exactly one operand.");

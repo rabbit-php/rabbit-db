@@ -1,11 +1,12 @@
 <?php
+declare(strict_types=1);
 /**
  * @link http://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
-namespace rabbit\db\conditions;
+namespace Rabbit\DB\Conditions;
 
 /**
  * Class ConjunctionCondition
@@ -32,7 +33,7 @@ abstract class ConjunctionCondition implements ConditionInterface
     /**
      * {@inheritdoc}
      */
-    public static function fromArrayDefinition($operator, $operands)
+    public static function fromArrayDefinition(string $operator, array $operands): self
     {
         return new static($operands);
     }
@@ -49,5 +50,5 @@ abstract class ConjunctionCondition implements ConditionInterface
      * Returns the operator that is represented by this condition class, e.g. `AND`, `OR`.
      * @return string
      */
-    abstract public function getOperator();
+    abstract public function getOperator(): string;
 }

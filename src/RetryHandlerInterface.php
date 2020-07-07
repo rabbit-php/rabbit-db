@@ -1,16 +1,18 @@
 <?php
+declare(strict_types=1);
 
+namespace Rabbit\DB;
 
-namespace rabbit\db;
+use Throwable;
 
 /**
- * Interface RetryHandlerInterface
- * @package rabbit\db
+ * Class RetryHandlerInterface
+ * @package Rabbit\DB
  */
 abstract class RetryHandlerInterface
 {
     /** @var int */
-    protected $totalCount;
+    protected int $totalCount;
     /**
      * @return int
      */
@@ -21,10 +23,9 @@ abstract class RetryHandlerInterface
     abstract public function setTotalCount(int $count): void;
 
     /**
-     * @param Command $cmd
-     * @param \Throwable $e
+     * @param Throwable $e
      * @param int $count
      * @return bool
      */
-    abstract public function handle(\Throwable $e, int $count): bool;
+    abstract public function handle(Throwable $e, int $count): bool;
 }

@@ -1,11 +1,12 @@
 <?php
+declare(strict_types=1);
 /**
  * @link http://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
-namespace rabbit\db\conditions;
+namespace Rabbit\DB\Conditions;
 
 use rabbit\db\Query;
 
@@ -20,11 +21,11 @@ class ExistsCondition implements ConditionInterface
     /**
      * @var string $operator the operator to use (e.g. `EXISTS` or `NOT EXISTS`)
      */
-    private $operator;
+    private string $operator;
     /**
      * @var Query the [[Query]] object representing the sub-query.
      */
-    private $query;
+    private Query $query;
 
 
     /**
@@ -33,7 +34,7 @@ class ExistsCondition implements ConditionInterface
      * @param string $operator the operator to use (e.g. `EXISTS` or `NOT EXISTS`)
      * @param Query $query the [[Query]] object representing the sub-query.
      */
-    public function __construct($operator, $query)
+    public function __construct(string $operator, Query $query)
     {
         $this->operator = $operator;
         $this->query = $query;
@@ -42,7 +43,7 @@ class ExistsCondition implements ConditionInterface
     /**
      * {@inheritdoc}
      */
-    public static function fromArrayDefinition($operator, $operands)
+    public static function fromArrayDefinition(string $operator, array $operands): self
     {
         if (!isset($operands[0]) || !$operands[0] instanceof Query) {
             throw new \InvalidArgumentException('Subquery for EXISTS operator must be a Query object.');
@@ -54,7 +55,7 @@ class ExistsCondition implements ConditionInterface
     /**
      * @return string
      */
-    public function getOperator()
+    public function getOperator(): string
     {
         return $this->operator;
     }
@@ -62,7 +63,7 @@ class ExistsCondition implements ConditionInterface
     /**
      * @return Query
      */
-    public function getQuery()
+    public function getQuery(): Query
     {
         return $this->query;
     }

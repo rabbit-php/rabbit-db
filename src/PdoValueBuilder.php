@@ -1,11 +1,12 @@
 <?php
+declare(strict_types=1);
 /**
  * @link http://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
-namespace rabbit\db;
+namespace Rabbit\DB;
 
 /**
  * Class PdoValueBuilder builds object of the [[PdoValue]] expression class.
@@ -18,7 +19,7 @@ class PdoValueBuilder implements ExpressionBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public function build(ExpressionInterface $expression, array &$params = [])
+    public function build(ExpressionInterface $expression, array &$params = []): string
     {
         $params[count($params)] = $expression;
 

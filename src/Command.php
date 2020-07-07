@@ -1,16 +1,22 @@
 <?php
+declare(strict_types=1);
 /**
  * @link http://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
-namespace rabbit\db;
+namespace Rabbit\DB;
 
+use Generator;
+use PDOException;
+use PDOStatement;
 use Psr\SimpleCache\CacheInterface;
-use rabbit\App;
-use rabbit\core\BaseObject;
-use rabbit\exception\NotSupportedException;
+use Psr\SimpleCache\InvalidArgumentException;
+use Rabbit\Base\App;
+use Rabbit\Base\Core\BaseObject;
+use Rabbit\Base\Exception\NotSupportedException;
+use Throwable;
 
 /**
  * Command represents a SQL statement to be executed against a database.
@@ -60,49 +66,46 @@ class Command extends BaseObject
     /**
      * @var Connection the DB connection that this command is associated with
      */
-    public $db;
+    public ?Connection $db;
     /**
-     * @var \PDOStatement the PDOStatement object that this command is associated with
+     * @var PDOStatement the PDOStatement object that this command is associated with
      */
-    public $pdoStatement;
+    public ?PDOStatement $pdoStatement;
     /**
      * @var int the default fetch mode for this command.
      * @see http://www.php.net/manual/en/pdostatement.setfetchmode.php
      */
-    public $fetchMode = \PDO::FETCH_ASSOC;
+    public int $fetchMode = \PDO::FETCH_ASSOC;
     /**
      * @var array the parameters (name => value) that are bound to the current PDO statement.
      * This property is maintained by methods such as [[bindValue()]]. It is mainly provided for logging purpose
      * and is used to generate [[rawSql]]. Do not modify it directly.
      */
-    public $params = [];
+    public array $params = [];
     /**
      * @var int the default number of seconds that query results can remain valid in cache.
      * Use 0 to indicate that the cached data will never expire. And use a negative number to indicate
      * query cache should not be used.
      * @see cache()
      */
-    public $queryCacheDuration;
+    public ?int $queryCacheDuration;
 
     /**
      * @var array pending parameters to be bound to the current PDO statement.
      */
-    protected $_pendingParams = [];
+    protected array $_pendingParams = [];
     /**
      * @var string the SQL statement that this command represents
      */
-    protected $_sql;
+    protected ?string $_sql;
     /**
      * @var string name of the table, which schema, should be refreshed after command execution.
      */
-    protected $_refreshTableName;
-    /**
-     * @var string|false|null the isolation level to use for this transaction.
-     * See [[Transaction::begin()]] for details.
-     */
-    protected $_isolationLevel = false;
+    protected ?string $_refreshTableName;
+    /** @var bool|null */
+    protected ?bool $_isolationLevel = false;
     /** @var CacheInterface|null */
-    protected $cache = null;
+    protected ?CacheInterface $cache = null;
 
     public function __destruct()
     {
@@ -142,9 +145,13 @@ class Command extends BaseObject
      * @param int $length length of the data type
      * @param mixed $driverOptions the driver-specific options
      * @return $this the current command being executed
+     * @throws Exception
+     * @throws InvalidArgumentException
+     * @throws NotSupportedException
+     * @throws Throwable
      * @see http://www.php.net/manual/en/function.PDOStatement-bindParam.php
      */
-    public function bindParam($name, &$value, $dataType = null, $length = null, $driverOptions = null)
+    public function bindParam($name, &$value, ?int $dataType = null, ?int $length = null, $driverOptions = null): self
     {
         $this->prepare();
 
@@ -172,8 +179,11 @@ class Command extends BaseObject
      * @param bool $forRead whether this method is called for a read query. If null, it means
      * the SQL statement should be used to determine whether it is for read or write.
      * @throws Exception if there is any DB error
+     * @throws InvalidArgumentException
+     * @throws NotSupportedException
+     * @throws Throwable
      */
-    public function prepare($forRead = null)
+    public function prepare(?bool $forRead = null)
     {
         if ($this->pdoStatement) {
             $this->bindPendingParams();
@@ -192,12 +202,15 @@ class Command extends BaseObject
         } else {
             $pdo = $this->db->getMasterPdo();
         }
+        if ($pdo === null) {
+            throw new Exception('Can not get the connection!');
+        }
         try {
             $this->pdoStatement = $pdo->prepare($sql);
             $this->bindPendingParams();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $message = $e->getMessage() . " Failed to prepare SQL: $sql";
-            $errorInfo = $e instanceof \PDOException ? $e->errorInfo : null;
+            $errorInfo = $e instanceof PDOException ? $e->errorInfo : null;
             $e = new Exception($message, $errorInfo, (int)$e->getCode(), $e);
             throw $e;
         }
@@ -207,7 +220,7 @@ class Command extends BaseObject
      * Binds pending parameters that were registered via [[bindValue()]] and [[bindValues()]].
      * Note that this method requires an active [[pdoStatement]].
      */
-    protected function bindPendingParams()
+    protected function bindPendingParams(): void
     {
         foreach ($this->_pendingParams as $name => $value) {
             $this->pdoStatement->bindValue(is_int($name) ? $name + 1 : $name, $value[0], $value[1]);
@@ -218,7 +231,7 @@ class Command extends BaseObject
      * Returns the SQL statement for this command.
      * @return string the SQL statement to be executed
      */
-    public function getSql()
+    public function getSql(): ?string
     {
         return $this->_sql;
     }
@@ -233,7 +246,7 @@ class Command extends BaseObject
      * @see reset()
      * @see cancel()
      */
-    public function setSql($sql)
+    public function setSql(string $sql): self
     {
         if ($sql !== $this->_sql) {
             $this->cancel();
@@ -253,9 +266,12 @@ class Command extends BaseObject
      * @param mixed $value The value to bind to the parameter
      * @param int $dataType SQL data type of the parameter. If null, the type is determined by the PHP type of the value.
      * @return $this the current command being executed
+     * @throws NotSupportedException
+     * @throws Throwable
+     * @throws InvalidArgumentException
      * @see http://www.php.net/manual/en/function.PDOStatement-bindValue.php
      */
-    public function bindValue($name, $value, $dataType = null)
+    public function bindValue($name, $value, int $dataType = null): self
     {
         if ($dataType === null) {
             $dataType = $this->db->getSchema()->getPdoType($value);
@@ -270,9 +286,9 @@ class Command extends BaseObject
      * Executes the SQL statement and returns query result.
      * This method is for executing a SQL query that returns result set, such as `SELECT`.
      * @return DataReader the reader object for fetching the query result
-     * @throws Exception execution failed
+     * @throws Throwable execution failed
      */
-    public function query()
+    public function query(): DataReader
     {
         return $this->queryInternal('');
     }
@@ -283,10 +299,11 @@ class Command extends BaseObject
      * @param int $fetchMode the result fetch mode. Please refer to [PHP manual](http://www.php.net/manual/en/function.PDOStatement-setFetchMode.php)
      * for valid fetch modes. If this parameter is null, the value set in [[fetchMode]] will be used.
      * @return mixed the method execution result
-     * @throws Exception if the query causes any problem
+     * @throws InvalidArgumentException
+     * @throws Throwable
      * @since 2.0.1 this method is protected (was private before).
      */
-    protected function queryInternal($method, $fetchMode = null)
+    protected function queryInternal(string $method, int $fetchMode = null)
     {
         $rawSql = $this->getRawSql();
 
@@ -326,7 +343,7 @@ class Command extends BaseObject
                 $result = call_user_func_array([$this->pdoStatement, $method], (array)$fetchMode);
                 $this->pdoStatement->closeCursor();
             }
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             throw $e;
         }
 
@@ -338,8 +355,10 @@ class Command extends BaseObject
     }
 
     /**
-     * @return string
-     * @throws \Exception
+     * @param string $rawSql
+     * @param string $module
+     * @return void
+     * @throws Throwable
      */
     protected function logQuery(string $rawSql, string $module = 'db'): void
     {
@@ -353,8 +372,11 @@ class Command extends BaseObject
      * Note that the return value of this method should mainly be used for logging purpose.
      * It is likely that this method returns an invalid SQL due to improper replacement of parameter placeholders.
      * @return string the raw SQL with parameter values inserted into the corresponding placeholders in [[sql]].
+     * @throws InvalidArgumentException
+     * @throws NotSupportedException
+     * @throws Throwable
      */
-    public function getRawSql()
+    public function getRawSql(): string
     {
         if (empty($this->params)) {
             return $this->_sql;
@@ -393,9 +415,12 @@ class Command extends BaseObject
      *
      * @param string|null $rawSql the rawSql if it has been created.
      * @throws Exception if execution failed.
+     * @throws InvalidArgumentException
+     * @throws NotSupportedException
+     * @throws Throwable
      * @since 2.0.14
      */
-    protected function internalExecute($rawSql)
+    protected function internalExecute(?string $rawSql): void
     {
         $attempt = 0;
         while (true) {
@@ -435,9 +460,10 @@ class Command extends BaseObject
      * for valid fetch modes. If this parameter is null, the value set in [[fetchMode]] will be used.
      * @return array all rows of the query result. Each array element is an array representing a row of data.
      * An empty array is returned if the query results in nothing.
-     * @throws Exception execution failed
+     * @throws InvalidArgumentException
+     * @throws Throwable
      */
-    public function queryAll($fetchMode = null)
+    public function queryAll(int $fetchMode = null)
     {
         $res = $this->queryInternal('fetchAll', $fetchMode);
         if ($res === false) {
@@ -451,30 +477,38 @@ class Command extends BaseObject
      * This method is best used when only the first row of result is needed for a query.
      * @param int $fetchMode the result fetch mode. Please refer to [PHP manual](http://php.net/manual/en/pdostatement.setfetchmode.php)
      * for valid fetch modes. If this parameter is null, the value set in [[fetchMode]] will be used.
-     * @return array|false the first row (in terms of an array) of the query result. False is returned if the query
+     * @return array the first row (in terms of an array) of the query result. False is returned if the query
      * results in nothing.
-     * @throws Exception execution failed
+     * @throws InvalidArgumentException
+     * @throws Throwable
      */
-    public function queryOne($fetchMode = null)
+    public function queryOne(int $fetchMode = null): ?array
     {
-        return $this->queryInternal('fetch', $fetchMode);
+        if (false === $result = $this->queryInternal('fetch', $fetchMode)) {
+            return null;
+        }
+        return $result;
     }
 
     /**
      * Executes the SQL statement and returns the value of the first column in the first row of data.
      * This method is best used when only a single value is needed for a query.
-     * @return string|null|false the value of the first column in the first row of the query result.
+     * @return string|null the value of the first column in the first row of the query result.
      * False is returned if there is no value.
-     * @throws Exception execution failed
+     * @throws InvalidArgumentException
+     * @throws Throwable
      */
-    public function queryScalar()
+    public function queryScalar(): ?string
     {
         $result = $this->queryInternal('fetchColumn', 0);
         if (is_resource($result) && get_resource_type($result) === 'stream') {
-            return stream_get_contents($result);
+            if (false === $res = stream_get_contents($result)) {
+                return null;
+            }
+            return $res;
         }
 
-        return $result;
+        return (string)$result;
     }
 
     /**
@@ -482,9 +516,10 @@ class Command extends BaseObject
      * This method is best used when only the first column of result (i.e. the first element in each row)
      * is needed for a query.
      * @return array the first column of the query result. Empty array is returned if the query results in nothing.
-     * @throws Exception execution failed
+     * @throws InvalidArgumentException
+     * @throws Throwable
      */
-    public function queryColumn()
+    public function queryColumn(): ?array
     {
         return $this->queryInternal('fetchAll', \PDO::FETCH_COLUMN);
     }
@@ -510,8 +545,11 @@ class Command extends BaseObject
      * of [[rabbit\db\Query|Query]] to perform INSERT INTO ... SELECT SQL statement.
      * Passing of [[rabbit\db\Query|Query]] is available since version 2.0.11.
      * @return $this the command object itself
+     * @throws InvalidArgumentException
+     * @throws NotSupportedException
+     * @throws Throwable
      */
-    public function insert($table, $columns)
+    public function insert(string $table, $columns): self
     {
         $params = [];
         $sql = $this->db->getQueryBuilder()->insert($table, $columns, $params);
@@ -529,8 +567,11 @@ class Command extends BaseObject
      * by its PHP type. You may explicitly specify the PDO type by using a [[rabbit\db\PdoValue]] class: `new PdoValue(value, type)`,
      * e.g. `[':name' => 'John', ':profile' => new PdoValue($profile, \PDO::PARAM_LOB)]`.
      * @return $this the current command being executed
+     * @throws InvalidArgumentException
+     * @throws NotSupportedException
+     * @throws Throwable
      */
-    public function bindValues($values)
+    public function bindValues(array $values): self
     {
         if (empty($values)) {
             return $this;
@@ -575,10 +616,13 @@ class Command extends BaseObject
      *
      * @param string $table the table that new rows will be inserted into.
      * @param array $columns the column names
-     * @param array|\Generator $rows the rows to be batch inserted into the table
+     * @param array|Generator $rows the rows to be batch inserted into the table
      * @return $this the command object itself
+     * @throws InvalidArgumentException
+     * @throws NotSupportedException
+     * @throws Throwable
      */
-    public function batchInsert($table, $columns, $rows)
+    public function batchInsert(string $table, array $columns, $rows): self
     {
         $table = $this->db->quoteSql($table);
         $columns = array_map(function ($column) {
@@ -605,7 +649,7 @@ class Command extends BaseObject
      * @see reset()
      * @see cancel()
      */
-    public function setRawSql($sql)
+    public function setRawSql(string $sql): self
     {
         if ($sql !== $this->_sql) {
             $this->cancel();
@@ -630,7 +674,7 @@ class Command extends BaseObject
      *
      * @since 2.0.13
      */
-    protected function reset()
+    protected function reset(): void
     {
         $this->_sql = null;
         $this->_pendingParams = [];
@@ -666,9 +710,12 @@ class Command extends BaseObject
      * If `false` is passed, no update will be performed if the column data already exists.
      * @param array $params the parameters to be bound to the command.
      * @return $this the command object itself.
+     * @throws InvalidArgumentException
+     * @throws NotSupportedException
+     * @throws Throwable
      * @since 2.0.14
      */
-    public function upsert($table, $insertColumns, $updateColumns = true, $params = [])
+    public function upsert(string $table, $insertColumns, $updateColumns = true, array $params = []): self
     {
         $sql = $this->db->getQueryBuilder()->upsert($table, $insertColumns, $updateColumns, $params);
 
@@ -701,8 +748,11 @@ class Command extends BaseObject
      * refer to [[Query::where()]] on how to specify condition.
      * @param array $params the parameters to be bound to the command
      * @return $this the command object itself
+     * @throws InvalidArgumentException
+     * @throws NotSupportedException
+     * @throws Throwable
      */
-    public function update($table, $columns, $condition = '', $params = [])
+    public function update(string $table, array $columns, $condition = '', array $params = []): self
     {
         $sql = $this->db->getQueryBuilder()->update($table, $columns, $condition, $params);
 
@@ -734,8 +784,11 @@ class Command extends BaseObject
      * refer to [[Query::where()]] on how to specify condition.
      * @param array $params the parameters to be bound to the command
      * @return $this the command object itself
+     * @throws InvalidArgumentException
+     * @throws NotSupportedException
+     * @throws Throwable
      */
-    public function delete($table, $condition = '', $params = [])
+    public function delete(string $table, $condition = '', array $params = []): self
     {
         $sql = $this->db->getQueryBuilder()->delete($table, $condition, $params);
 
@@ -759,8 +812,11 @@ class Command extends BaseObject
      * @param array $columns the columns (name => definition) in the new table.
      * @param string $options additional SQL fragment that will be appended to the generated SQL.
      * @return $this the command object itself
+     * @throws InvalidArgumentException
+     * @throws NotSupportedException
+     * @throws Throwable
      */
-    public function createTable($table, $columns, $options = null)
+    public function createTable(string $table, array $columns, string $options = null): self
     {
         $sql = $this->db->getQueryBuilder()->createTable($table, $columns, $options);
 
@@ -773,7 +829,7 @@ class Command extends BaseObject
      * @return $this this command instance
      * @since 2.0.6
      */
-    protected function requireTableSchemaRefresh($name)
+    protected function requireTableSchemaRefresh(string $name): self
     {
         $this->_refreshTableName = $name;
         return $this;
@@ -784,8 +840,11 @@ class Command extends BaseObject
      * @param string $table the table to be renamed. The name will be properly quoted by the method.
      * @param string $newName the new table name. The name will be properly quoted by the method.
      * @return $this the command object itself
+     * @throws InvalidArgumentException
+     * @throws NotSupportedException
+     * @throws Throwable
      */
-    public function renameTable($table, $newName)
+    public function renameTable(string $table, string $newName): self
     {
         $sql = $this->db->getQueryBuilder()->renameTable($table, $newName);
 
@@ -796,8 +855,11 @@ class Command extends BaseObject
      * Creates a SQL command for dropping a DB table.
      * @param string $table the table to be dropped. The name will be properly quoted by the method.
      * @return $this the command object itself
+     * @throws InvalidArgumentException
+     * @throws NotSupportedException
+     * @throws Throwable
      */
-    public function dropTable($table)
+    public function dropTable(string $table): self
     {
         $sql = $this->db->getQueryBuilder()->dropTable($table);
 
@@ -808,8 +870,11 @@ class Command extends BaseObject
      * Creates a SQL command for truncating a DB table.
      * @param string $table the table to be truncated. The name will be properly quoted by the method.
      * @return $this the command object itself
+     * @throws InvalidArgumentException
+     * @throws NotSupportedException
+     * @throws Throwable
      */
-    public function truncateTable($table)
+    public function truncateTable(string $table): self
     {
         $sql = $this->db->getQueryBuilder()->truncateTable($table);
 
@@ -824,8 +889,11 @@ class Command extends BaseObject
      * to convert the give column type to the physical one. For example, `string` will be converted
      * as `varchar(255)`, and `string not null` becomes `varchar(255) not null`.
      * @return $this the command object itself
+     * @throws InvalidArgumentException
+     * @throws NotSupportedException
+     * @throws Throwable
      */
-    public function addColumn($table, $column, $type)
+    public function addColumn(string $table, string $column, string $type): self
     {
         $sql = $this->db->getQueryBuilder()->addColumn($table, $column, $type);
 
@@ -837,8 +905,11 @@ class Command extends BaseObject
      * @param string $table the table whose column is to be dropped. The name will be properly quoted by the method.
      * @param string $column the name of the column to be dropped. The name will be properly quoted by the method.
      * @return $this the command object itself
+     * @throws InvalidArgumentException
+     * @throws NotSupportedException
+     * @throws Throwable
      */
-    public function dropColumn($table, $column)
+    public function dropColumn(string $table, string $column): self
     {
         $sql = $this->db->getQueryBuilder()->dropColumn($table, $column);
 
@@ -851,8 +922,11 @@ class Command extends BaseObject
      * @param string $oldName the old name of the column. The name will be properly quoted by the method.
      * @param string $newName the new name of the column. The name will be properly quoted by the method.
      * @return $this the command object itself
+     * @throws InvalidArgumentException
+     * @throws NotSupportedException
+     * @throws Throwable
      */
-    public function renameColumn($table, $oldName, $newName)
+    public function renameColumn(string $table, string $oldName, string $newName): self
     {
         $sql = $this->db->getQueryBuilder()->renameColumn($table, $oldName, $newName);
 
@@ -867,8 +941,11 @@ class Command extends BaseObject
      * to convert the give column type to the physical one. For example, `string` will be converted
      * as `varchar(255)`, and `string not null` becomes `varchar(255) not null`.
      * @return $this the command object itself
+     * @throws InvalidArgumentException
+     * @throws NotSupportedException
+     * @throws Throwable
      */
-    public function alterColumn($table, $column, $type)
+    public function alterColumn(string $table, string $column, string $type): self
     {
         $sql = $this->db->getQueryBuilder()->alterColumn($table, $column, $type);
 
@@ -882,8 +959,11 @@ class Command extends BaseObject
      * @param string $table the table that the primary key constraint will be added to.
      * @param string|array $columns comma separated string or array of columns that the primary key will consist of.
      * @return $this the command object itself.
+     * @throws InvalidArgumentException
+     * @throws NotSupportedException
+     * @throws Throwable
      */
-    public function addPrimaryKey($name, $table, $columns)
+    public function addPrimaryKey(string $name, string $table, $columns): self
     {
         $sql = $this->db->getQueryBuilder()->addPrimaryKey($name, $table, $columns);
 
@@ -895,8 +975,11 @@ class Command extends BaseObject
      * @param string $name the name of the primary key constraint to be removed.
      * @param string $table the table that the primary key constraint will be removed from.
      * @return $this the command object itself
+     * @throws InvalidArgumentException
+     * @throws NotSupportedException
+     * @throws Throwable
      */
-    public function dropPrimaryKey($name, $table)
+    public function dropPrimaryKey(string $name, string $table): self
     {
         $sql = $this->db->getQueryBuilder()->dropPrimaryKey($name, $table);
 
@@ -914,8 +997,11 @@ class Command extends BaseObject
      * @param string $delete the ON DELETE option. Most DBMS support these options: RESTRICT, CASCADE, NO ACTION, SET DEFAULT, SET NULL
      * @param string $update the ON UPDATE option. Most DBMS support these options: RESTRICT, CASCADE, NO ACTION, SET DEFAULT, SET NULL
      * @return $this the command object itself
+     * @throws InvalidArgumentException
+     * @throws NotSupportedException
+     * @throws Throwable
      */
-    public function addForeignKey($name, $table, $columns, $refTable, $refColumns, $delete = null, $update = null)
+    public function addForeignKey(string $name, string $table, $columns, string $refTable, $refColumns, string $delete = null, string $update = null): self
     {
         $sql = $this->db->getQueryBuilder()->addForeignKey(
             $name,
@@ -935,8 +1021,11 @@ class Command extends BaseObject
      * @param string $name the name of the foreign key constraint to be dropped. The name will be properly quoted by the method.
      * @param string $table the table whose foreign is to be dropped. The name will be properly quoted by the method.
      * @return $this the command object itself
+     * @throws InvalidArgumentException
+     * @throws NotSupportedException
+     * @throws Throwable
      */
-    public function dropForeignKey($name, $table)
+    public function dropForeignKey(string $name, string $table): self
     {
         $sql = $this->db->getQueryBuilder()->dropForeignKey($name, $table);
 
@@ -951,8 +1040,11 @@ class Command extends BaseObject
      * by commas. The column names will be properly quoted by the method.
      * @param bool $unique whether to add UNIQUE constraint on the created index.
      * @return $this the command object itself
+     * @throws InvalidArgumentException
+     * @throws NotSupportedException
+     * @throws Throwable
      */
-    public function createIndex($name, $table, $columns, $unique = false)
+    public function createIndex(string $name, string $table, $columns, bool $unique = false): self
     {
         $sql = $this->db->getQueryBuilder()->createIndex($name, $table, $columns, $unique);
 
@@ -964,8 +1056,11 @@ class Command extends BaseObject
      * @param string $name the name of the index to be dropped. The name will be properly quoted by the method.
      * @param string $table the table whose index is to be dropped. The name will be properly quoted by the method.
      * @return $this the command object itself
+     * @throws InvalidArgumentException
+     * @throws NotSupportedException
+     * @throws Throwable
      */
-    public function dropIndex($name, $table)
+    public function dropIndex(string $name, string $table): self
     {
         $sql = $this->db->getQueryBuilder()->dropIndex($name, $table);
 
@@ -982,9 +1077,12 @@ class Command extends BaseObject
      * If there are multiple columns, separate them with commas.
      * The name will be properly quoted by the method.
      * @return $this the command object itself.
+     * @throws InvalidArgumentException
+     * @throws NotSupportedException
+     * @throws Throwable
      * @since 2.0.13
      */
-    public function addUnique($name, $table, $columns)
+    public function addUnique(string $name, string $table, $columns): self
     {
         $sql = $this->db->getQueryBuilder()->addUnique($name, $table, $columns);
 
@@ -998,9 +1096,12 @@ class Command extends BaseObject
      * @param string $table the table whose unique constraint is to be dropped.
      * The name will be properly quoted by the method.
      * @return $this the command object itself.
+     * @throws InvalidArgumentException
+     * @throws NotSupportedException
+     * @throws Throwable
      * @since 2.0.13
      */
-    public function dropUnique($name, $table)
+    public function dropUnique(string $name, string $table): self
     {
         $sql = $this->db->getQueryBuilder()->dropUnique($name, $table);
 
@@ -1015,9 +1116,12 @@ class Command extends BaseObject
      * The name will be properly quoted by the method.
      * @param string $expression the SQL of the `CHECK` constraint.
      * @return $this the command object itself.
+     * @throws InvalidArgumentException
+     * @throws NotSupportedException
+     * @throws Throwable
      * @since 2.0.13
      */
-    public function addCheck($name, $table, $expression)
+    public function addCheck(string $name, string $table, string $expression): self
     {
         $sql = $this->db->getQueryBuilder()->addCheck($name, $table, $expression);
 
@@ -1031,9 +1135,12 @@ class Command extends BaseObject
      * @param string $table the table whose check constraint is to be dropped.
      * The name will be properly quoted by the method.
      * @return $this the command object itself.
+     * @throws InvalidArgumentException
+     * @throws NotSupportedException
+     * @throws Throwable
      * @since 2.0.13
      */
-    public function dropCheck($name, $table)
+    public function dropCheck(string $name, string $table): self
     {
         $sql = $this->db->getQueryBuilder()->dropCheck($name, $table);
 
@@ -1050,9 +1157,12 @@ class Command extends BaseObject
      * The name will be properly quoted by the method.
      * @param mixed $value default value.
      * @return $this the command object itself.
+     * @throws InvalidArgumentException
+     * @throws NotSupportedException
+     * @throws Throwable
      * @since 2.0.13
      */
-    public function addDefaultValue($name, $table, $column, $value)
+    public function addDefaultValue(string $name, string $table, string $column, $value): self
     {
         $sql = $this->db->getQueryBuilder()->addDefaultValue($name, $table, $column, $value);
 
@@ -1066,9 +1176,12 @@ class Command extends BaseObject
      * @param string $table the table whose default value constraint is to be dropped.
      * The name will be properly quoted by the method.
      * @return $this the command object itself.
+     * @throws InvalidArgumentException
+     * @throws NotSupportedException
+     * @throws Throwable
      * @since 2.0.13
      */
-    public function dropDefaultValue($name, $table)
+    public function dropDefaultValue(string $name, string $table): self
     {
         $sql = $this->db->getQueryBuilder()->dropDefaultValue($name, $table);
 
@@ -1083,9 +1196,11 @@ class Command extends BaseObject
      * @param mixed $value the value for the primary key of the next new row inserted. If this is not set,
      * the next new row's primary key will have a value 1.
      * @return $this the command object itself
+     * @throws InvalidArgumentException
      * @throws NotSupportedException if this is not supported by the underlying DBMS
+     * @throws Throwable
      */
-    public function resetSequence($table, $value = null)
+    public function resetSequence(string $table, $value = null): self
     {
         $sql = $this->db->getQueryBuilder()->resetSequence($table, $value);
 
@@ -1099,9 +1214,11 @@ class Command extends BaseObject
      * or default schema.
      * @param string $table the table name.
      * @return $this the command object itself
+     * @throws InvalidArgumentException
      * @throws NotSupportedException if this is not supported by the underlying DBMS
+     * @throws Throwable
      */
-    public function checkIntegrity($check = true, $schema = '', $table = '')
+    public function checkIntegrity(bool $check = true, string $schema = '', string $table = ''): self
     {
         $sql = $this->db->getQueryBuilder()->checkIntegrity($check, $schema, $table);
 
@@ -1115,9 +1232,12 @@ class Command extends BaseObject
      * @param string $column the name of the column to be commented. The column name will be properly quoted by the method.
      * @param string $comment the text of the comment to be added. The comment will be properly quoted by the method.
      * @return $this the command object itself
+     * @throws InvalidArgumentException
+     * @throws NotSupportedException
+     * @throws Throwable
      * @since 2.0.8
      */
-    public function addCommentOnColumn($table, $column, $comment)
+    public function addCommentOnColumn(string $table, string $column, string $comment): self
     {
         $sql = $this->db->getQueryBuilder()->addCommentOnColumn($table, $column, $comment);
 
@@ -1130,9 +1250,12 @@ class Command extends BaseObject
      * @param string $table the table whose column is to be commented. The table name will be properly quoted by the method.
      * @param string $comment the text of the comment to be added. The comment will be properly quoted by the method.
      * @return $this the command object itself
+     * @throws InvalidArgumentException
+     * @throws NotSupportedException
+     * @throws Throwable
      * @since 2.0.8
      */
-    public function addCommentOnTable($table, $comment)
+    public function addCommentOnTable(string $table, string $comment): self
     {
         $sql = $this->db->getQueryBuilder()->addCommentOnTable($table, $comment);
 
@@ -1145,9 +1268,12 @@ class Command extends BaseObject
      * @param string $table the table whose column is to be commented. The table name will be properly quoted by the method.
      * @param string $column the name of the column to be commented. The column name will be properly quoted by the method.
      * @return $this the command object itself
+     * @throws InvalidArgumentException
+     * @throws NotSupportedException
+     * @throws Throwable
      * @since 2.0.8
      */
-    public function dropCommentFromColumn($table, $column)
+    public function dropCommentFromColumn(string $table, string $column): self
     {
         $sql = $this->db->getQueryBuilder()->dropCommentFromColumn($table, $column);
 
@@ -1159,9 +1285,12 @@ class Command extends BaseObject
      *
      * @param string $table the table whose column is to be commented. The table name will be properly quoted by the method.
      * @return $this the command object itself
+     * @throws InvalidArgumentException
+     * @throws NotSupportedException
+     * @throws Throwable
      * @since 2.0.8
      */
-    public function dropCommentFromTable($table)
+    public function dropCommentFromTable(string $table): self
     {
         $sql = $this->db->getQueryBuilder()->dropCommentFromTable($table);
 
@@ -1175,9 +1304,12 @@ class Command extends BaseObject
      * @param string|Query $subquery the select statement which defines the view.
      * This can be either a string or a [[Query]] object.
      * @return $this the command object itself.
+     * @throws InvalidArgumentException
+     * @throws NotSupportedException
+     * @throws Throwable
      * @since 2.0.14
      */
-    public function createView($viewName, $subquery)
+    public function createView(string $viewName, $subquery): self
     {
         $sql = $this->db->getQueryBuilder()->createView($viewName, $subquery);
 
@@ -1189,9 +1321,12 @@ class Command extends BaseObject
      *
      * @param string $viewName the name of the view to be dropped.
      * @return $this the command object itself.
+     * @throws InvalidArgumentException
+     * @throws NotSupportedException
+     * @throws Throwable
      * @since 2.0.14
      */
-    public function dropView($viewName)
+    public function dropView(string $viewName): self
     {
         $sql = $this->db->getQueryBuilder()->dropView($viewName);
 
@@ -1204,8 +1339,11 @@ class Command extends BaseObject
      * No result set will be returned.
      * @return int number of rows affected by the execution.
      * @throws Exception execution failed
+     * @throws InvalidArgumentException
+     * @throws NotSupportedException
+     * @throws Throwable
      */
-    public function execute()
+    public function execute(): int
     {
         $sql = $this->_sql;
         $rawSql = $this->getRawSql();
@@ -1226,10 +1364,11 @@ class Command extends BaseObject
     }
 
     /**
-     * Refreshes table schema, which was marked by [[requireTableSchemaRefresh()]].
-     * @since 2.0.6
+     * @throws InvalidArgumentException
+     * @throws NotSupportedException
+     * @throws Throwable
      */
-    protected function refreshTableSchema()
+    protected function refreshTableSchema(): void
     {
         if ($this->_refreshTableName !== null) {
             $this->db->getSchema()->refreshTableSchema($this->_refreshTableName);
@@ -1243,7 +1382,7 @@ class Command extends BaseObject
      * @return $this this command instance.
      * @since 2.0.14
      */
-    protected function requireTransaction($isolationLevel = null)
+    protected function requireTransaction(?string $isolationLevel = null): self
     {
         $this->_isolationLevel = $isolationLevel;
         return $this;

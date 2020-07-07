@@ -1,9 +1,10 @@
 <?php
+declare(strict_types=1);
 
-namespace rabbit\db;
+namespace Rabbit\DB;
 
 use Psr\SimpleCache\CacheInterface;
-use rabbit\helper\ArrayHelper;
+use Rabbit\Base\Helper\ArrayHelper;
 
 /**
  * Class DBHelper
@@ -14,11 +15,11 @@ class DBHelper
     /**
      * @param Query $query
      * @param array $filter
-     * @param $handle
-     * @param $db
+     * @param string $handle
+     * @param ConnectionInterface $db
      * @return mixed
      */
-    public static function PubSearch(Query $query, array $filter, $handle, $db = null)
+    public static function PubSearch(Query $query, array $filter, string $handle, ConnectionInterface $db = null)
     {
         $query = static::Search($query, $filter);
         if (is_array($handle)) {
@@ -47,6 +48,9 @@ class DBHelper
      * @param Query $query
      * @param array|null $filter
      * @param int $page
+     * @param int $duration
+     * @param CacheInterface|null $cache
+     * @param ConnectionInterface|null $db
      * @return array
      */
     public static function SearchList(

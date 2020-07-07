@@ -1,13 +1,15 @@
 <?php
+declare(strict_types=1);
 /**
  * @link http://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
-namespace rabbit\db\conditions;
+namespace Rabbit\DB\Conditions;
 
-use rabbit\db\ExpressionInterface;
+use Rabbit\Base\Exception\InvalidArgumentException;
+use Rabbit\DB\ExpressionInterface;
 
 /**
  * Class InCondition represents `IN` condition.
@@ -20,7 +22,7 @@ class InCondition implements ConditionInterface
     /**
      * @var string $operator the operator to use (e.g. `IN` or `NOT IN`)
      */
-    private $operator;
+    private string $operator;
     /**
      * @var string|string[] the column name. If it is an array, a composite `IN` condition
      * will be generated.
@@ -31,7 +33,7 @@ class InCondition implements ConditionInterface
      * If it is an empty array the generated expression will be a `false` value if
      * [[operator]] is `IN` and empty if operator is `NOT IN`.
      */
-    private $values;
+    private array $values;
 
 
     /**
@@ -43,7 +45,7 @@ class InCondition implements ConditionInterface
      * @param array an array of values that [[column]] value should be among. If it is an empty array the generated
      * expression will be a `false` value if [[operator]] is `IN` and empty if operator is `NOT IN`.
      */
-    public function __construct($column, $operator, $values)
+    public function __construct($column, string $operator, $values)
     {
         $this->column = $column;
         $this->operator = $operator;
@@ -54,7 +56,7 @@ class InCondition implements ConditionInterface
      * {@inheritdoc}
      * @throws InvalidArgumentException if wrong number of operands have been given.
      */
-    public static function fromArrayDefinition($operator, $operands)
+    public static function fromArrayDefinition(string $operator, array $operands): self
     {
         if (!isset($operands[0], $operands[1])) {
             throw new \InvalidArgumentException("Operator '$operator' requires two operands.");
@@ -66,7 +68,7 @@ class InCondition implements ConditionInterface
     /**
      * @return string
      */
-    public function getOperator()
+    public function getOperator(): string
     {
         return $this->operator;
     }

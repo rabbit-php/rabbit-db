@@ -1,11 +1,12 @@
 <?php
+declare(strict_types=1);
 /**
  * @link http://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
-namespace rabbit\db;
+namespace Rabbit\DB;
 
 /**
  * Class JsonExpression represents data that should be encoded to JSON.
@@ -35,7 +36,7 @@ class JsonExpression implements ExpressionInterface, \JsonSerializable
      * This property will be encountered only for DBMSs that support different types of JSON.
      * For example, PostgreSQL has `json` and `jsonb` types.
      */
-    protected $type;
+    protected ?string $type;
 
 
     /**
@@ -47,7 +48,7 @@ class JsonExpression implements ExpressionInterface, \JsonSerializable
      *
      * @see type
      */
-    public function __construct($value, $type = null)
+    public function __construct($value, string $type = null)
     {
         if ($value instanceof self) {
             $value = $value->getValue();
@@ -70,7 +71,7 @@ class JsonExpression implements ExpressionInterface, \JsonSerializable
      * @return null|string the type of JSON
      * @see type
      */
-    public function getType()
+    public function getType(): ?string
     {
         return $this->type;
     }

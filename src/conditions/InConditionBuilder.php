@@ -1,16 +1,19 @@
 <?php
+declare(strict_types=1);
 /**
  * @link http://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
-namespace rabbit\db\conditions;
+namespace Rabbit\DB\Conditions;
 
-use rabbit\db\ExpressionBuilderInterface;
-use rabbit\db\ExpressionBuilderTrait;
-use rabbit\db\ExpressionInterface;
-use rabbit\db\Query;
+use ArrayAccess;
+use Rabbit\DB\ExpressionBuilderInterface;
+use Rabbit\DB\ExpressionBuilderTrait;
+use Rabbit\DB\ExpressionInterface;
+use Rabbit\DB\Query;
+use Traversable;
 
 /**
  * Class InConditionBuilder builds objects of [[InCondition]]
@@ -31,7 +34,7 @@ class InConditionBuilder implements ExpressionBuilderInterface
      * @param array $params the binding parameters.
      * @return string the raw SQL that will not be additionally escaped or quoted.
      */
-    public function build(ExpressionInterface $expression, array &$params = [])
+    public function build(ExpressionInterface $expression, array &$params = []): string
     {
         $operator = $expression->getOperator();
         $column = $expression->getColumn();
@@ -46,11 +49,11 @@ class InConditionBuilder implements ExpressionBuilderInterface
             return $this->buildSubqueryInCondition($operator, $column, $values, $params);
         }
 
-        if (!is_array($values) && !$values instanceof \Traversable) {
+        if (!is_array($values) && !$values instanceof Traversable) {
             // ensure values is an array
             $values = (array)$values;
         }
-        if ($column instanceof \Traversable || ((is_array($column) || $column instanceof \Countable) && count($column) > 1)) {
+        if ($column instanceof Traversable || ((is_array($column) || $column instanceof \Countable) && count($column) > 1)) {
             return $this->buildCompositeInCondition($operator, $column, $values, $params);
         }
 
@@ -84,7 +87,7 @@ class InConditionBuilder implements ExpressionBuilderInterface
      * @param array $params
      * @return string SQL
      */
-    protected function buildSubqueryInCondition($operator, $columns, $values, &$params)
+    protected function buildSubqueryInCondition(string $operator, $columns, Query $values, array &$params): string
     {
         $sql = $this->queryBuilder->buildExpression($values, $params);
 
@@ -109,12 +112,12 @@ class InConditionBuilder implements ExpressionBuilderInterface
      * Builds SQL for IN condition.
      *
      * @param string $operator
-     * @param array|\Traversable $columns
+     * @param array|Traversable $columns
      * @param array $values
      * @param array $params
      * @return string SQL
      */
-    protected function buildCompositeInCondition($operator, $columns, $values, &$params)
+    protected function buildCompositeInCondition(string $operator, $columns, array $values, array &$params): string
     {
         $vss = [];
         foreach ($values as $value) {
@@ -152,13 +155,13 @@ class InConditionBuilder implements ExpressionBuilderInterface
      * @param array $params the binding parameters
      * @return array of prepared for SQL placeholders
      */
-    protected function buildValues(ConditionInterface $condition, $values, &$params)
+    protected function buildValues(ConditionInterface $condition, array $values, array &$params): array
     {
         $sqlValues = [];
         $column = $condition->getColumn();
 
         foreach ($values as $i => $value) {
-            if (is_array($value) || $value instanceof \ArrayAccess) {
+            if (is_array($value) || $value instanceof ArrayAccess) {
                 $value = $value[$column] ?? null;
             }
             if ($value === null) {

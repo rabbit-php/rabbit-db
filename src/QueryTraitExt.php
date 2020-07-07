@@ -1,7 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace rabbit\db;
+namespace Rabbit\DB;
+
+use Psr\SimpleCache\InvalidArgumentException;
+use Throwable;
 
 /**
  * Trait QueryTraitExt
@@ -48,6 +51,8 @@ trait QueryTraitExt
     /**
      * @param array $rows
      * @return array
+     * @throws InvalidArgumentException
+     * @throws Throwable
      */
     public function populate(array $rows)
     {
@@ -69,13 +74,15 @@ trait QueryTraitExt
     }
 
     /**
-     * @param null $db
-     * @return bool|mixed
+     * @param ConnectionInterface|null $db
+     * @return array|null
+     * @throws InvalidArgumentException
+     * @throws Throwable
      */
-    public function one($db = null)
+    public function one(ConnectionInterface $db = null): ?array
     {
         if ($this->emulateExecution) {
-            return false;
+            return null;
         }
         $result = $this->createCommand($db)->queryOne();
         if ($result) {
@@ -88,8 +95,10 @@ trait QueryTraitExt
     /**
      * @param array $result
      * @return array
+     * @throws InvalidArgumentException
+     * @throws Throwable
      */
-    public function buildWith(array $result)
+    public function buildWith(array $result): array
     {
         if (is_array($this->joinWith)) {
             foreach ($this->joinWith as $key => $with) {
@@ -135,7 +144,7 @@ trait QueryTraitExt
      * @param array $list
      * @return QueryTraitExt
      */
-    public function joinWithOne(array $list)
+    public function joinWithOne(array $list): self
     {
         $this->flag = false;
         return $this->group($list);
@@ -144,14 +153,18 @@ trait QueryTraitExt
     /**
      * @param array $tableList
      */
-    public function joinWithOneList(array $tableList)
+    public function joinWithOneList(array $tableList): void
     {
         foreach ($tableList as $table) {
             $this->joinWithOne($table);
         }
     }
 
-    public function joinWithMany(array $list)
+    /**
+     * @param array $list
+     * @return QueryTraitExt
+     */
+    public function joinWithMany(array $list): self
     {
         $this->flag = true;
         return $this->group($list);
@@ -160,7 +173,7 @@ trait QueryTraitExt
     /**
      * @param array $tableList
      */
-    public function joinWithManyList(array $tableList)
+    public function joinWithManyList(array $tableList): void
     {
         foreach ($tableList as $table) {
             $this->joinWithMany($table);
@@ -171,7 +184,7 @@ trait QueryTraitExt
      * @param array $list
      * @return $this
      */
-    public function group(array $list)
+    public function group(array $list): self
     {
         foreach ($list as $key => $join) {
             if (is_array($join)) {
@@ -204,7 +217,7 @@ trait QueryTraitExt
      * @param array $columns
      * @return $this
      */
-    public function querySelect(array $columns)
+    public function querySelect(array $columns): self
     {
         foreach ($columns as $key => $val) {
             $columns[$key] = DBHelper::Search(new Query(), $val);
@@ -222,7 +235,7 @@ trait QueryTraitExt
      * @param array $params
      * @return $this
      */
-    public function addWhere(array $condition = [], array $params = [])
+    public function addWhere(array $condition = [], array $params = []): self
     {
         if ($condition) {
             if ($this->where === null) {
@@ -241,9 +254,8 @@ trait QueryTraitExt
      * @param array $condition
      * @param array $params
      * @return $this
-     * @throws \rabbit\exception\NotSupportedException
      */
-    public function addFilterWhere(array $condition = [], array $params = [])
+    public function addFilterWhere(array $condition = [], array $params = []): self
     {
         if ($condition) {
             if ($this->where === null) {
@@ -265,7 +277,7 @@ trait QueryTraitExt
      * @param $val
      * @return string
      */
-    private function makeWhere($val)
+    private function makeWhere($val): string
     {
         if (is_string($val)) {
             return $val;
@@ -286,7 +298,12 @@ trait QueryTraitExt
         return $val;
     }
 
-    public function queryWhere($condition = [], $params = [])
+    /**
+     * @param array $condition
+     * @param array $params
+     * @return $this
+     */
+    public function queryWhere(array $condition = [], array &$params = []): self
     {
         if ($condition) {
             if ($this->where === null) {

@@ -1,13 +1,15 @@
 <?php
+declare(strict_types=1);
 /**
  * @link http://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
-namespace rabbit\db\conditions;
+namespace Rabbit\DB\Conditions;
 
-use rabbit\db\ExpressionInterface;
+use Rabbit\Base\Exception\InvalidArgumentException;
+use Rabbit\DB\ExpressionInterface;
 
 /**
  * Interface ConditionInterface should be implemented by classes that represent a condition
@@ -26,7 +28,7 @@ interface ConditionInterface extends ExpressionInterface
      * @param array $operands array of corresponding operands
      *
      * @return $this
-     * @throws \InvalidArgumentException if input parameters are not suitable for this condition
+     * @throws InvalidArgumentException if input parameters are not suitable for this condition
      */
-    public static function fromArrayDefinition($operator, $operands);
+    public static function fromArrayDefinition(string $operator, array $operands): self;
 }

@@ -1,11 +1,12 @@
 <?php
+declare(strict_types=1);
 /**
  * @link http://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
-namespace rabbit\db;
+namespace Rabbit\DB;
 
 /**
  * IndexConstraint represents the metadata of a table `INDEX` constraint.
@@ -18,9 +19,9 @@ class IndexConstraint extends Constraint
     /**
      * @var bool whether the index is unique.
      */
-    public $isUnique;
+    public bool $isUnique;
     /**
      * @var bool whether the index was created for a primary key.
      */
-    public $isPrimary;
+    public bool $isPrimary;
 }

@@ -1,13 +1,14 @@
 <?php
+declare(strict_types=1);
 /**
  * @link http://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
-namespace rabbit\db;
+namespace Rabbit\DB;
 
-use rabbit\exception\NotSupportedException;
+use Rabbit\Base\Exception\NotSupportedException;
 
 /**
  * The BaseQuery trait represents the minimum method set of a database Query.
@@ -44,7 +45,7 @@ trait QueryTrait
      * The array may also contain [[ExpressionInterface]] objects. If that is the case, the expressions
      * will be converted into strings without any change.
      */
-    public $orderBy;
+    public array $orderBy;
     /**
      * @var string|callable the name of the column by which the query results should be indexed by.
      * This can also be a callable (e.g. anonymous function) that returns the index value based on the given
@@ -56,7 +57,7 @@ trait QueryTrait
      * @see emulateExecution()
      * @since 2.0.11
      */
-    public $emulateExecution = false;
+    public bool $emulateExecution = false;
 
 
     /**
@@ -74,7 +75,7 @@ trait QueryTrait
      *
      * @return $this the query object itself
      */
-    public function indexBy($column)
+    public function indexBy($column): self
     {
         $this->indexBy = $column;
         return $this;
@@ -103,11 +104,12 @@ trait QueryTrait
      * @param array $condition the conditions that should be put in the WHERE part.
      * See [[where()]] on how to specify this parameter.
      * @return $this the query object itself
-     * @see where()
+     * @throws NotSupportedException
      * @see andFilterWhere()
      * @see orFilterWhere()
+     * @see where()
      */
-    public function filterWhere(array $condition)
+    public function filterWhere(array $condition): self
     {
         $condition = $this->filterCondition($condition);
         if ($condition !== []) {
@@ -194,7 +196,7 @@ trait QueryTrait
      * @param mixed $value
      * @return bool if the value is empty
      */
-    protected function isEmpty($value)
+    protected function isEmpty($value): bool
     {
         return $value === '' || $value === [] || $value === null || is_string($value) && trim($value) === '';
     }
@@ -209,7 +211,7 @@ trait QueryTrait
      * @see andWhere()
      * @see orWhere()
      */
-    public function where($condition)
+    public function where($condition): self
     {
         $this->where = $condition;
         return $this;
@@ -226,10 +228,11 @@ trait QueryTrait
      * @param array $condition the new WHERE condition. Please refer to [[where()]]
      * on how to specify this parameter.
      * @return $this the query object itself
-     * @see filterWhere()
+     * @throws NotSupportedException
      * @see orFilterWhere()
+     * @see filterWhere()
      */
-    public function andFilterWhere(array $condition)
+    public function andFilterWhere(array $condition): self
     {
         $condition = $this->filterCondition($condition);
         if ($condition !== []) {
@@ -248,7 +251,7 @@ trait QueryTrait
      * @see where()
      * @see orWhere()
      */
-    public function andWhere($condition)
+    public function andWhere($condition): self
     {
         if ($this->where === null) {
             $this->where = $condition;
@@ -270,10 +273,11 @@ trait QueryTrait
      * @param array $condition the new WHERE condition. Please refer to [[where()]]
      * on how to specify this parameter.
      * @return $this the query object itself
-     * @see filterWhere()
+     * @throws NotSupportedException
      * @see andFilterWhere()
+     * @see filterWhere()
      */
-    public function orFilterWhere(array $condition)
+    public function orFilterWhere(array $condition): self
     {
         $condition = $this->filterCondition($condition);
         if ($condition !== []) {
@@ -292,7 +296,7 @@ trait QueryTrait
      * @see where()
      * @see andWhere()
      */
-    public function orWhere($condition)
+    public function orWhere($condition): self
     {
         if ($this->where === null) {
             $this->where = $condition;
@@ -320,7 +324,7 @@ trait QueryTrait
      * @return $this the query object itself
      * @see addOrderBy()
      */
-    public function orderBy($columns)
+    public function orderBy($columns): self
     {
         $this->orderBy = $this->normalizeOrderBy($columns);
         return $this;
@@ -343,7 +347,7 @@ trait QueryTrait
      * @return $this the query object itself
      * @see orderBy()
      */
-    public function addOrderBy($columns)
+    public function addOrderBy($columns): self
     {
         $columns = $this->normalizeOrderBy($columns);
         if ($this->orderBy === null) {
@@ -360,7 +364,7 @@ trait QueryTrait
      * @param int|ExpressionInterface|null $limit the limit. Use null or negative value to disable limit.
      * @return $this the query object itself
      */
-    public function limit($limit)
+    public function limit($limit): self
     {
         $this->limit = $limit;
         return $this;
@@ -371,7 +375,7 @@ trait QueryTrait
      * @param int|ExpressionInterface|null $offset the offset. Use null or negative value to disable offset.
      * @return $this the query object itself
      */
-    public function offset($offset)
+    public function offset($offset): self
     {
         $this->offset = $offset;
         return $this;
@@ -387,7 +391,7 @@ trait QueryTrait
      * @return $this the query object itself.
      * @since 2.0.11
      */
-    public function emulateExecution($value = true)
+    public function emulateExecution(bool $value = true): self
     {
         $this->emulateExecution = $value;
         return $this;

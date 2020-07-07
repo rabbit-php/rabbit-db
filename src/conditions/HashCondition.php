@@ -1,11 +1,12 @@
 <?php
+declare(strict_types=1);
 /**
  * @link http://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
-namespace rabbit\db\conditions;
+namespace Rabbit\DB\Conditions;
 
 /**
  * Condition based on column-value pairs.
@@ -18,7 +19,7 @@ class HashCondition implements ConditionInterface
     /**
      * @var array|null the condition specification.
      */
-    private $hash;
+    private ?array $hash;
 
 
     /**
@@ -34,7 +35,7 @@ class HashCondition implements ConditionInterface
     /**
      * {@inheritdoc}
      */
-    public static function fromArrayDefinition($operator, $operands)
+    public static function fromArrayDefinition(string $operator, array $operands): self
     {
         return new static($operands);
     }
@@ -42,7 +43,7 @@ class HashCondition implements ConditionInterface
     /**
      * @return array|null
      */
-    public function getHash()
+    public function getHash(): ?array
     {
         return $this->hash;
     }

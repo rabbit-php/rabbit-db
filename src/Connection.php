@@ -1,21 +1,24 @@
 <?php
+declare(strict_types=1);
 /**
  * @link http://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
-namespace rabbit\db;
+namespace Rabbit\DB;
 
+use DI\DependencyException;
+use DI\NotFoundException;
 use PDO;
 use Psr\SimpleCache\CacheInterface;
+use Psr\SimpleCache\InvalidArgumentException;
 use rabbit\App;
-use rabbit\core\BaseObject;
-use rabbit\core\Context;
-use rabbit\core\ObjectFactory;
-use rabbit\exception\NotSupportedException;
-use rabbit\helper\ArrayHelper;
-use rabbit\helper\UrlHelper;
+use Rabbit\Base\Core\BaseObject;
+use Rabbit\Base\Core\Context;
+use Rabbit\Base\Exception\NotSupportedException;
+use Rabbit\Base\Helper\UrlHelper;
+use Throwable;
 
 /**
  * Connection represents a connection to a database via [PDO](http://php.net/manual/en/book.pdo.php).
@@ -157,47 +160,25 @@ class Connection extends BaseObject implements ConnectionInterface
 {
     use ConnectionTrait;
 
-    /**
-     * @var string|array the Data Source Name, or DSN, contains the information required to connect to the database.
-     * Please refer to the [PHP manual](http://php.net/manual/en/pdo.construct.php) on
-     * the format of the DSN string.
-     *
-     * For [SQLite](http://php.net/manual/en/ref.pdo-sqlite.connection.php) you may use a [path alias](guide:concept-aliases)
-     * for specifying the database path, e.g. `sqlite:@app/data/db.sql`.
-     *
-     * Since version 3.0.0 an array can be passed to contruct a DSN string.
-     * The `driver` array key is used as the driver prefix of the DSN,
-     * all further key-value pairs are rendered as `key=value` and concatenated by `;`. For example:
-     *
-     * ```php
-     * 'dsn' => [
-     *     'driver' => 'mysql',
-     *     'host' => '127.0.0.1',
-     *     'dbname' => 'demo',
-     *     'charset' => 'utf8',
-     * ],
-     * ```
-     *
-     * Will result in the DSN string `mysql:host=127.0.0.1;dbname=demo`.
-     */
-    public $dsn;
     /** @var string */
-    public $shortDsn;
+    public ?string $dsn;
+    /** @var string */
+    public ?string $shortDsn;
     /**
      * @var string the username for establishing DB connection. Defaults to `null` meaning no username to use.
      */
-    public $username;
+    public ?string $username;
     /**
      * @var string the password for establishing DB connection. Defaults to `null` meaning no password to use.
      */
-    public $password;
+    public ?string $password;
     /**
      * @var array PDO attributes (name => value) that should be set when calling [[open()]]
      * to establish a DB connection. Please refer to the
      * [PHP manual](http://php.net/manual/en/pdo.setattribute.php) for
      * details about available attributes.
      */
-    public $attributes;
+    public ?array $attributes;
     /**
      * @var bool whether to enable schema caching.
      * Note that in order to enable truly schema caching, a valid cache component as specified
@@ -206,25 +187,25 @@ class Connection extends BaseObject implements ConnectionInterface
      * @see schemaCacheExclude
      * @see schemaCache
      */
-    public $enableSchemaCache = true;
+    public bool $enableSchemaCache = true;
     /**
      * @var int number of seconds that table metadata can remain valid in cache.
      * Use 0 to indicate that the cached data will never expire.
      * @see enableSchemaCache
      */
-    public $schemaCacheDuration;
+    public ?int $schemaCacheDuration;
     /**
      * @var array list of tables whose metadata should NOT be cached. Defaults to empty array.
      * The table names may contain schema prefix, if any. Do not quote the table names.
      * @see enableSchemaCache
      */
-    public $schemaCacheExclude = [];
+    public array $schemaCacheExclude = [];
     /**
-     * @var CacheInterface|string the cache object or the ID of the cache application component that
+     * @var CacheInterface the cache object or the ID of the cache application component that
      * is used to cache the table metadata.
      * @see enableSchemaCache
      */
-    public $schemaCache = 'cache';
+    public ?CacheInterface $schemaCache;
     /**
      * @var bool whether to enable query caching.
      * Note that in order to enable query caching, a valid cache component as specified
@@ -234,13 +215,13 @@ class Connection extends BaseObject implements ConnectionInterface
      * @see cache()
      * @see noCache()
      */
-    public $enableQueryCache = true;
+    public bool $enableQueryCache = true;
     /**
-     * @var CacheInterface|string the cache object or the ID of the cache application component
+     * @var CacheInterface the cache object or the ID of the cache application component
      * that is used for query caching.
      * @see enableQueryCache
      */
-    public $queryCache = 'cache';
+    public ?CacheInterface $queryCache;
     /**
      * @var string the charset used for database connection. The property is only used
      * for MySQL, PostgreSQL and CUBRID databases. Defaults to null, meaning using default charset
@@ -252,7 +233,7 @@ class Connection extends BaseObject implements ConnectionInterface
      * The same applies for if you're using GBK or BIG5 charset with MySQL, then it's highly recommended to
      * specify charset via [[dsn]] like `'mysql:dbname=mydatabase;host=127.0.0.1;charset=GBK;'`.
      */
-    public $charset;
+    public ?string $charset;
 
     /**
      * @var bool whether to turn on prepare emulation. Defaults to false, meaning PDO
@@ -261,13 +242,13 @@ class Connection extends BaseObject implements ConnectionInterface
      * the buggy native prepare support.
      * The default value is null, which means the PDO ATTR_EMULATE_PREPARES value will not be changed.
      */
-    public $emulatePrepare;
+    public ?bool $emulatePrepare;
     /**
      * @var string the common prefix or suffix for table names. If a table name is given
      * as `{{%TableName}}`, then the percentage character `%` will be replaced with this
      * property value. For example, `{{%post}}` becomes `{{tbl_post}}`.
      */
-    public $tablePrefix = '';
+    public string $tablePrefix = '';
     /**
      * @var array mapping between PDO driver names and [[Schema]] classes.
      * The keys of the array are PDO driver names while the values are either the corresponding
@@ -278,38 +259,38 @@ class Connection extends BaseObject implements ConnectionInterface
      * You normally do not need to set this property unless you want to use your own
      * [[Schema]] class to support DBMS that is not supported by Yii.
      */
-    public $schemaMap = [
-        'mysqli' => mysql\Schema::class, // MySQL
-        'mysql' => mysql\Schema::class, // MySQL
+    public array $schemaMap = [
+//        'mysqli' => mysql\Schema::class, // MySQL
+//        'mysql' => mysql\Schema::class, // MySQL
     ];
     /**
      * @var string Custom PDO wrapper class. If not set, it will use [[PDO]] or [[\rabbit\db\mssql\PDO]] when MSSQL is used.
      * @see pdo
      */
-    public $pdoClass;
+    public ?string $pdoClass;
 
     /**
      * @var bool whether to enable [savepoint](http://en.wikipedia.org/wiki/Savepoint).
      * Note that if the underlying DBMS does not support savepoint, setting this property to be true will have no effect.
      */
-    public $enableSavepoint = true;
+    public bool $enableSavepoint = true;
     /**
-     * @var CacheInterface|string|false the cache object or the ID of the cache application component that is used to store
+     * @var CacheInterface the cache object or the ID of the cache application component that is used to store
      * the health status of the DB servers specified in [[masters]] and [[slaves]].
      * This is used only when read/write splitting is enabled or [[masters]] is not empty.
      * Set boolean `false` to disabled server status caching.
      */
-    public $serverStatusCache = 'cache';
+    public ?CacheInterface $serverStatusCache;
     /**
      * @var int the retry interval in seconds for dead servers listed in [[masters]] and [[slaves]].
      * This is used together with [[serverStatusCache]].
      */
-    public $serverRetryInterval = 600;
+    public int $serverRetryInterval = 600;
     /**
      * @var bool whether to enable read/write splitting by using [[slaves]] to read data.
      * Note that if [[slaves]] is empty, read/write splitting will NOT be enabled no matter what value this property takes.
      */
-    public $enableSlaves = true;
+    public bool $enableSlaves = true;
     /**
      * @var array list of slave connection configurations. Each configuration is used to create a slave DB connection.
      * When [[enableSlaves]] is true, one of these configurations will be chosen and used to create a DB connection
@@ -317,7 +298,7 @@ class Connection extends BaseObject implements ConnectionInterface
      * @see enableSlaves
      * @see slaveConfig
      */
-    public $slaves = [];
+    public array $slaves = [];
     /**
      * @var array the configuration that should be merged with every slave configuration listed in [[slaves]].
      * For example,
@@ -333,7 +314,7 @@ class Connection extends BaseObject implements ConnectionInterface
      * ]
      * ```
      */
-    public $slaveConfig = [];
+    public array $slaveConfig = [];
     /**
      * @var array list of master connection configurations. Each configuration is used to create a master DB connection.
      * When [[open()]] is called, one of these configurations will be chosen and used to create a DB connection
@@ -343,7 +324,7 @@ class Connection extends BaseObject implements ConnectionInterface
      * @see masterConfig
      * @see shuffleMasters
      */
-    public $masters = [];
+    public array $masters = [];
     /**
      * @var array the configuration that should be merged with every master configuration listed in [[masters]].
      * For example,
@@ -359,13 +340,13 @@ class Connection extends BaseObject implements ConnectionInterface
      * ]
      * ```
      */
-    public $masterConfig = [];
+    public array $masterConfig = [];
     /**
      * @var bool whether to shuffle [[masters]] before getting one.
      * @since 2.0.11
      * @see masters
      */
-    public $shuffleMasters = true;
+    public bool $shuffleMasters = true;
     /**
      * @var bool whether to enable logging of database queries. Defaults to true.
      * You may want to disable this option in a production environment to gain performance
@@ -373,39 +354,39 @@ class Connection extends BaseObject implements ConnectionInterface
      * @since 2.0.12
      * @see enableProfiling
      */
-    public $enableLogging = true;
+    public bool $enableLogging = true;
     /** @var int */
-    public $maxLog = 1024;
+    public int $maxLog = 1024;
     /** @var string | Transaction */
     protected $transactionClass = Transaction::class;
     /**
      * @var Schema the database schema
      */
-    protected $_schema;
+    protected ?Schema $_schema;
     /**
      * @var string driver name
      */
-    protected $_driverName;
+    protected ?string $_driverName;
     /**
-     * @var Connection|false the currently active master connection
+     * @var Connection the currently active master connection
      */
-    protected $_master = false;
+    protected ?Connection $_master = null;
     /**
-     * @var Connection|false the currently active slave connection
+     * @var Connection the currently active slave connection
      */
-    protected $_slave = false;
+    protected ?Connection $_slave = null;
     /** @var RetryHandlerInterface|null */
-    protected $retryHandler = null;
+    protected ?RetryHandlerInterface $retryHandler = null;
     /** @var bool */
-    protected $hasOrm = false;
+    protected bool $hasOrm = false;
     /** @var string */
-    protected $commandClass = Command::class;
+    protected string $commandClass = Command::class;
     /** @var string */
-    public $poolName = 'default';
+    public string $poolName = 'default';
     /** @var string */
-    public $driver = 'pdo';
+    public string $driver = 'pdo';
     /** @var array */
-    protected $parseDsn = [];
+    protected ?array $parseDsn = [];
 
     /**
      * Connection constructor.
@@ -440,7 +421,7 @@ class Connection extends BaseObject implements ConnectionInterface
      * Returns a value indicating whether the DB connection is established.
      * @return bool whether the DB connection is established
      */
-    public function getIsActive()
+    public function getIsActive(): bool
     {
         return DbContext::get($this->poolName, $this->driver) !== null;
     }
@@ -449,10 +430,12 @@ class Connection extends BaseObject implements ConnectionInterface
      * Returns the current query cache information.
      * This method is used internally by [[Command]].
      * @param int $duration the preferred caching duration. If null, it will be ignored.
+     * @param CacheInterface|null $cache
      * @return array the current query cache information, or null if query cache is not enabled.
+     * @throws Throwable
      * @internal
      */
-    public function getQueryCacheInfo($duration, ?CacheInterface $cache = null)
+    public function getQueryCacheInfo(?int $duration, ?CacheInterface $cache = null)
     {
         if (!$this->enableQueryCache) {
             return null;
@@ -460,8 +443,8 @@ class Connection extends BaseObject implements ConnectionInterface
 
         if ($duration === 0 || $duration > 0) {
             if ($cache === null) {
-                if (is_string($this->queryCache)) {
-                    $cache = getDI($this->queryCache, false);
+                if ($this->queryCache === null) {
+                    $cache = getDI('cache', false);
                 } else {
                     $cache = $this->queryCache;
                 }
@@ -477,6 +460,7 @@ class Connection extends BaseObject implements ConnectionInterface
     /**
      * Closes the currently active DB connection.
      * It does nothing if the connection is already closed.
+     * @throws \Exception
      */
     public function close()
     {
@@ -487,7 +471,7 @@ class Connection extends BaseObject implements ConnectionInterface
             }
 
             $this->_master->close();
-            $this->_master = false;
+            $this->_master = null;
         }
 
         if ($pdo !== null) {
@@ -498,7 +482,7 @@ class Connection extends BaseObject implements ConnectionInterface
 
         if ($this->_slave) {
             $this->_slave->close();
-            $this->_slave = false;
+            $this->_slave = null;
         }
     }
 
@@ -507,22 +491,26 @@ class Connection extends BaseObject implements ConnectionInterface
      * @param string $sql the SQL statement to be executed
      * @param array $params the parameters to be bound to the SQL statement
      * @return Command the DB command
+     * @throws DependencyException
+     * @throws NotFoundException
      */
-    public function createCommand($sql = null, $params = [])
+    public function createCommand(?string $sql = null, array $params = []): Command
     {
         $config = ['class' => $this->commandClass, 'retryHandler' => $this->retryHandler];
         $config['db'] = $this;
         $config['sql'] = $sql;
         /** @var Command $command */
-        $command = ObjectFactory::createObject($config, [], false);
+        $command = create($config, [], false);
         return $command->bindValues($params);
     }
 
     /**
      * @param array $array
      * @return Command
-     * @throws \DI\DependencyException
-     * @throws \DI\NotFoundException
+     * @throws DependencyException
+     * @throws Exception
+     * @throws NotFoundException
+     * @throws Throwable
      */
     public function createCommandExt(array $array): Command
     {
@@ -539,12 +527,11 @@ class Connection extends BaseObject implements ConnectionInterface
         if (false === $array = \swoole_orm::$method(...$data)) {
             throw new Exception("Can not build sql");
         }
-        $driver = $this->getDriverName();
         $config = ['class' => $this->commandClass, 'retryHandler' => $this->retryHandler];
         $config['db'] = $this;
         $config['sql'] = $array['sql'];
         /** @var Command $command */
-        $command = ObjectFactory::createObject($config, [], false);
+        $command = create($config, [], false);
         return $command->bindValues($array['bind_value']);
     }
 
@@ -552,8 +539,10 @@ class Connection extends BaseObject implements ConnectionInterface
      * Returns the name of the DB driver. Based on the the current [[dsn]], in case it was not set explicitly
      * by an end user.
      * @return string name of the DB driver
+     * @throws InvalidArgumentException
+     * @throws Throwable
      */
-    public function getDriverName()
+    public function getDriverName(): string
     {
         if ($this->_driverName === null) {
             if (($pos = strpos($this->dsn, ':')) !== false) {
@@ -570,7 +559,7 @@ class Connection extends BaseObject implements ConnectionInterface
      * Changes the current driver name.
      * @param string $driverName name of the DB driver
      */
-    public function setDriverName($driverName)
+    public function setDriverName(string $driverName)
     {
         $this->_driverName = strtolower($driverName);
     }
@@ -582,8 +571,10 @@ class Connection extends BaseObject implements ConnectionInterface
      * @param bool $fallbackToMaster whether to return a master PDO in case none of the slave connections is available.
      * @return PDO the PDO instance for the currently active slave connection. `null` is returned if no slave connection
      * is available and `$fallbackToMaster` is false.
+     * @throws InvalidArgumentException
+     * @throws Throwable
      */
-    public function getSlavePdo($fallbackToMaster = true)
+    public function getSlavePdo(bool $fallbackToMaster = true)
     {
         $db = $this->getSlave(false);
         if ($db === null) {
@@ -599,8 +590,10 @@ class Connection extends BaseObject implements ConnectionInterface
      * @param bool $fallbackToMaster whether to return a master connection in case there is no slave connection available.
      * @return Connection the currently active slave connection. `null` is returned if there is no slave available and
      * `$fallbackToMaster` is false.
+     * @throws InvalidArgumentException
+     * @throws Throwable
      */
-    public function getSlave($fallbackToMaster = true)
+    public function getSlave(bool $fallbackToMaster = true): ?self
     {
         if (!$this->enableSlaves) {
             return $fallbackToMaster ? $this : null;
@@ -620,9 +613,10 @@ class Connection extends BaseObject implements ConnectionInterface
      * @param array $pool the list of connection configurations in the server pool
      * @param array $sharedConfig the configuration common to those given in `$pool`.
      * @return Connection the opened DB connection, or `null` if no server is available
-     * @throws InvalidConfigException if a configuration does not specify "dsn"
+     * @throws InvalidArgumentException
+     * @throws Throwable
      */
-    protected function openFromPool(array $pool, array $sharedConfig)
+    protected function openFromPool(array $pool, array $sharedConfig): ?self
     {
         shuffle($pool);
         return $this->openFromPoolSequentially($pool, $sharedConfig);
@@ -635,10 +629,11 @@ class Connection extends BaseObject implements ConnectionInterface
      * @param array $pool the list of connection configurations in the server pool
      * @param array $sharedConfig the configuration common to those given in `$pool`.
      * @return Connection the opened DB connection, or `null` if no server is available
-     * @throws InvalidConfigException if a configuration does not specify "dsn"
+     * @throws Throwable
+     * @throws InvalidArgumentException
      * @since 2.0.11
      */
-    protected function openFromPoolSequentially(array $pool, array $sharedConfig)
+    protected function openFromPoolSequentially(array $pool, array $sharedConfig): ?self
     {
         if (empty($pool)) {
             return null;
@@ -666,7 +661,7 @@ class Connection extends BaseObject implements ConnectionInterface
             }
 
             /* @var $db Connection */
-            $db = ObjectFactory::createObject($config, []);
+            $db = create($config, []);
 
             try {
                 $db->open();
@@ -685,8 +680,8 @@ class Connection extends BaseObject implements ConnectionInterface
 
     /**
      * @param int $attempt
-     * @throws Exception
-     * @throws NotSupportedException
+     * @throws InvalidArgumentException
+     * @throws Throwable
      */
     public function open(int $attempt = 0)
     {
@@ -720,11 +715,13 @@ class Connection extends BaseObject implements ConnectionInterface
      * Returns the currently active master connection.
      * If this method is called for the first time, it will try to open a master connection.
      * @return Connection the currently active master connection. `null` is returned if there is no master available.
+     * @throws InvalidArgumentException
+     * @throws Throwable
      * @since 2.0.11
      */
-    public function getMaster()
+    public function getMaster(): ?self
     {
-        if ($this->_master === false) {
+        if ($this->_master === null) {
             $this->_master = $this->shuffleMasters
                 ? $this->openFromPool($this->masters, $this->masterConfig)
                 : $this->openFromPoolSequentially($this->masters, $this->masterConfig);
@@ -739,6 +736,8 @@ class Connection extends BaseObject implements ConnectionInterface
      * The default implementation will create a PHP PDO instance.
      * You may override this method if the default PDO needs to be adapted for certain DBMS.
      * @return PDO the pdo instance
+     * @throws InvalidArgumentException
+     * @throws Throwable
      */
     public function createPdoInstance()
     {
@@ -775,6 +774,8 @@ class Connection extends BaseObject implements ConnectionInterface
      * Returns the PDO instance for the currently active master connection.
      * This method will open the master DB connection and then return [[pdo]].
      * @return PDO the PDO instance for the currently active master connection.
+     * @throws InvalidArgumentException
+     * @throws Throwable
      */
     public function getMasterPdo()
     {
@@ -789,9 +790,9 @@ class Connection extends BaseObject implements ConnectionInterface
      * @param string|null $isolationLevel The isolation level to use for this transaction.
      * See [[Transaction::begin()]] for details.
      * @return mixed result of callback function
-     * @throws \Throwable if there is any exception during query. In this case the transaction will be rolled back.
+     * @throws Throwable|InvalidArgumentException if there is any exception during query. In this case the transaction will be rolled back.
      */
-    public function transaction(callable $callback, $isolationLevel = null)
+    public function transaction(callable $callback, string $isolationLevel = null)
     {
         $transaction = $this->beginTransaction($isolationLevel);
         $level = $transaction->level;
@@ -801,7 +802,7 @@ class Connection extends BaseObject implements ConnectionInterface
             if ($transaction->isActive && $transaction->level === $level) {
                 $transaction->commit();
             }
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->rollbackTransactionOnLevel($transaction, $level);
             throw $e;
         }
@@ -810,12 +811,12 @@ class Connection extends BaseObject implements ConnectionInterface
     }
 
     /**
-     * @param null $isolationLevel
+     * @param string $isolationLevel
      * @return mixed|Transaction|null
-     * @throws Exception
-     * @throws NotSupportedException
+     * @throws InvalidArgumentException
+     * @throws Throwable
      */
-    public function beginTransaction($isolationLevel = null)
+    public function beginTransaction(string $isolationLevel = null): ?Transaction
     {
         $this->open();
 
@@ -832,7 +833,7 @@ class Connection extends BaseObject implements ConnectionInterface
      * Returns the currently active transaction.
      * @return Transaction|null the currently active transaction. Null if no active transaction.
      */
-    public function getTransaction()
+    public function getTransaction(): ?Transaction
     {
         $transaction = Context::get('transaction', $this->poolName);
         return $transaction && $transaction->getIsActive() ? $transaction : null;
@@ -844,8 +845,9 @@ class Connection extends BaseObject implements ConnectionInterface
      * from rollback will be caught and just logged with [[\Yii::error()]].
      * @param Transaction $transaction Transaction object given from [[beginTransaction()]].
      * @param int $level Transaction level just after [[beginTransaction()]] call.
+     * @throws Throwable
      */
-    private function rollbackTransactionOnLevel($transaction, $level)
+    private function rollbackTransactionOnLevel($transaction, $level): void
     {
         if ($transaction->isActive && $transaction->level === $level) {
             // https://github.com/yiisoft/yii2/pull/13347
@@ -862,9 +864,12 @@ class Connection extends BaseObject implements ConnectionInterface
      * Can be used to set [[QueryBuilder]] configuration via Connection configuration array.
      *
      * @param iterable $config the [[QueryBuilder]] properties to be configured.
+     * @throws InvalidArgumentException
+     * @throws NotSupportedException
+     * @throws Throwable
      * @since 2.0.14
      */
-    public function setQueryBuilder(iterable $config)
+    public function setQueryBuilder(iterable $config): void
     {
         $builder = $this->getQueryBuilder();
         foreach ($config as $key => $value) {
@@ -875,8 +880,11 @@ class Connection extends BaseObject implements ConnectionInterface
     /**
      * Returns the query builder for the current DB connection.
      * @return QueryBuilder the query builder for the current DB connection.
+     * @throws InvalidArgumentException
+     * @throws NotSupportedException
+     * @throws Throwable
      */
-    public function getQueryBuilder()
+    public function getQueryBuilder(): QueryBuilder
     {
         return $this->getSchema()->getQueryBuilder();
     }
@@ -884,9 +892,11 @@ class Connection extends BaseObject implements ConnectionInterface
     /**
      * Returns the schema information for the database opened by this connection.
      * @return Schema the schema information for the database opened by this connection.
+     * @throws InvalidArgumentException
      * @throws NotSupportedException if there is no support for the current driver type
+     * @throws Throwable
      */
-    public function getSchema()
+    public function getSchema(): Schema
     {
         if ($this->_schema !== null) {
             return $this->_schema;
@@ -907,8 +917,11 @@ class Connection extends BaseObject implements ConnectionInterface
      * @param string $name table name.
      * @param bool $refresh whether to reload the table schema even if it is found in the cache.
      * @return TableSchema table schema information. Null if the named table does not exist.
+     * @throws InvalidArgumentException
+     * @throws NotSupportedException
+     * @throws Throwable
      */
-    public function getTableSchema($name, $refresh = false)
+    public function getTableSchema(string $name, bool $refresh = false): ?TableSchema
     {
         return $this->getSchema()->getTableSchema($name, $refresh);
     }
@@ -917,9 +930,12 @@ class Connection extends BaseObject implements ConnectionInterface
      * Returns the ID of the last inserted row or sequence value.
      * @param string $sequenceName name of the sequence object (required by some DBMS)
      * @return string the row ID of the last row inserted, or the last value retrieved from the sequence object
+     * @throws InvalidArgumentException
+     * @throws NotSupportedException
+     * @throws Throwable
      * @see http://php.net/manual/en/pdo.lastinsertid.php
      */
-    public function getLastInsertID($sequenceName = '')
+    public function getLastInsertID(string $sequenceName = '')
     {
         return $this->getSchema()->getLastInsertID($sequenceName);
     }
@@ -929,9 +945,12 @@ class Connection extends BaseObject implements ConnectionInterface
      * Note that if the parameter is not a string, it will be returned without change.
      * @param string $value string to be quoted
      * @return string the properly quoted string
+     * @throws InvalidArgumentException
+     * @throws NotSupportedException
+     * @throws Throwable
      * @see http://php.net/manual/en/pdo.quote.php
      */
-    public function quoteValue($value)
+    public function quoteValue(string $value): string
     {
         return $this->getSchema()->quoteValue($value);
     }
@@ -945,7 +964,7 @@ class Connection extends BaseObject implements ConnectionInterface
      * @param string $sql the SQL to be quoted
      * @return string the quoted SQL
      */
-    public function quoteSql($sql)
+    public function quoteSql(string $sql): string
     {
         return preg_replace_callback(
             '/(\\{\\{(%?[\w\-\. ]+%?)\\}\\}|\\[\\[([\w\-\. ]+)\\]\\])/',
@@ -967,8 +986,11 @@ class Connection extends BaseObject implements ConnectionInterface
      * then this method will do nothing.
      * @param string $name column name
      * @return string the properly quoted column name
+     * @throws InvalidArgumentException
+     * @throws NotSupportedException
+     * @throws Throwable
      */
-    public function quoteColumnName($name)
+    public function quoteColumnName(string $name): string
     {
         return $this->getSchema()->quoteColumnName($name);
     }
@@ -980,8 +1002,11 @@ class Connection extends BaseObject implements ConnectionInterface
      * then this method will do nothing.
      * @param string $name table name
      * @return string the properly quoted table name
+     * @throws InvalidArgumentException
+     * @throws NotSupportedException
+     * @throws Throwable
      */
-    public function quoteTableName($name)
+    public function quoteTableName(string $name): string
     {
         return $this->getSchema()->quoteTableName($name);
     }
@@ -989,9 +1014,12 @@ class Connection extends BaseObject implements ConnectionInterface
     /**
      * Returns a server version as a string comparable by [[\version_compare()]].
      * @return string server version as a string.
+     * @throws InvalidArgumentException
+     * @throws NotSupportedException
+     * @throws Throwable
      * @since 2.0.14
      */
-    public function getServerVersion()
+    public function getServerVersion(): string
     {
         return $this->getSchema()->getServerVersion();
     }
@@ -1011,7 +1039,7 @@ class Connection extends BaseObject implements ConnectionInterface
      * @param callable $callback a PHP callable to be executed by this method. Its signature is
      * `function (Connection $db)`. Its return value will be returned by this method.
      * @return mixed the return value of the callback
-     * @throws \Throwable if there is any exception thrown from the callback
+     * @throws Throwable if there is any exception thrown from the callback
      */
     public function useMaster(callable $callback)
     {
@@ -1019,7 +1047,7 @@ class Connection extends BaseObject implements ConnectionInterface
             $this->enableSlaves = false;
             try {
                 $result = call_user_func($callback, $this);
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 $this->enableSlaves = true;
                 throw $e;
             }
@@ -1054,10 +1082,8 @@ class Connection extends BaseObject implements ConnectionInterface
      */
     public function __clone()
     {
-        parent::__clone();
-
-        $this->_master = false;
-        $this->_slave = false;
+        $this->_master = null;
+        $this->_slave = null;
         $this->_schema = null;
         if (strncmp($this->dsn, 'sqlite::memory:', 15) !== 0) {
             // reset PDO connection, unless its sqlite in-memory, which can only have one connection
@@ -1068,10 +1094,10 @@ class Connection extends BaseObject implements ConnectionInterface
     protected function makeShortDsn(): void
     {
         $parsed = parse_url($this->dsn);
-        $this->parseDsn = $parsed;
+        $this->parseDsn = is_array($parsed) ? $parsed : [];
         if (!isset($parsed['path'])) {
             $parsed['path'] = '/';
         }
-        $this->shortDsn = UrlHelper::unparse_url($parsed, false);
+        $this->shortDsn = UrlHelper::unParseUrl($parsed, false);
     }
 }

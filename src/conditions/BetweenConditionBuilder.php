@@ -1,15 +1,16 @@
 <?php
+declare(strict_types=1);
 /**
  * @link http://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
-namespace rabbit\db\conditions;
+namespace Rabbit\DB\Conditions;
 
-use rabbit\db\ExpressionBuilderInterface;
-use rabbit\db\ExpressionBuilderTrait;
-use rabbit\db\ExpressionInterface;
+use Rabbit\DB\ExpressionBuilderInterface;
+use Rabbit\DB\ExpressionBuilderTrait;
+use Rabbit\DB\ExpressionInterface;
 
 /**
  * Class BetweenConditionBuilder builds objects of [[BetweenCondition]]
@@ -30,7 +31,7 @@ class BetweenConditionBuilder implements ExpressionBuilderInterface
      * @param array $params the binding parameters.
      * @return string the raw SQL that will not be additionally escaped or quoted.
      */
-    public function build(ExpressionInterface $expression, array &$params = [])
+    public function build(ExpressionInterface $expression, array &$params = []): string
     {
         $operator = $expression->getOperator();
         $column = $expression->getColumn();
@@ -52,7 +53,7 @@ class BetweenConditionBuilder implements ExpressionBuilderInterface
      * @param array $params passed by reference
      * @return string
      */
-    protected function createPlaceholder($value, &$params)
+    protected function createPlaceholder($value, array &$params): string
     {
         if ($value instanceof ExpressionInterface) {
             return $this->queryBuilder->buildExpression($value, $params);

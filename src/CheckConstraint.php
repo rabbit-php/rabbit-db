@@ -1,11 +1,12 @@
 <?php
+declare(strict_types=1);
 /**
  * @link http://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
-namespace rabbit\db;
+namespace Rabbit\DB;
 
 /**
  * CheckConstraint represents the metadata of a table `CHECK` constraint.
@@ -18,5 +19,5 @@ class CheckConstraint extends Constraint
     /**
      * @var string the SQL of the `CHECK` constraint.
      */
-    public $expression;
+    public string $expression;
 }

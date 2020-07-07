@@ -1,11 +1,12 @@
 <?php
+declare(strict_types=1);
 /**
  * @link http://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
-namespace rabbit\db;
+namespace Rabbit\DB;
 
 /**
  * Class PdoValue represents a $value that should be bound to PDO with exact $type.
@@ -32,7 +33,7 @@ final class PdoValue implements ExpressionInterface
      * @var int One of PDO_PARAM_* constants
      * @see http://php.net/manual/en/pdo.constants.php
      */
-    private $type;
+    private int $type;
 
 
     /**
@@ -41,7 +42,7 @@ final class PdoValue implements ExpressionInterface
      * @param $value
      * @param $type
      */
-    public function __construct($value, $type)
+    public function __construct($value, int $type)
     {
         $this->value = $value;
         $this->type = $type;
@@ -58,7 +59,7 @@ final class PdoValue implements ExpressionInterface
     /**
      * @return int
      */
-    public function getType()
+    public function getType(): int
     {
         return $this->type;
     }

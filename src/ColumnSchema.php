@@ -1,13 +1,12 @@
 <?php
+declare(strict_types=1);
 /**
  * @link http://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
-namespace rabbit\db;
-
-use rabbit\helper\StringHelper;
+namespace Rabbit\DB;
 
 /**
  * ColumnSchema class describes the metadata of a column in a database table.
@@ -20,26 +19,26 @@ class ColumnSchema
     /**
      * @var string name of this column (without quotes).
      */
-    public $name;
+    public string $name;
     /**
      * @var bool whether this column can be null.
      */
-    public $allowNull;
+    public bool $allowNull;
     /**
      * @var string abstract type of this column. Possible abstract types include:
      * char, string, text, boolean, smallint, integer, bigint, float, decimal, datetime,
      * timestamp, time, date, binary, and money.
      */
-    public $type;
+    public string $type;
     /**
      * @var string the PHP type of this column. Possible PHP types include:
      * `string`, `boolean`, `integer`, `double`, `array`.
      */
-    public $phpType;
+    public string $phpType;
     /**
      * @var string the DB type of this column. Possible DB types vary according to the type of DBMS.
      */
-    public $dbType;
+    public string $dbType;
     /**
      * @var mixed default value of this column
      */
@@ -47,36 +46,36 @@ class ColumnSchema
     /**
      * @var array enumerable values. This is set only if the column is declared to be an enumerable type.
      */
-    public $enumValues;
+    public array $enumValues;
     /**
      * @var int display size of the column.
      */
-    public $size;
+    public int $size;
     /**
      * @var int precision of the column data, if it is numeric.
      */
-    public $precision;
+    public int $precision;
     /**
      * @var int scale of the column data, if it is numeric.
      */
-    public $scale;
+    public int $scale;
     /**
      * @var bool whether this column is a primary key
      */
-    public $isPrimaryKey;
+    public bool $isPrimaryKey;
     /**
      * @var bool whether this column is auto-incremental
      */
-    public $autoIncrement = false;
+    public bool $autoIncrement = false;
     /**
      * @var bool whether this column is unsigned. This is only meaningful
      * when [[type]] is `smallint`, `integer` or `bigint`.
      */
-    public $unsigned;
+    public bool $unsigned;
     /**
      * @var string comment of this column. Not all DBMS support this.
      */
-    public $comment;
+    public string $comment;
 
 
     /**
@@ -157,7 +156,7 @@ class ColumnSchema
     /**
      * @return int[] array of numbers that represent possible PDO parameter types
      */
-    protected function getPdoParamTypes()
+    protected function getPdoParamTypes(): array
     {
         return [
             \PDO::PARAM_BOOL,

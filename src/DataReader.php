@@ -1,14 +1,16 @@
 <?php
+declare(strict_types=1);
 /**
  * @link http://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
-namespace rabbit\db;
+namespace Rabbit\DB;
 
-use rabbit\core\ObjectFactory;
-use rabbit\exception\InvalidCallException;
+use Rabbit\Base\Core\ObjectFactory;
+use Rabbit\Base\Exception\InvalidCallException;
+use ReflectionException;
 
 /**
  * DataReader represents a forward-only stream of rows from a query result set.
@@ -54,17 +56,18 @@ class DataReader implements \Iterator, \Countable
     /**
      * @var \PDOStatement the PDOStatement associated with the command
      */
-    protected $_statement;
-    protected $_closed = false;
+    protected ?\PDOStatement $_statement;
+    protected bool $_closed = false;
     protected $_row;
-    protected $_index = -1;
+    protected int $_index = -1;
     /** @var Command */
-    protected $command;
+    protected Command $command;
 
     /**
      * Constructor.
      * @param Command $command the command generating the query result
      * @param array $config name-value pairs that will be used to initialize the object properties
+     * @throws ReflectionException
      */
     public function __construct(Command $command, $config = [])
     {
@@ -72,7 +75,7 @@ class DataReader implements \Iterator, \Countable
         $this->_statement = $command->pdoStatement;
         $this->_statement->setFetchMode(\PDO::FETCH_ASSOC);
 
-        ObjectFactory::configure($this, $config);
+        configure($this, $config);
     }
 
     /**
@@ -86,7 +89,7 @@ class DataReader implements \Iterator, \Countable
      * @param int $dataType Data type of the parameter
      * @see http://www.php.net/manual/en/function.PDOStatement-bindColumn.php
      */
-    public function bindColumn($column, &$value, $dataType = null)
+    public function bindColumn($column, &$value, int $dataType = null): void
     {
         if ($dataType === null) {
             $this->_statement->bindColumn($column, $value);
@@ -101,7 +104,7 @@ class DataReader implements \Iterator, \Countable
      * @param int $mode fetch mode
      * @see http://www.php.net/manual/en/function.PDOStatement-setFetchMode.php
      */
-    public function setFetchMode($mode)
+    public function setFetchMode(int $mode): void
     {
         $params = func_get_args();
         call_user_func_array([$this->_statement, 'setFetchMode'], $params);
@@ -111,9 +114,12 @@ class DataReader implements \Iterator, \Countable
      * Advances the reader to the next row in a result set.
      * @return array the current row, false if no more row available
      */
-    public function read()
+    public function read(): ?array
     {
-        return $this->_statement->fetch();
+        if (false === $row = $this->_statement->fetch()) {
+            return null;
+        }
+        return $row;
     }
 
     /**
@@ -121,7 +127,7 @@ class DataReader implements \Iterator, \Countable
      * @param int $columnIndex zero-based column index
      * @return mixed the column of the current row, false if no more rows available
      */
-    public function readColumn($columnIndex)
+    public function readColumn(int $columnIndex)
     {
         return $this->_statement->fetchColumn($columnIndex);
     }
@@ -132,7 +138,7 @@ class DataReader implements \Iterator, \Countable
      * @param array $fields Elements of this array are passed to the constructor
      * @return mixed the populated object, false if no more row of data available
      */
-    public function readObject($className, $fields)
+    public function readObject(string $className, array $fields)
     {
         return $this->_statement->fetchObject($className, $fields);
     }
@@ -142,7 +148,7 @@ class DataReader implements \Iterator, \Countable
      * @return array the result set (each array element represents a row of data).
      * An empty array will be returned if the result contains no row.
      */
-    public function readAll()
+    public function readAll(): array
     {
         return $this->_statement->fetchAll();
     }
@@ -153,7 +159,7 @@ class DataReader implements \Iterator, \Countable
      * returned by the query. Not all DBMS support this feature.
      * @return bool Returns true on success or false on failure.
      */
-    public function nextResult()
+    public function nextResult(): bool
     {
         if (($result = $this->_statement->nextRowset()) !== false) {
             $this->_index = -1;
@@ -167,7 +173,7 @@ class DataReader implements \Iterator, \Countable
      * This frees up the resources allocated for executing this SQL statement.
      * Read attempts after this method call are unpredictable.
      */
-    public function close()
+    public function close(): void
     {
         $this->_statement->closeCursor();
         $this->_closed = true;
@@ -177,7 +183,7 @@ class DataReader implements \Iterator, \Countable
      * whether the reader is closed or not.
      * @return bool whether the reader is closed or not.
      */
-    public function getIsClosed()
+    public function getIsClosed(): bool
     {
         return $this->_closed;
     }
@@ -189,7 +195,7 @@ class DataReader implements \Iterator, \Countable
      * In this case, use "SELECT COUNT(*) FROM tableName" to obtain the number of rows.
      * @return int number of rows contained in the result.
      */
-    public function count()
+    public function count(): int
     {
         return $this->getRowCount();
     }
@@ -200,7 +206,7 @@ class DataReader implements \Iterator, \Countable
      * In this case, use "SELECT COUNT(*) FROM tableName" to obtain the number of rows.
      * @return int number of rows contained in the result.
      */
-    public function getRowCount()
+    public function getRowCount(): int
     {
         return $this->_statement->rowCount();
     }
@@ -210,7 +216,7 @@ class DataReader implements \Iterator, \Countable
      * Note, even there's no row in the reader, this still gives correct column number.
      * @return int the number of columns in the result set.
      */
-    public function getColumnCount()
+    public function getColumnCount(): int
     {
         return $this->_statement->columnCount();
     }

@@ -178,7 +178,7 @@ class Connection extends BaseObject implements ConnectionInterface
      * [PHP manual](http://php.net/manual/en/pdo.setattribute.php) for
      * details about available attributes.
      */
-    public ?array $attributes;
+    public ?array $attributes = null;
     /**
      * @var bool whether to enable schema caching.
      * Note that in order to enable truly schema caching, a valid cache component as specified
@@ -264,7 +264,7 @@ class Connection extends BaseObject implements ConnectionInterface
      * @var string Custom PDO wrapper class. If not set, it will use [[PDO]] or [[\rabbit\db\mssql\PDO]] when MSSQL is used.
      * @see pdo
      */
-    public ?string $pdoClass;
+    public string $pdoClass = 'PDO';
 
     /**
      * @var bool whether to enable [savepoint](http://en.wikipedia.org/wiki/Savepoint).

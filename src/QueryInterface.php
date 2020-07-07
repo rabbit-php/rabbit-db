@@ -38,7 +38,7 @@ interface QueryInterface
      * @return array|bool the first row (in terms of an array) of the query result. False is returned if the query
      * results in nothing.
      */
-    public function one(ConnectionInterface $db = null): ?array;
+    public function one(ConnectionInterface $db = null);
 
     /**
      * Returns the number of records.

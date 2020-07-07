@@ -13,9 +13,9 @@ use Throwable;
 trait QueryTraitExt
 {
     /** @var array */
-    protected $joinWith;
-    /** @var array */
-    protected $flag = false;
+    protected ?array $joinWith;
+    /** @var bool */
+    protected bool $flag = false;
 
     /**
      * @param $columns
@@ -54,7 +54,7 @@ trait QueryTraitExt
      * @throws InvalidArgumentException
      * @throws Throwable
      */
-    public function populate(array $rows)
+    public function populate(array $rows): array
     {
         $rows = $this->buildWith($rows);
         if ($this->indexBy === null) {

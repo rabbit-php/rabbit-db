@@ -75,7 +75,7 @@ trait QueryTrait
      *
      * @return $this the query object itself
      */
-    public function indexBy($column): self
+    public function indexBy($column): QueryInterface
     {
         $this->indexBy = $column;
         return $this;

@@ -459,7 +459,7 @@ class Connection extends BaseObject implements ConnectionInterface
      * It does nothing if the connection is already closed.
      * @throws \Exception
      */
-    public function close()
+    public function close(): void
     {
         $pdo = DbContext::get($this->poolName, $this->driver);
         if ($this->_master) {

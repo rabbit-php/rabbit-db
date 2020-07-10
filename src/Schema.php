@@ -123,6 +123,8 @@ abstract class Schema extends BaseObject
      * @var QueryBuilder the query builder for this database
      */
     private ?QueryBuilder $_builder = null;
+
+    protected string $builderClass = QueryBuilder::class;
     /**
      * @var string server version as a string.
      */
@@ -255,7 +257,7 @@ abstract class Schema extends BaseObject
      */
     public function createQueryBuilder(): QueryBuilder
     {
-        return new QueryBuilder($this->db);
+        return new $this->builderClass($this->db);
     }
 
     /**

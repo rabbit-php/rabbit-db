@@ -14,7 +14,7 @@ use Throwable;
 class RetryHandler extends RetryHandlerInterface
 {
     /** @var int */
-    private int $sleep = 1;
+    protected int $sleep = 1;
 
     /**
      * RetryHandler constructor.

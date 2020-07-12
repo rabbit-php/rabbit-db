@@ -142,7 +142,7 @@ class Query extends BaseObject implements QueryInterface, ExpressionInterface
      */
     public function __construct(?\Rabbit\Pool\ConnectionInterface $db = null, array $config = [])
     {
-        $this->db = $db;
+        $this->db = $db ?? getDI('db')->get();
         $config !== [] && configure($this, $config);
     }
 

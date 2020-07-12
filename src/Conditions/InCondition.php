@@ -33,7 +33,7 @@ class InCondition implements ConditionInterface
      * If it is an empty array the generated expression will be a `false` value if
      * [[operator]] is `IN` and empty if operator is `NOT IN`.
      */
-    private array $values;
+    private $values;
 
 
     /**

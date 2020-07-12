@@ -732,7 +732,7 @@ class QueryBuilder
      *
      * @since 2.0.14
      */
-    public function bindParam(?string $value, array &$params): string
+    public function bindParam($value, array &$params): string
     {
         $phName = '?';
         $params[count($params)] = $value;

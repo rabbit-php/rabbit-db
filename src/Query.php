@@ -1018,7 +1018,7 @@ PATTERN;
      * @param array $params the parameters (name => value) to be bound to the query
      * @return $this the query object itself
      */
-    public function leftJoin(string $table, string $on = '', array $params = []): self
+    public function leftJoin($table, string $on = '', array $params = []): self
     {
         $this->join[] = ['LEFT JOIN', $table, $on];
         return $this->addParams($params);

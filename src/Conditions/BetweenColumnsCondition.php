@@ -67,7 +67,7 @@ class BetweenColumnsCondition implements ConditionInterface
      * @param string|ExpressionInterface $intervalStartColumn the column name or expression that is a beginning of the interval
      * @param string|ExpressionInterface $intervalEndColumn the column name or expression that is an end of the interval
      */
-    public function __construct($value, $operator, $intervalStartColumn, $intervalEndColumn)
+    public function __construct($value, string $operator, $intervalStartColumn, $intervalEndColumn)
     {
         $this->value = $value;
         $this->operator = $operator;

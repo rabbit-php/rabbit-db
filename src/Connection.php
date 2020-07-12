@@ -193,7 +193,7 @@ class Connection extends BaseObject implements ConnectionInterface
      * Use 0 to indicate that the cached data will never expire.
      * @see enableSchemaCache
      */
-    public ?int $schemaCacheDuration;
+    public ?int $schemaCacheDuration = null;
     /**
      * @var array list of tables whose metadata should NOT be cached. Defaults to empty array.
      * The table names may contain schema prefix, if any. Do not quote the table names.
@@ -205,7 +205,7 @@ class Connection extends BaseObject implements ConnectionInterface
      * is used to cache the table metadata.
      * @see enableSchemaCache
      */
-    public ?CacheInterface $schemaCache;
+    public ?CacheInterface $schemaCache = null;
     /**
      * @var bool whether to enable query caching.
      * Note that in order to enable query caching, a valid cache component as specified
@@ -221,7 +221,7 @@ class Connection extends BaseObject implements ConnectionInterface
      * that is used for query caching.
      * @see enableQueryCache
      */
-    public ?CacheInterface $queryCache;
+    public ?CacheInterface $queryCache = null;
     /**
      * @var string the charset used for database connection. The property is only used
      * for MySQL, PostgreSQL and CUBRID databases. Defaults to null, meaning using default charset
@@ -233,7 +233,7 @@ class Connection extends BaseObject implements ConnectionInterface
      * The same applies for if you're using GBK or BIG5 charset with MySQL, then it's highly recommended to
      * specify charset via [[dsn]] like `'mysql:dbname=mydatabase;host=127.0.0.1;charset=GBK;'`.
      */
-    public ?string $charset;
+    public ?string $charset = null;
 
     /**
      * @var bool whether to turn on prepare emulation. Defaults to false, meaning PDO
@@ -277,7 +277,7 @@ class Connection extends BaseObject implements ConnectionInterface
      * This is used only when read/write splitting is enabled or [[masters]] is not empty.
      * Set boolean `false` to disabled server status caching.
      */
-    public ?CacheInterface $serverStatusCache;
+    public ?CacheInterface $serverStatusCache = null;
     /**
      * @var int the retry interval in seconds for dead servers listed in [[masters]] and [[slaves]].
      * This is used together with [[serverStatusCache]].

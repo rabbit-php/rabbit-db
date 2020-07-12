@@ -1,22 +1,13 @@
 <?php
 declare(strict_types=1);
-/**
- * @link http://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license http://www.yiiframework.com/license/
- */
 
 namespace Rabbit\DB;
 
 /**
- * DataBase connection interface.
- * XXX TODO to be continued...
+ * Interface ConnectionInterface
+ * @package Rabbit\DB
  */
 interface ConnectionInterface extends \Rabbit\Pool\ConnectionInterface
 {
-    /**
-     * @param bool $release
-     * @return void
-     */
-    public function release($release = false): void;
+
 }

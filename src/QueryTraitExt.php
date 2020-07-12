@@ -74,17 +74,16 @@ trait QueryTraitExt
     }
 
     /**
-     * @param ConnectionInterface|null $db
-     * @return array|null
+     * @return mixed|null
      * @throws InvalidArgumentException
      * @throws Throwable
      */
-    public function one(ConnectionInterface $db = null)
+    public function one()
     {
         if ($this->emulateExecution) {
             return null;
         }
-        $result = $this->createCommand($db)->queryOne();
+        $result = $this->createCommand()->queryOne();
         if ($result) {
             $list[] = $result;
             $result = current($this->buildWith($list));

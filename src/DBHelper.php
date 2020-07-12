@@ -16,17 +16,16 @@ class DBHelper
      * @param Query $query
      * @param array $filter
      * @param string $handle
-     * @param ConnectionInterface $db
      * @return mixed
      */
-    public static function PubSearch(Query $query, array $filter, string $handle, ConnectionInterface $db = null)
+    public static function PubSearch(Query $query, array $filter, string $handle)
     {
         $query = static::Search($query, $filter);
         if (is_array($handle)) {
             $k = key($handle);
-            $result = $query->$k($handle[key($handle)], $db);
+            $result = $query->$k($handle[key($handle)]);
         } else {
-            $result = $query->$handle($db);
+            $result = $query->$handle();
         }
         return $result;
     }
@@ -50,7 +49,6 @@ class DBHelper
      * @param int $page
      * @param int $duration
      * @param CacheInterface|null $cache
-     * @param ConnectionInterface|null $db
      * @return array
      */
     public static function SearchList(
@@ -58,19 +56,18 @@ class DBHelper
         array $filter = [],
         int $page = 0,
         int $duration = -1,
-        ?CacheInterface $cache = null,
-        ConnectionInterface $db = null
+        ?CacheInterface $cache = null
     ): array
     {
         $limit = ArrayHelper::remove($filter, 'limit', 20);
         $offset = ArrayHelper::remove($filter, 'offset', ($page ? ($page - 1) : 0) * (int)$limit);
         $count = ArrayHelper::remove($filter, 'count', '1');
         $queryRes = $filter === [] || !$filter ? $query : static::Search($query, $filter);
-        $rows = $queryRes->cache($duration, $cache)->limit($limit ?: null)->offset($offset)->all($db);
+        $rows = $queryRes->cache($duration, $cache)->limit($limit ?: null)->offset($offset)->all();
         if ($limit) {
             $query->limit = null;
             $query->offset = null;
-            $total = $queryRes->cache($duration, $cache)->count($count, $db);
+            $total = $queryRes->cache($duration, $cache)->count($count);
         } else {
             $total = count($rows);
         }

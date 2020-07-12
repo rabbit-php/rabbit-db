@@ -57,7 +57,7 @@ class MakePdoConnection
             if (!empty($retryHandler)) {
                 $conn[$name]['retryHandler'] = create($retryHandler);
             } else {
-                $conn[$name]['retryHandler'] = getDI(RetryHandlerInterface::class);
+                $conn[$name]['retryHandler'] = getDI(RetryHandler::class);
             }
             $manager->add($conn);
         }

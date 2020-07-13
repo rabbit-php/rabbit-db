@@ -438,7 +438,8 @@ class Command extends BaseObject
                 } else {
                     $this->pdoStatement->execute();
                     if ($this->pdoStatement->errorCode() !== '00000') {
-                        throw new Exception(implode(PHP_EOL, $this->pdoStatement->errorInfo()));
+                        $errArr = $this->pdoStatement->errorInfo();
+                        throw new Exception(end($errArr), $this->pdoStatement->errorInfo());
                     }
                 }
                 $this->_pendingParams = [];

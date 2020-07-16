@@ -1210,11 +1210,11 @@ PATTERN;
     }
 
     /**
-     * @param int $duration
+     * @param float $duration
      * @param CacheInterface|null $cache
      * @return $this
      */
-    public function cache(int $duration = 0, ?CacheInterface $cache = null): self
+    public function cache(float $duration = 0, ?CacheInterface $cache = null): self
     {
         $this->queryCacheDuration = $duration;
         $this->cache = $cache;

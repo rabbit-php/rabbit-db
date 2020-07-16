@@ -114,11 +114,11 @@ class Command extends BaseObject
     }
 
     /**
-     * @param int $duration
+     * @param float $duration
      * @param CacheInterface|null $cache
      * @return $this
      */
-    public function cache(int $duration = 0, ?CacheInterface $cache = null)
+    public function cache(float $duration = 0, ?CacheInterface $cache = null)
     {
         $this->queryCacheDuration = $duration;
         $this->cache = $cache;

@@ -83,6 +83,7 @@ trait QueryTraitExt
         if ($this->emulateExecution) {
             return null;
         }
+        $this->limit(1);
         $result = $this->createCommand()->queryOne();
         if ($result) {
             $list[] = $result;

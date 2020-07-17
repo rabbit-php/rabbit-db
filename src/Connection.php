@@ -167,11 +167,11 @@ class Connection extends BaseObject implements ConnectionInterface
     /**
      * @var string the username for establishing DB connection. Defaults to `null` meaning no username to use.
      */
-    public ?string $username;
+    public ?string $username = null;
     /**
      * @var string the password for establishing DB connection. Defaults to `null` meaning no password to use.
      */
-    public ?string $password;
+    public ?string $password = null;
     /**
      * @var array PDO attributes (name => value) that should be set when calling [[open()]]
      * to establish a DB connection. Please refer to the
@@ -242,7 +242,7 @@ class Connection extends BaseObject implements ConnectionInterface
      * the buggy native prepare support.
      * The default value is null, which means the PDO ATTR_EMULATE_PREPARES value will not be changed.
      */
-    public ?bool $emulatePrepare;
+    public ?bool $emulatePrepare = null;
     /**
      * @var string the common prefix or suffix for table names. If a table name is given
      * as `{{%TableName}}`, then the percentage character `%` will be replaced with this

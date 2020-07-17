@@ -17,7 +17,7 @@ class BatchInsert implements BatchInterface
     /** @var array */
     protected array $columnSchemas = [];
     /** @var string */
-    protected ?string $sql;
+    protected ?string $sql = '';
     /** @var ConnectionInterface */
     protected ConnectionInterface $db;
     /** @var int */
@@ -62,7 +62,7 @@ class BatchInsert implements BatchInterface
      */
     public function addColumns(array $columns): bool
     {
-        if (empty($columns)) {
+        if (empty($columns) || $this->columns) {
             return false;
         }
 

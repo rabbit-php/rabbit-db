@@ -27,10 +27,12 @@ trait QueryTraitExt
             return [$columns];
         } elseif (is_array($columns)) {
             foreach ($columns as $key => $sort) {
-                if (strtolower($sort) === 'desc') {
-                    $columns[$key] = SORT_DESC;
-                } elseif (strtolower($sort) === 'asc') {
-                    $columns[$key] = SORT_ASC;
+                if (is_string($sort)) {
+                    if (strtolower($sort) === 'desc') {
+                        $columns[$key] = SORT_DESC;
+                    } elseif (strtolower($sort) === 'asc') {
+                        $columns[$key] = SORT_ASC;
+                    }
                 }
             }
             return $columns;

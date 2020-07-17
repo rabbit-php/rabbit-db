@@ -84,12 +84,12 @@ class Command extends BaseObject
      */
     public array $params = [];
     /**
-     * @var int the default number of seconds that query results can remain valid in cache.
+     * @var float the default number of seconds that query results can remain valid in cache.
      * Use 0 to indicate that the cached data will never expire. And use a negative number to indicate
      * query cache should not be used.
      * @see cache()
      */
-    public ?int $queryCacheDuration = null;
+    public ?float $queryCacheDuration = null;
 
     /**
      * @var array pending parameters to be bound to the current PDO statement.

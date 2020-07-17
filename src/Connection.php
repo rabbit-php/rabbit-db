@@ -426,13 +426,13 @@ class Connection extends BaseObject implements ConnectionInterface
     /**
      * Returns the current query cache information.
      * This method is used internally by [[Command]].
-     * @param int $duration the preferred caching duration. If null, it will be ignored.
+     * @param float $duration the preferred caching duration. If null, it will be ignored.
      * @param CacheInterface|null $cache
      * @return array the current query cache information, or null if query cache is not enabled.
      * @throws Throwable
      * @internal
      */
-    public function getQueryCacheInfo(?int $duration, ?CacheInterface $cache = null)
+    public function getQueryCacheInfo(?float $duration, ?CacheInterface $cache = null)
     {
         if (!$this->enableQueryCache) {
             return null;

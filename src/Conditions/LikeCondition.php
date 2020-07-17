@@ -23,7 +23,7 @@ class LikeCondition extends SimpleCondition
      * or either null or empty array if escaping is condition builder responsibility.
      * By default it's set to `null`.
      */
-    protected ?array $escapingReplacements;
+    protected ?array $escapingReplacements = null;
 
 
     /**

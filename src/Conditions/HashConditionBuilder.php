@@ -50,7 +50,7 @@ class HashConditionBuilder implements ExpressionBuilderInterface
                 } elseif ($value instanceof ExpressionInterface) {
                     $parts[] = "$column=" . $this->queryBuilder->buildExpression($value, $params);
                 } else {
-                    $phName = $this->queryBuilder->bindParam((string)$value, $params);
+                    $phName = $this->queryBuilder->bindParam($value, $params);
                     $parts[] = "$column=$phName";
                 }
             }

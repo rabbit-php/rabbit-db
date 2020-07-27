@@ -111,6 +111,7 @@ class Command extends BaseObject
     public function __destruct()
     {
         $this->db && $this->db->release();
+        $this->pdoStatement = null;
     }
 
     /**

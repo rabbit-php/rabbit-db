@@ -434,7 +434,7 @@ class Connection extends BaseObject implements ConnectionInterface
      */
     public function getQueryCacheInfo(?float $duration, ?CacheInterface $cache = null)
     {
-        if (!$this->enableQueryCache) {
+        if (!$this->enableQueryCache || $duration === null) {
             return null;
         }
 

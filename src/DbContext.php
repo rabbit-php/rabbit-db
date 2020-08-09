@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Rabbit\DB;
 
 
+use Co;
 use Rabbit\Base\Core\Context;
 
 /**
@@ -13,7 +14,7 @@ use Rabbit\Base\Core\Context;
 class DbContext extends Context
 {
     /**
-     * @param string $key
+     * @param string|null $key
      * @return array|null
      */
     public static function getAll(?string $key = 'database'): ?array
@@ -23,7 +24,7 @@ class DbContext extends Context
 
     /**
      * @param array $config
-     * @param string $key
+     * @param string|null $key
      */
     public static function setAll($config = [], ?string $key = 'database'): void
     {
@@ -32,7 +33,7 @@ class DbContext extends Context
 
     /**
      * @param string $name
-     * @param string $key
+     * @param string|null $key
      * @return mixed|null
      */
     public static function get(string $name, ?string $key = 'database')
@@ -43,7 +44,7 @@ class DbContext extends Context
     /**
      * @param string $name
      * @param $value
-     * @param string $key
+     * @param string|null $key
      */
     public static function set(string $name, $value, ?string $key = 'database'): void
     {
@@ -52,7 +53,7 @@ class DbContext extends Context
 
     /**
      * @param string $name
-     * @param string $key
+     * @param string|null $key
      * @return bool
      */
     public static function has(string $name, ?string $key = 'database'): bool
@@ -62,7 +63,7 @@ class DbContext extends Context
 
     /**
      * @param string $name
-     * @param string $key
+     * @param string|null $key
      */
     public static function delete(string $name, ?string $key = 'database'): void
     {
@@ -74,7 +75,7 @@ class DbContext extends Context
      */
     public static function release(): void
     {
-        $context = \Co::getContext();
+        $context = Co::getContext();
         if (isset($context['database'])) {
             /** @var ConnectionInterface $connection */
             foreach ($context['database'] as $connection) {

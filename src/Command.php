@@ -16,6 +16,7 @@ use Psr\SimpleCache\InvalidArgumentException;
 use Rabbit\Base\App;
 use Rabbit\Base\Core\BaseObject;
 use Rabbit\Base\Exception\NotSupportedException;
+use ReflectionException;
 use Swoole\Coroutine\MySQL\Statement;
 use Throwable;
 
@@ -57,53 +58,22 @@ use Throwable;
  *
  * @property string $rawSql The raw SQL with parameter values inserted into the corresponding placeholders in
  * [[sql]].
- * @property string $sql The SQL statement to be executed.
- *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @since 2.0
  */
 class Command extends BaseObject
 {
-    /**
-     * @var ConnectionInterface the DB connection that this command is associated with
-     */
     public ?ConnectionInterface $db;
     /**
      * @var PDOStatement|Statement the PDOStatement object that this command is associated with
      */
     public $pdoStatement;
-    /**
-     * @var int the default fetch mode for this command.
-     * @see http://www.php.net/manual/en/pdostatement.setfetchmode.php
-     */
     public int $fetchMode = \PDO::FETCH_ASSOC;
-    /**
-     * @var array the parameters (name => value) that are bound to the current PDO statement.
-     * This property is maintained by methods such as [[bindValue()]]. It is mainly provided for logging purpose
-     * and is used to generate [[rawSql]]. Do not modify it directly.
-     */
     public array $params = [];
-    /**
-     * @var float the default number of seconds that query results can remain valid in cache.
-     * Use 0 to indicate that the cached data will never expire. And use a negative number to indicate
-     * query cache should not be used.
-     * @see cache()
-     */
     public ?float $queryCacheDuration = null;
-
-    /**
-     * @var array pending parameters to be bound to the current PDO statement.
-     */
     protected array $_pendingParams = [];
-    /**
-     * @var string the SQL statement that this command represents
-     */
-    protected ?string $_sql = null;
-    /**
-     * @var string name of the table, which schema, should be refreshed after command execution.
-     */
+    protected ?string $sql = null;
     protected ?string $_refreshTableName;
-    /** @var bool|null */
     protected ?bool $_isolationLevel = false;
     /** @var CacheInterface|null */
     protected ?CacheInterface $cache = null;
@@ -181,18 +151,16 @@ class Command extends BaseObject
      * @param bool $forRead whether this method is called for a read query. If null, it means
      * the SQL statement should be used to determine whether it is for read or write.
      * @throws Exception if there is any DB error
-     * @throws InvalidArgumentException
-     * @throws NotSupportedException
      * @throws Throwable
      */
-    public function prepare(?bool $forRead = null)
+    public function prepare(bool $forRead = null)
     {
         if ($this->pdoStatement) {
             $this->bindPendingParams();
             return;
         }
 
-        $sql = $this->_sql;
+        $sql = $this->sql;
 
         if ($this->db->getTransaction()) {
             // master is in a transaction. use the same connection.
@@ -235,7 +203,7 @@ class Command extends BaseObject
      */
     public function getSql(): ?string
     {
-        return $this->_sql;
+        return $this->sql;
     }
 
     /**
@@ -243,17 +211,17 @@ class Command extends BaseObject
      * The previous SQL (if any) will be discarded, and [[params]] will be cleared as well. See [[reset()]]
      * for details.
      *
-     * @param string $sql the SQL statement to be set.
+     * @param string|null $sql the SQL statement to be set.
      * @return $this this command instance
      * @see reset()
      * @see cancel()
      */
     public function setSql(?string $sql): self
     {
-        if ($sql !== $this->_sql) {
+        if ($sql !== $this->sql) {
             $this->cancel();
             $this->reset();
-            $this->_sql = $this->db->quoteSql($sql);
+            $this->sql = $this->db->quoteSql($sql);
         }
 
         return $this;
@@ -288,7 +256,7 @@ class Command extends BaseObject
      * Executes the SQL statement and returns query result.
      * This method is for executing a SQL query that returns result set, such as `SELECT`.
      * @return DataReader the reader object for fetching the query result
-     * @throws Throwable execution failed
+     * @throws Throwable|InvalidArgumentException execution failed
      */
     public function query(): DataReader
     {
@@ -298,11 +266,14 @@ class Command extends BaseObject
     /**
      * Performs the actual DB query of a SQL statement.
      * @param string $method method of PDOStatement to be called
-     * @param int $fetchMode the result fetch mode. Please refer to [PHP manual](http://www.php.net/manual/en/function.PDOStatement-setFetchMode.php)
+     * @param int|null $fetchMode the result fetch mode. Please refer to [PHP manual](http://www.php.net/manual/en/function.PDOStatement-setFetchMode.php)
      * for valid fetch modes. If this parameter is null, the value set in [[fetchMode]] will be used.
      * @return mixed the method execution result
+     * @throws Exception
      * @throws InvalidArgumentException
+     * @throws NotSupportedException
      * @throws Throwable
+     * @throws ReflectionException
      * @since 2.0.1 this method is protected (was private before).
      */
     protected function queryInternal(string $method, int $fetchMode = null)
@@ -374,14 +345,12 @@ class Command extends BaseObject
      * Note that the return value of this method should mainly be used for logging purpose.
      * It is likely that this method returns an invalid SQL due to improper replacement of parameter placeholders.
      * @return string the raw SQL with parameter values inserted into the corresponding placeholders in [[sql]].
-     * @throws InvalidArgumentException
-     * @throws NotSupportedException
      * @throws Throwable
      */
     public function getRawSql(): string
     {
         if (empty($this->params)) {
-            return $this->_sql;
+            return $this->sql;
         }
         $params = [];
         foreach ($this->params as $name => $value) {
@@ -399,10 +368,10 @@ class Command extends BaseObject
             }
         }
         if (!isset($params[0])) {
-            return strtr($this->_sql, $params);
+            return strtr($this->sql, $params);
         }
         $sql = '';
-        foreach (explode('?', $this->_sql) as $i => $part) {
+        foreach (explode('?', $this->sql) as $i => $part) {
             $sql .= $part . ($params[$i] ?? '');
         }
 
@@ -548,8 +517,6 @@ class Command extends BaseObject
      * of [[rabbit\db\Query|Query]] to perform INSERT INTO ... SELECT SQL statement.
      * Passing of [[rabbit\db\Query|Query]] is available since version 2.0.11.
      * @return $this the command object itself
-     * @throws InvalidArgumentException
-     * @throws NotSupportedException
      * @throws Throwable
      */
     public function insert(string $table, $columns): self
@@ -570,8 +537,6 @@ class Command extends BaseObject
      * by its PHP type. You may explicitly specify the PDO type by using a [[rabbit\db\PdoValue]] class: `new PdoValue(value, type)`,
      * e.g. `[':name' => 'John', ':profile' => new PdoValue($profile, \PDO::PARAM_LOB)]`.
      * @return $this the current command being executed
-     * @throws InvalidArgumentException
-     * @throws NotSupportedException
      * @throws Throwable
      */
     public function bindValues(array $values): self
@@ -654,10 +619,10 @@ class Command extends BaseObject
      */
     public function setRawSql(string $sql): self
     {
-        if ($sql !== $this->_sql) {
+        if ($sql !== $this->sql) {
             $this->cancel();
             $this->reset();
-            $this->_sql = $sql;
+            $this->sql = $sql;
         }
 
         return $this;
@@ -679,7 +644,7 @@ class Command extends BaseObject
      */
     protected function reset(): void
     {
-        $this->_sql = null;
+        $this->sql = null;
         $this->_pendingParams = [];
         $this->params = [];
         $this->_refreshTableName = null;
@@ -1348,7 +1313,7 @@ class Command extends BaseObject
      */
     public function execute(): int
     {
-        $sql = $this->_sql;
+        $sql = $this->sql;
         $rawSql = $this->getRawSql();
         $this->logQuery($rawSql);
         if ($sql == '') {

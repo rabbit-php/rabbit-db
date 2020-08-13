@@ -17,7 +17,9 @@ use Rabbit\Base\App;
 use Rabbit\Base\Core\BaseObject;
 use Rabbit\Base\Core\Context;
 use Rabbit\Base\Exception\NotSupportedException;
+use Rabbit\Base\Helper\ArrayHelper;
 use Rabbit\Base\Helper\UrlHelper;
+use ReflectionException;
 use Throwable;
 
 /**
@@ -160,229 +162,43 @@ class Connection extends BaseObject implements ConnectionInterface
 {
     use ConnectionTrait;
 
-    /** @var string */
     public ?string $dsn;
-    /** @var string */
     public ?string $shortDsn;
-    /**
-     * @var string the username for establishing DB connection. Defaults to `null` meaning no username to use.
-     */
     public ?string $username = null;
-    /**
-     * @var string the password for establishing DB connection. Defaults to `null` meaning no password to use.
-     */
     public ?string $password = null;
-    /**
-     * @var array PDO attributes (name => value) that should be set when calling [[open()]]
-     * to establish a DB connection. Please refer to the
-     * [PHP manual](http://php.net/manual/en/pdo.setattribute.php) for
-     * details about available attributes.
-     */
     public ?array $attributes = null;
-    /**
-     * @var bool whether to enable schema caching.
-     * Note that in order to enable truly schema caching, a valid cache component as specified
-     * by [[schemaCache]] must be enabled and [[enableSchemaCache]] must be set true.
-     * @see schemaCacheDuration
-     * @see schemaCacheExclude
-     * @see schemaCache
-     */
     public bool $enableSchemaCache = true;
-    /**
-     * @var int number of seconds that table metadata can remain valid in cache.
-     * Use 0 to indicate that the cached data will never expire.
-     * @see enableSchemaCache
-     */
     public ?int $schemaCacheDuration = null;
-    /**
-     * @var array list of tables whose metadata should NOT be cached. Defaults to empty array.
-     * The table names may contain schema prefix, if any. Do not quote the table names.
-     * @see enableSchemaCache
-     */
     public array $schemaCacheExclude = [];
-    /**
-     * @var CacheInterface the cache object or the ID of the cache application component that
-     * is used to cache the table metadata.
-     * @see enableSchemaCache
-     */
     public ?CacheInterface $schemaCache = null;
-    /**
-     * @var bool whether to enable query caching.
-     * Note that in order to enable query caching, a valid cache component as specified
-     * by [[queryCache]] must be enabled and [[enableQueryCache]] must be set true.
-     * Also, only the results of the queries enclosed within [[cache()]] will be cached.
-     * @see queryCache
-     * @see cache()
-     * @see noCache()
-     */
     public bool $enableQueryCache = true;
-    /**
-     * @var CacheInterface the cache object or the ID of the cache application component
-     * that is used for query caching.
-     * @see enableQueryCache
-     */
     public ?CacheInterface $queryCache = null;
-    /**
-     * @var string the charset used for database connection. The property is only used
-     * for MySQL, PostgreSQL and CUBRID databases. Defaults to null, meaning using default charset
-     * as configured by the database.
-     *
-     * For Oracle Database, the charset must be specified in the [[dsn]], for example for UTF-8 by appending `;charset=UTF-8`
-     * to the DSN string.
-     *
-     * The same applies for if you're using GBK or BIG5 charset with MySQL, then it's highly recommended to
-     * specify charset via [[dsn]] like `'mysql:dbname=mydatabase;host=127.0.0.1;charset=GBK;'`.
-     */
     public ?string $charset = null;
-
-    /**
-     * @var bool whether to turn on prepare emulation. Defaults to false, meaning PDO
-     * will use the native prepare support if available. For some databases (such as MySQL),
-     * this may need to be set true so that PDO can emulate the prepare support to bypass
-     * the buggy native prepare support.
-     * The default value is null, which means the PDO ATTR_EMULATE_PREPARES value will not be changed.
-     */
     public ?bool $emulatePrepare = null;
-    /**
-     * @var string the common prefix or suffix for table names. If a table name is given
-     * as `{{%TableName}}`, then the percentage character `%` will be replaced with this
-     * property value. For example, `{{%post}}` becomes `{{tbl_post}}`.
-     */
     public string $tablePrefix = '';
-    /**
-     * @var array mapping between PDO driver names and [[Schema]] classes.
-     * The keys of the array are PDO driver names while the values are either the corresponding
-     * schema class names or configurations. Please refer to [[Yii::createObject()]] for
-     * details on how to specify a configuration.
-     *
-     * This property is mainly used by [[getSchema()]] when fetching the database schema information.
-     * You normally do not need to set this property unless you want to use your own
-     * [[Schema]] class to support DBMS that is not supported by Yii.
-     */
     public array $schemaMap = [];
-    /**
-     * @var string Custom PDO wrapper class. If not set, it will use [[PDO]] or [[\rabbit\db\mssql\PDO]] when MSSQL is used.
-     * @see pdo
-     */
     public string $pdoClass = 'PDO';
-
-    /**
-     * @var bool whether to enable [savepoint](http://en.wikipedia.org/wiki/Savepoint).
-     * Note that if the underlying DBMS does not support savepoint, setting this property to be true will have no effect.
-     */
     public bool $enableSavepoint = true;
-    /**
-     * @var CacheInterface the cache object or the ID of the cache application component that is used to store
-     * the health status of the DB servers specified in [[masters]] and [[slaves]].
-     * This is used only when read/write splitting is enabled or [[masters]] is not empty.
-     * Set boolean `false` to disabled server status caching.
-     */
     public ?CacheInterface $serverStatusCache = null;
-    /**
-     * @var int the retry interval in seconds for dead servers listed in [[masters]] and [[slaves]].
-     * This is used together with [[serverStatusCache]].
-     */
     public int $serverRetryInterval = 600;
-    /**
-     * @var bool whether to enable read/write splitting by using [[slaves]] to read data.
-     * Note that if [[slaves]] is empty, read/write splitting will NOT be enabled no matter what value this property takes.
-     */
     public bool $enableSlaves = true;
-    /**
-     * @var array list of slave connection configurations. Each configuration is used to create a slave DB connection.
-     * When [[enableSlaves]] is true, one of these configurations will be chosen and used to create a DB connection
-     * for performing read queries only.
-     * @see enableSlaves
-     * @see slaveConfig
-     */
     public array $slaves = [];
-    /**
-     * @var array the configuration that should be merged with every slave configuration listed in [[slaves]].
-     * For example,
-     *
-     * ```php
-     * [
-     *     'username' => 'slave',
-     *     'password' => 'slave',
-     *     'attributes' => [
-     *         // use a smaller connection timeout
-     *         PDO::ATTR_TIMEOUT => 10,
-     *     ],
-     * ]
-     * ```
-     */
     public array $slaveConfig = [];
-    /**
-     * @var array list of master connection configurations. Each configuration is used to create a master DB connection.
-     * When [[open()]] is called, one of these configurations will be chosen and used to create a DB connection
-     * which will be used by this object.
-     * Note that when this property is not empty, the connection setting (e.g. "dsn", "username") of this object will
-     * be ignored.
-     * @see masterConfig
-     * @see shuffleMasters
-     */
     public array $masters = [];
-    /**
-     * @var array the configuration that should be merged with every master configuration listed in [[masters]].
-     * For example,
-     *
-     * ```php
-     * [
-     *     'username' => 'master',
-     *     'password' => 'master',
-     *     'attributes' => [
-     *         // use a smaller connection timeout
-     *         PDO::ATTR_TIMEOUT => 10,
-     *     ],
-     * ]
-     * ```
-     */
     public array $masterConfig = [];
-    /**
-     * @var bool whether to shuffle [[masters]] before getting one.
-     * @since 2.0.11
-     * @see masters
-     */
     public bool $shuffleMasters = true;
-    /**
-     * @var bool whether to enable logging of database queries. Defaults to true.
-     * You may want to disable this option in a production environment to gain performance
-     * if you do not need the information being logged.
-     * @since 2.0.12
-     * @see enableProfiling
-     */
     public bool $enableLogging = true;
-    /** @var int */
     public int $maxLog = 1024;
-    /** @var string */
     protected string $transactionClass = Transaction::class;
-    /**
-     * @var Schema the database schema
-     */
-    protected ?Schema $_schema = null;
-    /**
-     * @var string driver name
-     */
+    protected ?Schema $schema = null;
     protected ?string $_driverName = null;
-    /**
-     * @var Connection the currently active master connection
-     */
-    protected ?Connection $_master = null;
-    /**
-     * @var Connection the currently active slave connection
-     */
-    protected ?Connection $_slave = null;
-    /** @var RetryHandlerInterface|null */
+    protected ?Connection $master = null;
+    protected ?Connection $slave = null;
     protected ?RetryHandlerInterface $retryHandler = null;
-    /** @var bool */
     protected bool $hasOrm = false;
-    /** @var string */
     protected string $commandClass = Command::class;
-    /** @var string */
     public string $poolName = 'default';
-    /** @var string */
     public string $driver = 'pdo';
-    /** @var array */
     protected ?array $parseDsn = [];
 
     /**
@@ -426,7 +242,7 @@ class Connection extends BaseObject implements ConnectionInterface
     /**
      * Returns the current query cache information.
      * This method is used internally by [[Command]].
-     * @param float $duration the preferred caching duration. If null, it will be ignored.
+     * @param float|null $duration the preferred caching duration. If null, it will be ignored.
      * @param CacheInterface|null $cache
      * @return array the current query cache information, or null if query cache is not enabled.
      * @throws Throwable
@@ -457,39 +273,41 @@ class Connection extends BaseObject implements ConnectionInterface
     /**
      * Closes the currently active DB connection.
      * It does nothing if the connection is already closed.
-     * @throws \Exception
+     * @throws Throwable
      */
     public function close(): void
     {
         $pdo = DbContext::get($this->poolName, $this->driver);
-        if ($this->_master) {
-            if ($pdo === $this->_master->getConn()) {
+        if ($this->master) {
+            if ($pdo === $this->master->getConn()) {
                 DbContext::delete($this->poolName, $this->driver);
             }
 
-            $this->_master->close();
-            $this->_master = null;
+            $this->master->close();
+            $this->master = null;
         }
 
         if ($pdo !== null) {
             App::warning('Closing DB connection: ' . $this->shortDsn, "db");
             DbContext::delete($this->poolName, $this->driver);
-            $this->_schema = null;
+            $this->schema = null;
         }
 
-        if ($this->_slave) {
-            $this->_slave->close();
-            $this->_slave = null;
+        if ($this->slave) {
+            $this->slave->close();
+            $this->slave = null;
         }
     }
 
     /**
      * Creates a command for execution.
-     * @param string $sql the SQL statement to be executed
+     * @param string|null $sql the SQL statement to be executed
      * @param array $params the parameters to be bound to the SQL statement
      * @return Command the DB command
      * @throws DependencyException
      * @throws NotFoundException
+     * @throws Throwable
+     * @throws ReflectionException
      */
     public function createCommand(?string $sql = null, array $params = []): Command
     {
@@ -507,7 +325,7 @@ class Connection extends BaseObject implements ConnectionInterface
      * @throws DependencyException
      * @throws Exception
      * @throws NotFoundException
-     * @throws Throwable
+     * @throws Throwable|InvalidArgumentException
      */
     public function createCommandExt(array $array): Command
     {
@@ -596,11 +414,11 @@ class Connection extends BaseObject implements ConnectionInterface
             return $fallbackToMaster ? $this : null;
         }
 
-        if ($this->_slave === false) {
-            $this->_slave = $this->openFromPool($this->slaves, $this->slaveConfig);
+        if ($this->slave === false) {
+            $this->slave = $this->openFromPool($this->slaves, $this->slaveConfig);
         }
 
-        return $this->_slave === null && $fallbackToMaster ? $this : $this->_slave;
+        return $this->slave === null && $fallbackToMaster ? $this : $this->slave;
     }
 
     /**
@@ -718,13 +536,13 @@ class Connection extends BaseObject implements ConnectionInterface
      */
     public function getMaster(): ?self
     {
-        if ($this->_master === null) {
-            $this->_master = $this->shuffleMasters
+        if ($this->master === null) {
+            $this->master = $this->shuffleMasters
                 ? $this->openFromPool($this->masters, $this->masterConfig)
                 : $this->openFromPoolSequentially($this->masters, $this->masterConfig);
         }
 
-        return $this->_master;
+        return $this->master;
     }
 
     /**
@@ -808,9 +626,10 @@ class Connection extends BaseObject implements ConnectionInterface
     }
 
     /**
-     * @param string $isolationLevel
+     * @param string|null $isolationLevel
      * @return mixed|Transaction|null
      * @throws InvalidArgumentException
+     * @throws NotSupportedException
      * @throws Throwable
      */
     public function beginTransaction(string $isolationLevel = null): ?Transaction
@@ -842,7 +661,7 @@ class Connection extends BaseObject implements ConnectionInterface
      * from rollback will be caught and just logged with [[\Yii::error()]].
      * @param Transaction $transaction Transaction object given from [[beginTransaction()]].
      * @param int $level Transaction level just after [[beginTransaction()]] call.
-     * @throws Throwable
+     * @throws Throwable|InvalidArgumentException
      */
     private function rollbackTransactionOnLevel($transaction, $level): void
     {
@@ -895,15 +714,15 @@ class Connection extends BaseObject implements ConnectionInterface
      */
     public function getSchema(): Schema
     {
-        if ($this->_schema !== null) {
-            return $this->_schema;
+        if ($this->schema !== null) {
+            return $this->schema;
         }
 
         $driver = $this->getDriverName();
         if (isset($this->schemaMap[$driver])) {
             $class = $this->schemaMap[$driver];
 
-            return $this->_schema = new $class($this);
+            return $this->schema = new $class($this);
         }
 
         throw new NotSupportedException("Connection does not support reading schema information for '$driver' DBMS.");
@@ -953,13 +772,11 @@ class Connection extends BaseObject implements ConnectionInterface
     }
 
     /**
-     * Processes a SQL statement by quoting table and column names that are enclosed within double brackets.
-     * Tokens enclosed within double curly brackets are treated as table names, while
-     * tokens enclosed within double square brackets are column names. They will be quoted accordingly.
-     * Also, the percentage character "%" at the beginning or ending of a table name will be replaced
-     * with [[tablePrefix]].
-     * @param string $sql the SQL to be quoted
-     * @return string the quoted SQL
+     * @param string $sql
+     * @return string
+     * @throws InvalidArgumentException
+     * @throws NotSupportedException
+     * @throws Throwable
      */
     public function quoteSql(string $sql): string
     {
@@ -1079,9 +896,9 @@ class Connection extends BaseObject implements ConnectionInterface
      */
     public function __clone()
     {
-        $this->_master = null;
-        $this->_slave = null;
-        $this->_schema = null;
+        $this->master = null;
+        $this->slave = null;
+        $this->schema = null;
         if (strncmp($this->dsn, 'sqlite::memory:', 15) !== 0) {
             // reset PDO connection, unless its sqlite in-memory, which can only have one connection
             DbContext::delete($this->poolName, $this->driver);

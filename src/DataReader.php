@@ -8,7 +8,6 @@ declare(strict_types=1);
 
 namespace Rabbit\DB;
 
-use Rabbit\Base\Core\ObjectFactory;
 use Rabbit\Base\Exception\InvalidCallException;
 use ReflectionException;
 
@@ -56,10 +55,10 @@ class DataReader implements \Iterator, \Countable
     /**
      * @var \PDOStatement the PDOStatement associated with the command
      */
-    protected ?\PDOStatement $_statement;
-    protected bool $_closed = false;
-    protected $_row;
-    protected int $_index = -1;
+    protected ?\PDOStatement $statement;
+    protected bool $closed = false;
+    protected $row;
+    protected int $index = -1;
     /** @var Command */
     protected Command $command;
 
@@ -72,8 +71,8 @@ class DataReader implements \Iterator, \Countable
     public function __construct(Command $command, $config = [])
     {
         $this->command = $command;
-        $this->_statement = $command->pdoStatement;
-        $this->_statement->setFetchMode(\PDO::FETCH_ASSOC);
+        $this->statement = $command->pdoStatement;
+        $this->statement->setFetchMode(\PDO::FETCH_ASSOC);
 
         configure($this, $config);
     }
@@ -86,15 +85,15 @@ class DataReader implements \Iterator, \Countable
      * in the result set. If using the column name, be aware that the name
      * should match the case of the column, as returned by the driver.
      * @param mixed $value Name of the PHP variable to which the column will be bound.
-     * @param int $dataType Data type of the parameter
+     * @param int|null $dataType Data type of the parameter
      * @see http://www.php.net/manual/en/function.PDOStatement-bindColumn.php
      */
     public function bindColumn($column, &$value, int $dataType = null): void
     {
         if ($dataType === null) {
-            $this->_statement->bindColumn($column, $value);
+            $this->statement->bindColumn($column, $value);
         } else {
-            $this->_statement->bindColumn($column, $value, $dataType);
+            $this->statement->bindColumn($column, $value, $dataType);
         }
     }
 
@@ -107,7 +106,7 @@ class DataReader implements \Iterator, \Countable
     public function setFetchMode(int $mode): void
     {
         $params = func_get_args();
-        call_user_func_array([$this->_statement, 'setFetchMode'], $params);
+        call_user_func_array([$this->statement, 'setFetchMode'], $params);
     }
 
     /**
@@ -116,7 +115,7 @@ class DataReader implements \Iterator, \Countable
      */
     public function read(): ?array
     {
-        if (false === $row = $this->_statement->fetch()) {
+        if (false === $row = $this->statement->fetch()) {
             return null;
         }
         return $row;
@@ -129,7 +128,7 @@ class DataReader implements \Iterator, \Countable
      */
     public function readColumn(int $columnIndex)
     {
-        return $this->_statement->fetchColumn($columnIndex);
+        return $this->statement->fetchColumn($columnIndex);
     }
 
     /**
@@ -140,7 +139,7 @@ class DataReader implements \Iterator, \Countable
      */
     public function readObject(string $className, array $fields)
     {
-        return $this->_statement->fetchObject($className, $fields);
+        return $this->statement->fetchObject($className, $fields);
     }
 
     /**
@@ -150,7 +149,7 @@ class DataReader implements \Iterator, \Countable
      */
     public function readAll(): array
     {
-        return $this->_statement->fetchAll();
+        return $this->statement->fetchAll();
     }
 
     /**
@@ -161,8 +160,8 @@ class DataReader implements \Iterator, \Countable
      */
     public function nextResult()
     {
-        if (($result = $this->_statement->nextRowset()) !== false) {
-            $this->_index = -1;
+        if (($result = $this->statement->nextRowset()) !== false) {
+            $this->index = -1;
         }
 
         return $result;
@@ -175,8 +174,8 @@ class DataReader implements \Iterator, \Countable
      */
     public function close(): void
     {
-        $this->_statement->closeCursor();
-        $this->_closed = true;
+        $this->statement->closeCursor();
+        $this->closed = true;
     }
 
     /**
@@ -185,7 +184,7 @@ class DataReader implements \Iterator, \Countable
      */
     public function getIsClosed(): bool
     {
-        return $this->_closed;
+        return $this->closed;
     }
 
     /**
@@ -208,7 +207,7 @@ class DataReader implements \Iterator, \Countable
      */
     public function getRowCount(): int
     {
-        return $this->_statement->rowCount();
+        return $this->statement->rowCount();
     }
 
     /**
@@ -218,7 +217,7 @@ class DataReader implements \Iterator, \Countable
      */
     public function getColumnCount(): int
     {
-        return $this->_statement->columnCount();
+        return $this->statement->columnCount();
     }
 
     /**
@@ -228,9 +227,9 @@ class DataReader implements \Iterator, \Countable
      */
     public function rewind()
     {
-        if ($this->_index < 0) {
-            $this->_row = $this->_statement->fetch();
-            $this->_index = 0;
+        if ($this->index < 0) {
+            $this->row = $this->statement->fetch();
+            $this->index = 0;
         } else {
             throw new InvalidCallException('DataReader cannot rewind. It is a forward-only reader.');
         }
@@ -243,7 +242,7 @@ class DataReader implements \Iterator, \Countable
      */
     public function key()
     {
-        return $this->_index;
+        return $this->index;
     }
 
     /**
@@ -253,7 +252,7 @@ class DataReader implements \Iterator, \Countable
      */
     public function current()
     {
-        return $this->_row;
+        return $this->row;
     }
 
     /**
@@ -262,8 +261,8 @@ class DataReader implements \Iterator, \Countable
      */
     public function next()
     {
-        $this->_row = $this->_statement->fetch();
-        $this->_index++;
+        $this->row = $this->statement->fetch();
+        $this->index++;
     }
 
     /**
@@ -273,6 +272,6 @@ class DataReader implements \Iterator, \Countable
      */
     public function valid()
     {
-        return $this->_row !== false;
+        return $this->row !== false;
     }
 }

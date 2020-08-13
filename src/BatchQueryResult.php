@@ -8,7 +8,9 @@ declare(strict_types=1);
 
 namespace Rabbit\DB;
 
+use Psr\SimpleCache\InvalidArgumentException;
 use Rabbit\Base\Core\BaseObject;
+use Throwable;
 
 /**
  * BatchQueryResult represents a batch query from which you can retrieve data in batches.
@@ -31,42 +33,14 @@ use Rabbit\Base\Core\BaseObject;
  */
 class BatchQueryResult extends BaseObject implements \Iterator
 {
-    /**
-     * @var Connection the DB connection to be used when performing batch query.
-     * If null, the "db" application component will be used.
-     */
     public Connection $db;
-    /**
-     * @var Query the query object associated with this batch query.
-     * Do not modify this property directly unless after [[reset()]] is called explicitly.
-     */
     public Query $query;
-    /**
-     * @var int the number of rows to be returned in each batch.
-     */
     public int $batchSize = 100;
-    /**
-     * @var bool whether to return a single row during each iteration.
-     * If false, a whole batch of rows will be returned in each iteration.
-     */
     public bool $each = false;
-
-    /**
-     * @var DataReader the data reader associated with this batch query.
-     */
-    private ?DataReader $_dataReader;
-    /**
-     * @var array the data retrieved in the current batch
-     */
-    private ?array $_batch;
-    /**
-     * @var mixed the value for the current iteration
-     */
-    private $_value;
-    /**
-     * @var int the key for the current iteration
-     */
-    private ?int $_key;
+    protected ?DataReader $dataReader = null;
+    protected ?array $batch = null;
+    protected ?array $value = null;
+    protected ?int $key = null;
 
 
     /**
@@ -84,18 +58,18 @@ class BatchQueryResult extends BaseObject implements \Iterator
      */
     public function reset(): void
     {
-        if ($this->_dataReader !== null) {
-            $this->_dataReader->close();
+        if ($this->dataReader !== null) {
+            $this->dataReader->close();
         }
-        $this->_dataReader = null;
-        $this->_batch = null;
-        $this->_value = null;
-        $this->_key = null;
+        $this->dataReader = null;
+        $this->batch = null;
+        $this->value = null;
+        $this->key = null;
     }
 
     /**
-     * Resets the iterator to the initial state.
-     * This method is required by the interface [[\Iterator]].
+     * @throws InvalidArgumentException
+     * @throws Throwable
      */
     public function rewind()
     {
@@ -104,45 +78,45 @@ class BatchQueryResult extends BaseObject implements \Iterator
     }
 
     /**
-     * Moves the internal pointer to the next dataset.
-     * This method is required by the interface [[\Iterator]].
+     * @throws InvalidArgumentException
+     * @throws Throwable
      */
     public function next()
     {
-        if ($this->_batch === null || !$this->each || $this->each && next($this->_batch) === false) {
-            $this->_batch = $this->fetchData();
-            reset($this->_batch);
+        if ($this->batch === null || !$this->each || $this->each && next($this->batch) === false) {
+            $this->batch = $this->fetchData();
+            reset($this->batch);
         }
 
         if ($this->each) {
-            $this->_value = current($this->_batch);
+            $this->value = current($this->batch);
             if ($this->query->indexBy !== null) {
-                $this->_key = key($this->_batch);
-            } elseif (key($this->_batch) !== null) {
-                $this->_key = $this->_key === null ? 0 : $this->_key + 1;
+                $this->key = key($this->batch);
+            } elseif (key($this->batch) !== null) {
+                $this->key = $this->key === null ? 0 : $this->key + 1;
             } else {
-                $this->_key = null;
+                $this->key = null;
             }
         } else {
-            $this->_value = $this->_batch;
-            $this->_key = $this->_key === null ? 0 : $this->_key + 1;
+            $this->value = $this->batch;
+            $this->key = $this->key === null ? 0 : $this->key + 1;
         }
     }
 
     /**
-     * Fetches the next batch of data.
-     * @return array the data fetched
-     * @throws Exception
+     * @return array
+     * @throws InvalidArgumentException
+     * @throws Throwable
      */
-    protected function fetchData()
+    protected function fetchData(): ?array
     {
-        if ($this->_dataReader === null) {
-            $this->_dataReader = $this->query->createCommand($this->db)->query();
+        if ($this->dataReader === null) {
+            $this->dataReader = $this->query->createCommand()->query();
         }
 
         $rows = [];
         $count = 0;
-        while ($count++ < $this->batchSize && ($row = $this->_dataReader->read())) {
+        while ($count++ < $this->batchSize && ($row = $this->dataReader->read())) {
             $rows[] = $row;
         }
 
@@ -156,7 +130,7 @@ class BatchQueryResult extends BaseObject implements \Iterator
      */
     public function key()
     {
-        return $this->_key;
+        return $this->key;
     }
 
     /**
@@ -166,7 +140,7 @@ class BatchQueryResult extends BaseObject implements \Iterator
      */
     public function current()
     {
-        return $this->_value;
+        return $this->value;
     }
 
     /**
@@ -176,6 +150,6 @@ class BatchQueryResult extends BaseObject implements \Iterator
      */
     public function valid()
     {
-        return !empty($this->_batch);
+        return !empty($this->batch);
     }
 }

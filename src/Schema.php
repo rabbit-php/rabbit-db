@@ -17,6 +17,7 @@ use Rabbit\Base\Core\BaseObject;
 use Rabbit\Base\Core\Context;
 use Rabbit\Base\Exception\InvalidCallException;
 use Rabbit\Base\Exception\NotSupportedException;
+use ReflectionException;
 use Throwable;
 
 /**
@@ -67,70 +68,26 @@ abstract class Schema extends BaseObject
     const TYPE_BOOLEAN = 'boolean';
     const TYPE_MONEY = 'money';
     const TYPE_JSON = 'json';
-    /**
-     * Schema cache version, to detect incompatibilities in cached values when the
-     * data format of the cache changes.
-     */
     const SCHEMA_CACHE_VERSION = 1;
-
-    /**
-     * @var ConnectionInterface the database connection
-     */
     public ConnectionInterface $db;
-    /**
-     * @var string the default schema name used for the current session.
-     */
     public ?string $defaultSchema;
-    /**
-     * @var array map of DB errors and corresponding exceptions
-     * If left part is found in DB error message exception class from the right part is used.
-     */
     public array $exceptionMap = [
         'SQLSTATE[23' => IntegrityException::class,
     ];
-    /**
-     * @var string|array column schema class or class config
-     * @since 2.0.11
-     */
     public string $columnSchemaClass = ColumnSchema::class;
-
-    /**
-     * @var string character used to quote schema, table, etc. names.
-     * An array of 2 characters can be used in case starting and ending characters are different.
-     * @since 2.0.14
-     */
     protected string $tableQuoteCharacter = "'";
-    /**
-     * @var string character used to quote column names.
-     * An array of 2 characters can be used in case starting and ending characters are different.
-     * @since 2.0.14
-     */
     protected string $columnQuoteCharacter = '"';
-
-    /**
-     * @var array list of ALL schema names in the database, except system schemas
-     */
     private ?array $_schemaNames = null;
-    /**
-     * @var array list of ALL table names in the database
-     */
     private array $_tableNames = [];
-    /**
-     * @var array list of loaded table metadata (table name => metadata type => metadata).
-     */
     private array $_tableMetadata = [];
-    /**
-     * @var QueryBuilder the query builder for this database
-     */
     private ?QueryBuilder $_builder = null;
-
     protected string $builderClass = QueryBuilder::class;
-    /**
-     * @var string server version as a string.
-     */
     private ?string $_serverVersion = null;
 
-
+    /**
+     * Schema constructor.
+     * @param Connection $db
+     */
     public function __construct(Connection $db)
     {
         $this->db = $db;
@@ -143,6 +100,7 @@ abstract class Schema extends BaseObject
      * cached data may be returned if available.
      * @return TableSchema[] the metadata for all tables in the database.
      * Each array element is an instance of [[TableSchema]] or its child class.
+     * @throws NotSupportedException
      */
     public function getTableSchemas(string $schema = '', bool $refresh = false): array
     {
@@ -158,6 +116,7 @@ abstract class Schema extends BaseObject
      * @param bool $refresh whether to fetch the latest available table metadata. If this is `false`,
      * cached data may be returned if available.
      * @return array array of metadata.
+     * @throws NotSupportedException
      * @since 2.0.13
      */
     protected function getSchemaMetadata(string $schema, string $type, bool $refresh): array
@@ -352,7 +311,7 @@ abstract class Schema extends BaseObject
      * This method may be overridden by child classes to create a DBMS-specific column schema builder.
      *
      * @param string $type type of the column. See [[ColumnSchemaBuilder::$type]].
-     * @param int|string|array $length length or precision of the column. See [[ColumnSchemaBuilder::$length]].
+     * @param null $length length or precision of the column. See [[ColumnSchemaBuilder::$length]].
      * @return ColumnSchemaBuilder column schema builder instance
      * @since 2.0.6
      */
@@ -507,7 +466,7 @@ abstract class Schema extends BaseObject
      * @param string $type metadata type.
      * @param bool $refresh whether to reload the table metadata even if it is found in the cache.
      * @return mixed metadata.
-     * @throws Throwable
+     * @throws Throwable|InvalidArgumentException
      * @since 2.0.13
      */
     protected function getTableMetadata(string $name, string $type, bool $refresh)
@@ -805,7 +764,7 @@ abstract class Schema extends BaseObject
      * This method may be overridden by child classes to create a DBMS-specific column schema.
      * @return ColumnSchema column schema instance.
      * @throws DependencyException
-     * @throws NotFoundException
+     * @throws NotFoundException|ReflectionException
      */
     protected function createColumnSchema(): ColumnSchema
     {

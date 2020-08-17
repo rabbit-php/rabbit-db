@@ -451,7 +451,7 @@ abstract class Schema extends BaseObject
      * @param string $name table name. The table name may contain schema name if any. Do not quote the table name.
      * @param bool $refresh whether to reload the table schema even if it is found in the cache.
      * @return TableSchema|null table metadata. `null` if the named table does not exist.
-     * @throws Throwable
+     * @throws Throwable|InvalidArgumentException
      */
     public function getTableSchema(string $name, bool $refresh = false): ?TableSchema
     {

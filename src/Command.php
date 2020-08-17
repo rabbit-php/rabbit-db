@@ -269,9 +269,7 @@ class Command extends BaseObject
      * @param int|null $fetchMode the result fetch mode. Please refer to [PHP manual](http://www.php.net/manual/en/function.PDOStatement-setFetchMode.php)
      * for valid fetch modes. If this parameter is null, the value set in [[fetchMode]] will be used.
      * @return mixed the method execution result
-     * @throws Exception
      * @throws InvalidArgumentException
-     * @throws NotSupportedException
      * @throws Throwable
      * @throws ReflectionException
      * @since 2.0.1 this method is protected (was private before).
@@ -385,9 +383,7 @@ class Command extends BaseObject
      * and retry handlers.
      *
      * @param string|null $rawSql the rawSql if it has been created.
-     * @throws Exception if execution failed.
      * @throws InvalidArgumentException
-     * @throws NotSupportedException
      * @throws Throwable
      * @since 2.0.14
      */

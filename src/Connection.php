@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 /**
  * @link http://www.yiiframework.com/
@@ -636,7 +637,7 @@ class Connection extends BaseObject implements ConnectionInterface
 
         if (($transaction = $this->getTransaction()) === null) {
             $transaction = new $this->transactionClass($this);
-            Context::set('transaction', $transaction, $this->poolName);
+            Context::set('db.transaction', $transaction, $this->poolName);
         }
         $transaction->begin($isolationLevel);
 
@@ -649,7 +650,7 @@ class Connection extends BaseObject implements ConnectionInterface
      */
     public function getTransaction(): ?Transaction
     {
-        $transaction = Context::get('transaction', $this->poolName);
+        $transaction = Context::get('db.transaction', $this->poolName);
         return $transaction && $transaction->getIsActive() ? $transaction : null;
     }
 

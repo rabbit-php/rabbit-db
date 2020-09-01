@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 /**
  * @link http://www.yiiframework.com/
@@ -8,6 +9,7 @@ declare(strict_types=1);
 
 namespace Rabbit\DB;
 
+use PDO;
 use Psr\SimpleCache\InvalidArgumentException;
 use Rabbit\Base\App;
 use Rabbit\Base\Core\BaseObject;
@@ -115,12 +117,13 @@ class Transaction extends BaseObject
         }
         $this->db->open();
 
+        $pdo = $this->db->getConn();
         if ($this->_level === 0) {
             if ($isolationLevel !== null) {
                 $this->db->getSchema()->setTransactionIsolationLevel($isolationLevel);
             }
             App::debug('Begin transaction' . ($isolationLevel ? ' with isolation level ' . $isolationLevel : ''), "db");
-            $this->db->getConn()->beginTransaction();
+            $pdo->beginTransaction();
             $this->_level = 1;
             return;
         }
@@ -128,7 +131,13 @@ class Transaction extends BaseObject
         $schema = $this->db->getSchema();
         if ($schema->supportsSavepoint()) {
             App::debug('Set savepoint ' . $this->_level, "db");
-            $schema->createSavepoint('LEVEL' . $this->_level);
+            if (!$pdo->getAttribute(PDO::ATTR_EMULATE_PREPARES)) {
+                $pdo->getConn()->setAttribute(PDO::ATTR_EMULATE_PREPARES, true);
+                $schema->createSavepoint('LEVEL' . $this->_level);
+                $pdo->getConn()->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+            } else {
+                $schema->createSavepoint('LEVEL' . $this->_level);
+            }
         } else {
             App::info('Transaction not started: nested transaction not supported', "db");
             throw new NotSupportedException('Transaction not started: nested transaction not supported.');
@@ -149,9 +158,10 @@ class Transaction extends BaseObject
         }
 
         $this->_level--;
+        $pdo = $this->db->getConn();
         if ($this->_level === 0) {
             App::debug('Commit transaction', "db");
-            $this->db->getConn()->commit();
+            $pdo->commit();
             $this->db->release(true);
             return;
         }
@@ -159,7 +169,13 @@ class Transaction extends BaseObject
         $schema = $this->db->getSchema();
         if ($schema->supportsSavepoint()) {
             App::debug('Release savepoint ' . $this->_level, "db");
-            $schema->releaseSavepoint('LEVEL' . $this->_level);
+            if (!$pdo->getAttribute(PDO::ATTR_EMULATE_PREPARES)) {
+                $pdo->getConn()->setAttribute(PDO::ATTR_EMULATE_PREPARES, true);
+                $schema->releaseSavepoint('LEVEL' . $this->_level);
+                $pdo->getConn()->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+            } else {
+                $schema->releaseSavepoint('LEVEL' . $this->_level);
+            }
         } else {
             App::info('Transaction not committed: nested transaction not supported', "db");
         }
@@ -188,9 +204,10 @@ class Transaction extends BaseObject
         }
 
         $this->_level--;
+        $pdo = $this->db->getConn();
         if ($this->_level === 0) {
             App::debug('Roll back transaction', "db");
-            $this->db->getConn()->rollBack();
+            $pdo->rollBack();
             $this->db->release(true);
             return;
         }
@@ -198,7 +215,13 @@ class Transaction extends BaseObject
         $schema = $this->db->getSchema();
         if ($schema->supportsSavepoint()) {
             App::debug('Roll back to savepoint ' . $this->_level, "db");
-            $schema->rollBackSavepoint('LEVEL' . $this->_level);
+            if (!$pdo->getAttribute(PDO::ATTR_EMULATE_PREPARES)) {
+                $pdo->getConn()->setAttribute(PDO::ATTR_EMULATE_PREPARES, true);
+                $schema->rollBackSavepoint('LEVEL' . $this->_level);
+                $pdo->getConn()->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+            } else {
+                $schema->rollBackSavepoint('LEVEL' . $this->_level);
+            }
         } else {
             App::info('Transaction not rolled back: nested transaction not supported', "db");
         }

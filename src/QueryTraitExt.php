@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Rabbit\DB;
@@ -276,10 +277,11 @@ trait QueryTraitExt
     }
 
     /**
-     * @param $val
-     * @return string
+     * @author Albert <63851587@qq.com>
+     * @param array $val
+     * @return array
      */
-    private function makeWhere($val): string
+    private function makeWhere(array $val): array
     {
         if (is_string($val)) {
             return $val;

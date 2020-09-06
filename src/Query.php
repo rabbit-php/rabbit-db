@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 /**
  * @link http://www.yiiframework.com/
@@ -557,13 +558,8 @@ PATTERN;
      * in MySQL, the option 'SQL_CALC_FOUND_ROWS' can be used.
      * @return $this the query object itself
      */
-    public function select($columns, string $option = null): self
+    public function select(array $columns, string $option = null): self
     {
-        if ($columns instanceof ExpressionInterface) {
-            $columns = [$columns];
-        } elseif (!is_array($columns)) {
-            $columns = preg_split('/\s*,\s*/', trim($columns), -1, PREG_SPLIT_NO_EMPTY);
-        }
         // this sequantial assignment is needed in order to make sure select is being reset
         // before using getUniqueColumns() that checks it
         $this->select = [];
@@ -899,7 +895,7 @@ PATTERN;
      * @param array $params the parameters (name => value) to be bound to the query.
      * @return $this the query object itself
      */
-    public function join(string $type, string $table, string $on = '', array $params = []): self
+    public function join(string $type, $table, string $on = '', array $params = []): self
     {
         $this->join[] = [$type, $table, $on];
         return $this->addParams($params);
@@ -923,7 +919,7 @@ PATTERN;
      * @param array $params the parameters (name => value) to be bound to the query.
      * @return $this the query object itself
      */
-    public function innerJoin(string $table, string $on = '', array $params = []): self
+    public function innerJoin($table, string $on = '', array $params = []): self
     {
         $this->join[] = ['INNER JOIN', $table, $on];
         return $this->addParams($params);
@@ -971,7 +967,7 @@ PATTERN;
      * @param array $params the parameters (name => value) to be bound to the query
      * @return $this the query object itself
      */
-    public function rightJoin(string $table, string $on = '', array $params = []): self
+    public function rightJoin($table, string $on = '', array $params = []): self
     {
         $this->join[] = ['RIGHT JOIN', $table, $on];
         return $this->addParams($params);

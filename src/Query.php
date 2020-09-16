@@ -705,13 +705,8 @@ PATTERN;
      * @return $this the query object itself
      * @see select()
      */
-    public function addSelect($columns): self
+    public function addSelect(array $columns): self
     {
-        if ($columns instanceof ExpressionInterface) {
-            $columns = [$columns];
-        } elseif (!is_array($columns)) {
-            $columns = preg_split('/\s*,\s*/', trim($columns), -1, PREG_SPLIT_NO_EMPTY);
-        }
         $columns = $this->getUniqueColumns($columns);
         if ($this->select === null) {
             $this->select = $columns;

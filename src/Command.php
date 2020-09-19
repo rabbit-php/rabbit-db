@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 /**
  * @link http://www.yiiframework.com/
@@ -1182,9 +1183,9 @@ class Command extends BaseObject
      * @throws NotSupportedException if this is not supported by the underlying DBMS
      * @throws Throwable
      */
-    public function checkIntegrity(bool $check = true, string $schema = '', string $table = ''): self
+    public function checkIntegrity(string $schema = '', string $table = '', bool $check = true): self
     {
-        $sql = $this->db->getQueryBuilder()->checkIntegrity($check, $schema, $table);
+        $sql = $this->db->getQueryBuilder()->checkIntegrity($schema, $table, $check);
 
         return $this->setSql($sql);
     }

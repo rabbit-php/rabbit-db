@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 /**
  * @link http://www.yiiframework.com/
@@ -216,7 +217,7 @@ class QueryBuilder
      * @return string the INSERT SQL
      * @throws Exception
      */
-    public function insert(string $table, $columns, array &$params): string
+    public function insert(string $table, $columns, array &$params = []): string
     {
         [$names, $placeholders, $values, $params] = $this->prepareInsertValues($table, $columns, $params);
         return 'INSERT INTO ' . $this->db->quoteTableName($table)
@@ -426,9 +427,9 @@ class QueryBuilder
             }
         }
 
-//        if ($this->expressionBuilders[$className] === __CLASS__) {
-//            return $this->expressionBuilders[$className];
-//        }
+        //        if ($this->expressionBuilders[$className] === __CLASS__) {
+        //            return $this->expressionBuilders[$className];
+        //        }
 
         if (!is_object($this->expressionBuilders[$className])) {
             $this->expressionBuilders[$className] = new $this->expressionBuilders[$className]($this);
@@ -842,7 +843,7 @@ class QueryBuilder
      * @throws NotSupportedException if this is not supported by the underlying DBMS.
      * @since 2.0.14
      */
-    public function upsert(string $table, $insertColumns, $updateColumns, array &$params): string
+    public function upsert(string $table, $insertColumns, $updateColumns, array &$params = []): string
     {
         throw new NotSupportedException($this->db->getDriverName() . ' does not support upsert statements.');
     }
@@ -867,7 +868,7 @@ class QueryBuilder
      * so that they can be bound to the DB command later.
      * @return string the UPDATE SQL
      */
-    public function update(string $table, array $columns, $condition, array &$params): string
+    public function update(string $table, array $columns, $condition, array &$params = []): string
     {
         [$lines, $params] = $this->prepareUpdateSets($table, $columns, $params);
         $sql = 'UPDATE ' . $this->db->quoteTableName($table) . ' SET ' . implode(', ', $lines);
@@ -1378,14 +1379,13 @@ class QueryBuilder
     }
 
     /**
-     * Builds a SQL statement for enabling or disabling integrity check.
-     * @param bool $check whether to turn on or off the integrity check.
-     * @param string $schema the schema of the tables. Defaults to empty string, meaning the current or default schema.
-     * @param string $table the table name. Defaults to empty string, meaning that no table will be changed.
-     * @return string the SQL statement for checking integrity
-     * @throws NotSupportedException if this is not supported by the underlying DBMS
+     * @author Albert <63851587@qq.com>
+     * @param string $schema
+     * @param string $table
+     * @param boolean $check
+     * @return string
      */
-    public function checkIntegrity(bool $check = true, string $schema = '', string $table = ''): string
+    public function checkIntegrity(string $schema = '', string $table = '', bool $check = true): string
     {
         throw new NotSupportedException($this->db->getDriverName() . ' does not support enabling/disabling integrity check.');
     }

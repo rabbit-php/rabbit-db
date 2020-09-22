@@ -12,11 +12,11 @@ namespace Rabbit\DB;
 
 use Generator;
 use InvalidArgumentException;
-use Rabbit\Base\Exception\NotSupportedException;
 use Rabbit\Base\Helper\StringHelper;
-use Rabbit\DB\Conditions\ConditionInterface;
 use Rabbit\DB\Conditions\HashCondition;
 use Rabbit\DB\Conditions\SimpleCondition;
+use Rabbit\DB\Conditions\ConditionInterface;
+use Rabbit\Base\Exception\NotSupportedException;
 
 /**
  * QueryBuilder builds a SELECT SQL statement based on the specification given as a [[Query]] object.
@@ -51,7 +51,7 @@ class QueryBuilder
      * This is mainly used to support creating/modifying tables using DB-independent data type specifications.
      * Child classes should override this property to declare supported type mappings.
      */
-    public array $typeMap = [];
+    protected array $typeMap = [];
 
     /**
      * @var array map of condition aliases to condition classes. For example:

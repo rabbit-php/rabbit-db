@@ -8,17 +8,17 @@ declare(strict_types=1);
 
 namespace Rabbit\DB;
 
-use DI\DependencyException;
-use DI\NotFoundException;
+use Throwable;
 use PDOException;
+use ReflectionException;
+use DI\NotFoundException;
+use DI\DependencyException;
+use Rabbit\Base\Core\Context;
+use Rabbit\Base\Core\BaseObject;
 use Psr\SimpleCache\CacheInterface;
 use Psr\SimpleCache\InvalidArgumentException;
-use Rabbit\Base\Core\BaseObject;
-use Rabbit\Base\Core\Context;
 use Rabbit\Base\Exception\InvalidCallException;
 use Rabbit\Base\Exception\NotSupportedException;
-use ReflectionException;
-use Throwable;
 
 /**
  * Schema is the base class for concrete DBMS-specific schema classes.
@@ -70,7 +70,7 @@ abstract class Schema extends BaseObject
     const TYPE_JSON = 'json';
     const SCHEMA_CACHE_VERSION = 1;
     public ConnectionInterface $db;
-    public ?string $defaultSchema;
+    protected ?string $defaultSchema;
     public array $exceptionMap = [
         'SQLSTATE[23' => IntegrityException::class,
     ];
@@ -747,7 +747,7 @@ abstract class Schema extends BaseObject
      * @throws NotSupportedException if this method is not supported by the DBMS.
      * @since 2.0.13
      */
-    protected function resolveTableName($name): TableSchema
+    protected function resolveTableName(string $name): TableSchema
     {
         throw new NotSupportedException(get_class($this) . ' does not support resolving table names.');
     }

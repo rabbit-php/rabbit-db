@@ -53,7 +53,7 @@ class TableSchema
      * ]
      * ```
      */
-    public array $foreignKeys = [];
+    protected array $foreignKeys = [];
     /**
      * @var ColumnSchema[] column metadata of this table. Each array element is a [[ColumnSchema]] object, indexed by column names.
      */

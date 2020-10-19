@@ -552,7 +552,7 @@ class QueryBuilder
      * @see conditionClasses
      * @since 2.0.14
      */
-    public function createConditionFromArray($condition): ConditionInterface
+    public function createConditionFromArray(array $condition): ConditionInterface
     {
         if (isset($condition[0])) { // operator format: operator, operand 1, operand 2, ...
             $operator = strtoupper(array_shift($condition));

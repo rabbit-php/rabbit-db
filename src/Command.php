@@ -64,7 +64,7 @@ use Rabbit\Base\Exception\NotSupportedException;
 class Command extends BaseObject
 {
     public ?ConnectionInterface $db;
-    public PDOStatement $pdoStatement;
+    public ?PDOStatement $pdoStatement = null;
     public int $fetchMode = \PDO::FETCH_ASSOC;
     public array $params = [];
     public ?float $queryCacheDuration = null;

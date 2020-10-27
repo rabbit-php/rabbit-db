@@ -3,8 +3,6 @@ declare(strict_types=1);
 
 namespace Rabbit\DB;
 
-use Rabbit\DB\Exception;
-use Rabbit\DB\RetryHandlerInterface;
 use Throwable;
 
 /**

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Rabbit\DB;
@@ -47,7 +48,7 @@ class RetryHandler extends RetryHandlerInterface
     public function handle(Throwable $e, int $count): bool
     {
         if ($count < $this->totalCount) {
-            $count > 1 && \Co::sleep($this->sleep);
+            $count > 1 && sleep($this->sleep);
             return true;
         }
         return false;

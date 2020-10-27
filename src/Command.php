@@ -10,16 +10,15 @@ declare(strict_types=1);
 namespace Rabbit\DB;
 
 use Generator;
+use Throwable;
 use PDOException;
 use PDOStatement;
+use Rabbit\Base\App;
+use ReflectionException;
+use Rabbit\Base\Core\BaseObject;
 use Psr\SimpleCache\CacheInterface;
 use Psr\SimpleCache\InvalidArgumentException;
-use Rabbit\Base\App;
-use Rabbit\Base\Core\BaseObject;
 use Rabbit\Base\Exception\NotSupportedException;
-use ReflectionException;
-use Swoole\Coroutine\MySQL\Statement;
-use Throwable;
 
 /**
  * Command represents a SQL statement to be executed against a database.
@@ -65,10 +64,7 @@ use Throwable;
 class Command extends BaseObject
 {
     public ?ConnectionInterface $db;
-    /**
-     * @var PDOStatement|Statement the PDOStatement object that this command is associated with
-     */
-    public $pdoStatement;
+    public PDOStatement $pdoStatement;
     public int $fetchMode = \PDO::FETCH_ASSOC;
     public array $params = [];
     public ?float $queryCacheDuration = null;

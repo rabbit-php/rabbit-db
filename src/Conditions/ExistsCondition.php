@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 /**
  * @link http://www.yiiframework.com/
@@ -8,7 +9,7 @@ declare(strict_types=1);
 
 namespace Rabbit\DB\Conditions;
 
-use rabbit\db\Query;
+use Rabbit\DB\Query;
 
 /**
  * Condition that represents `EXISTS` operator.

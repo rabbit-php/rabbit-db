@@ -12,7 +12,6 @@
   "require": {
     "ext-pdo": "*",
     "php": ">=7.4.0",
-    "ext-swoole": ">=4.5.0",
     "rabbit/base": "dev-master",
     "rabbit/pool": "dev-master",
     "rabbit/cache": "dev-master",

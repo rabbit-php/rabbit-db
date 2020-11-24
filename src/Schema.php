@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 /**
  * @link http://www.yiiframework.com/
@@ -555,11 +556,11 @@ abstract class Schema extends BaseObject
      */
     public function getLastInsertID(string $sequenceName = '')
     {
-        if ($this->db->isActive) {
-            return Context::get($this->db->poolName . '.id');
+        if (null !== $id = Context::get($this->db->poolName . '.id')) {
+            return $id;
         }
 
-        throw new InvalidCallException('DB Connection is not active.');
+        throw new InvalidCallException('DB Connection is not get insert id.');
     }
 
     /**

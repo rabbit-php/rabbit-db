@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 /**
  * @link http://www.yiiframework.com/
@@ -7,6 +8,8 @@ declare(strict_types=1);
  */
 
 namespace Rabbit\DB;
+
+use Rabbit\Base\Helper\StringHelper;
 
 /**
  * ColumnSchema class describes the metadata of a column in a database table.
@@ -98,7 +101,8 @@ class ColumnSchema
      */
     protected function typecast($value)
     {
-        if ($value === ''
+        if (
+            $value === ''
             && !in_array(
                 $this->type,
                 [
@@ -113,7 +117,8 @@ class ColumnSchema
             return null;
         }
 
-        if ($value === null
+        if (
+            $value === null
             || gettype($value) === $this->phpType
             || $value instanceof ExpressionInterface
             || $value instanceof Query
@@ -121,7 +126,8 @@ class ColumnSchema
             return $value;
         }
 
-        if (is_array($value)
+        if (
+            is_array($value)
             && count($value) === 2
             && isset($value[1])
             && in_array($value[1], $this->getPdoParamTypes(), true)

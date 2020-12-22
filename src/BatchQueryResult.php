@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 /**
  * @link http://www.yiiframework.com/
@@ -89,7 +90,8 @@ class BatchQueryResult extends BaseObject implements \Iterator
         }
 
         if ($this->each) {
-            $this->value = current($this->batch);
+            $data = current($this->batch);
+            $this->value = $data !== false ? $data : null;
             if ($this->query->indexBy !== null) {
                 $this->key = key($this->batch);
             } elseif (key($this->batch) !== null) {

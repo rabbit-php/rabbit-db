@@ -218,7 +218,7 @@ class Query extends BaseObject implements QueryInterface, ExpressionInterface
     {
         return create([
             'class' => BatchQueryResult::class,
-            'query' => $this,
+            'query' => method_exists($this, 'asArray') ? $this->asArray() : $this,
             'batchSize' => $batchSize,
             'db' => $this->db,
             'each' => true,

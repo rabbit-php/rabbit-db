@@ -194,7 +194,6 @@ class Connection extends BaseObject implements ConnectionInterface
     protected ?Connection $master = null;
     protected ?Connection $slave = null;
     protected ?RetryHandlerInterface $retryHandler = null;
-    protected bool $hasOrm = false;
     protected string $commandClass = Command::class;
     public string $poolName = 'default';
     public string $driver = 'pdo';
@@ -208,9 +207,6 @@ class Connection extends BaseObject implements ConnectionInterface
     {
         $this->dsn = $dsn;
         $this->makeShortDsn();
-        if (extension_loaded('swoole_orm')) {
-            $this->hasOrm = true;
-        }
     }
 
     /**
@@ -316,37 +312,6 @@ class Connection extends BaseObject implements ConnectionInterface
         /** @var Command $command */
         $command = create($config, [], false);
         return $command->bindValues($params);
-    }
-
-    /**
-     * @param array $array
-     * @return Command
-     * @throws DependencyException
-     * @throws Exception
-     * @throws NotFoundException
-     * @throws Throwable|InvalidArgumentException
-     */
-    public function createCommandExt(array $array): Command
-    {
-        if (!$this->hasOrm) {
-            throw new Exception("You must install swoole_orm extension");
-        }
-        if (count($array) !== 2) {
-            throw new Exception("The argument must be set two item");
-        }
-        [$method, $data] = $array;
-        if (!is_array($data)) {
-            throw new Exception("The second argument must an array");
-        }
-        if (false === $array = \swoole_orm::$method(...$data)) {
-            throw new Exception("Can not build sql");
-        }
-        $config = ['class' => $this->commandClass, 'retryHandler' => $this->retryHandler];
-        $config['db'] = $this;
-        $config['sql'] = $array['sql'];
-        /** @var Command $command */
-        $command = create($config, [], false);
-        return $command->bindValues($array['bind_value']);
     }
 
     /**

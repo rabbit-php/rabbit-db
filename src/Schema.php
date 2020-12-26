@@ -18,6 +18,7 @@ use Rabbit\Base\Core\Context;
 use Rabbit\Base\Core\BaseObject;
 use Psr\SimpleCache\CacheInterface;
 use Psr\SimpleCache\InvalidArgumentException;
+use Rabbit\Base\Core\NumLock;
 use Rabbit\Base\Exception\InvalidCallException;
 use Rabbit\Base\Exception\NotSupportedException;
 
@@ -456,7 +457,13 @@ abstract class Schema extends BaseObject
      */
     public function getTableSchema(string $name, bool $refresh = false): ?TableSchema
     {
-        return $this->getTableMetadata($name, 'schema', $refresh);
+        static $lock = [];
+        if (!isset($lock[$name])) {
+            $lock[$name] = new NumLock();
+        }
+        return $lock[$name](function () use ($name, $refresh): ?TableSchema {
+            return $this->getTableMetadata($name, 'schema', $refresh);
+        });
     }
 
     /**

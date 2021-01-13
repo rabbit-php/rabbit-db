@@ -54,7 +54,7 @@ trait ConnectionTrait
             if (!empty($transaction) && $transaction->getIsActive()) {//事务里面不释放连接
                 return;
             }
-            if ($this->isAutoRelease() || $release) {
+            if ($this->autoRelease || $release) {
                 $this->getPool()->release($conn);
                 DbContext::delete($this->poolName, $this->driver);
             }

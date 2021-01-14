@@ -524,14 +524,8 @@ PATTERN;
      *
      * @return $this the query object itself
      */
-    public function from($tables): self
+    public function from(array $tables): self
     {
-        if ($tables instanceof Expression) {
-            $tables = [$tables];
-        }
-        if (is_string($tables)) {
-            $tables = preg_split('/\s*,\s*/', trim($tables), -1, PREG_SPLIT_NO_EMPTY);
-        }
         $this->from = $tables;
         return $this;
     }
@@ -1181,7 +1175,7 @@ PATTERN;
      * @param bool $all TRUE if using UNION ALL and FALSE if using UNION
      * @return $this the query object itself
      */
-    public function union($sql, bool $all = false): self
+    public function union(Query $sql, bool $all = false): self
     {
         $this->union[] = ['query' => $sql, 'all' => $all];
         return $this;

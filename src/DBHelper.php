@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Rabbit\DB;
@@ -38,6 +39,31 @@ class DBHelper
     public static function Search(Query $query, array $filter = []): Query
     {
         foreach ($filter as $method => $value) {
+            switch ($method) {
+                case (strpos(strtolower($method), 'where') !== false || in_array(strtolower($method), ['select', 'from'])) && is_array($value):
+                    foreach ($value as $key => $data) {
+                        if (is_array($data)) {
+                            if (isset($data['query'])) {
+                                $value[$key] = self::Search(new Query(), $data['query']);
+                            } elseif (isset($data['exp'])) {
+                                if (is_string($data['exp']) && strpos($data['exp'], ';') !== false) {
+                                    throw new Exception("Sql can not include ';'!");
+                                }
+                                $value[$key] = new Expression(...(array)$data['exp']);
+                            }
+                        }
+                    }
+                    break;
+                case str_ends_with($method, '[]'):
+                    $method = substr($method, -1, 2);
+                    foreach ($value as $data) {
+                        self::Search($query, [$method => $data]);
+                    }
+                    continue 2;
+            }
+            if (is_string($value) && strpos($value, ';') !== false) {
+                throw new Exception("Sql can not include ';'!");
+            }
             $query->$method($value);
         }
         return $query;
@@ -57,8 +83,7 @@ class DBHelper
         int $page = 0,
         int $duration = -1,
         ?CacheInterface $cache = null
-    ): array
-    {
+    ): array {
         $limit = ArrayHelper::remove($filter, 'limit', 20);
         $offset = ArrayHelper::remove($filter, 'offset', ($page ? ($page - 1) : 0) * (int)$limit);
         $count = ArrayHelper::remove($filter, 'count', '1');

@@ -267,11 +267,7 @@ abstract class Schema extends BaseObject
         $rawName = $this->getRawTableName($name);
         unset($this->_tableMetadata[$rawName]);
         $this->_tableNames = [];
-        /* @var $cache CacheInterface */
-        $cache = $this->db->schemaCache ?? getDI('cache', false);
-        if ($this->db->enableSchemaCache && $cache instanceof CacheInterface) {
-            $cache->delete($this->getCacheKey($rawName));
-        }
+        $this->db->enableSchemaCache && $this->db->schemaCache->delete($this->getCacheKey($rawName));
     }
 
     /**
@@ -481,10 +477,7 @@ abstract class Schema extends BaseObject
     {
         $cache = null;
         if ($this->db->enableSchemaCache && !in_array($name, $this->db->schemaCacheExclude, true)) {
-            $schemaCache = $this->db->schemaCache ?? getDI('cache', false);
-            if ($schemaCache instanceof CacheInterface) {
-                $cache = $schemaCache;
-            }
+            $cache = $this->db->schemaCache;
         }
         $rawName = $this->getRawTableName($name);
         if (!isset($this->_tableMetadata[$rawName])) {

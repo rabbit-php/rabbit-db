@@ -20,6 +20,7 @@ use Rabbit\Base\Core\Context;
 use Rabbit\Base\Exception\NotSupportedException;
 use Rabbit\Base\Helper\ArrayHelper;
 use Rabbit\Base\Helper\UrlHelper;
+use Rabbit\Cache\ArrayCache;
 use ReflectionException;
 use Throwable;
 
@@ -169,7 +170,7 @@ class Connection extends BaseObject implements ConnectionInterface
     public bool $enableSchemaCache = true;
     public ?int $schemaCacheDuration = null;
     public array $schemaCacheExclude = [];
-    public ?CacheInterface $schemaCache = null;
+    public CacheInterface $schemaCache;
     public bool $enableQueryCache = true;
     public ?CacheInterface $queryCache = null;
     public ?string $charset = null;
@@ -178,7 +179,7 @@ class Connection extends BaseObject implements ConnectionInterface
     public array $schemaMap = [];
     public string $pdoClass = 'PDO';
     public bool $enableSavepoint = true;
-    public ?CacheInterface $serverStatusCache = null;
+    public CacheInterface $serverStatusCache;
     public int $serverRetryInterval = 600;
     public bool $enableSlaves = true;
     public array $slaves = [];
@@ -206,6 +207,8 @@ class Connection extends BaseObject implements ConnectionInterface
     public function __construct(string $dsn)
     {
         $this->dsn = $dsn;
+        $this->schemaCache = new ArrayCache();
+        $this->serverStatusCache = new ArrayCache();
         $this->makeShortDsn();
     }
 
@@ -422,10 +425,7 @@ class Connection extends BaseObject implements ConnectionInterface
             $sharedConfig['class'] = get_class($this);
         }
 
-        $cache = is_string($this->serverStatusCache) ? getDI(
-            $this->serverStatusCache,
-            false
-        ) : $this->serverStatusCache;
+        $cache = $this->serverStatusCache;
 
         foreach ($pool as $config) {
             $config = array_merge($sharedConfig, $config);

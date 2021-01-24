@@ -46,13 +46,13 @@ class DBHelper
                 }
                 continue;
             }
-            if ((strpos(strtolower($method), 'where') !== false || in_array(strtolower($method), ['select', 'from'])) && is_array($value)) {
+            if ((str_contains(strtolower($method), 'where') || in_array(strtolower($method), ['select', 'from'])) && is_array($value)) {
                 foreach ($value as $key => $data) {
                     if (is_array($data)) {
                         if (isset($data['query'])) {
                             $value[$key] = self::Search(new Query(), $data['query']);
                         } elseif (isset($data['exp'])) {
-                            if (is_string($data['exp']) && strpos($data['exp'], ';') !== false) {
+                            if (is_string($data['exp']) && str_contains($data['exp'], ';') !== false) {
                                 throw new Exception("Sql can not include ';'!");
                             }
                             $value[$key] = new Expression(...(array)$data['exp']);
@@ -60,7 +60,7 @@ class DBHelper
                     }
                 }
             }
-            if (is_string($value) && strpos($value, ';') !== false) {
+            if (is_string($value) && str_contains($value, ';') !== false) {
                 throw new Exception("Sql can not include ';'!");
             }
             if (!empty($value)) {

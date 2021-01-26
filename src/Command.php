@@ -290,7 +290,7 @@ class Command extends BaseObject
                 if (!empty($ret = $cache->get($cacheKey))) {
                     $result = unserialize($ret);
                     if (is_array($result) && isset($result[0])) {
-                        $this->logQuery($rawSql . '; [Query result served from cache]');
+                        $this->logQuery($rawSql . '; [Query result read from cache]');
                         return $result[0];
                     }
                 }

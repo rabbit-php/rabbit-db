@@ -145,6 +145,9 @@ class ColumnSchema
                     // ensure type cast always has . as decimal separator in all locales
                     return StringHelper::floatToString($value);
                 }
+                if (is_array($value)) {
+                    throw new Exception("{$this->name} can not convert to string");
+                }
                 return (string)$value;
             case 'integer':
                 return (int)$value;

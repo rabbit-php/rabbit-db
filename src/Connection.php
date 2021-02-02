@@ -872,7 +872,7 @@ class Connection extends BaseObject implements ConnectionInterface
     protected function makeShortDsn(): void
     {
         $parsed = parse_url($this->dsn);
-        $this->parseDsn = is_array($parsed) ? $parsed : [];
+        $this->parseDsn = is_array($parsed) ? UrlHelper::unParseUrlArray($parsed) : [];
         if (!isset($parsed['path'])) {
             $parsed['path'] = '/';
         }

@@ -28,7 +28,6 @@ class Manager extends BaseManager
                 $pool = ArrayHelper::remove($config, 'pool');
                 $poolConfig = $pool->getPoolConfig();
                 $poolConfig->setUri($config['dsn']);
-                $config['poolName'] = $name;
                 $config['poolKey'] = $poolConfig->getName();
                 $conn = create($config, [], false);
                 $poolConfig->setConfig(['conn' => $conn]);

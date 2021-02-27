@@ -556,7 +556,7 @@ abstract class Schema extends BaseObject
      */
     public function getLastInsertID(string $sequenceName = '')
     {
-        if (null !== $id = Context::get($this->db->poolName . '.id')) {
+        if (null !== $id = Context::get($this->db->getPoolKey() . '.id')) {
             return $id;
         }
 

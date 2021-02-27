@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Rabbit\DB;
@@ -36,6 +37,11 @@ trait ConnectionTrait
     {
     }
 
+    public function getPoolKey(): string
+    {
+        return $this->poolKey;
+    }
+
     /**
      * @return PoolInterface
      */
@@ -49,14 +55,14 @@ trait ConnectionTrait
      */
     public function release($release = false): void
     {
-        if (null !== $conn = DbContext::get($this->poolName, $this->driver)) {
+        if (null !== $conn = DbContext::get($this->poolKey, $this->driver)) {
             $transaction = $this->getTransaction();
-            if (!empty($transaction) && $transaction->getIsActive()) {//事务里面不释放连接
+            if (!empty($transaction) && $transaction->getIsActive()) { //事务里面不释放连接
                 return;
             }
             if ($this->autoRelease || $release) {
                 $this->getPool()->release($conn);
-                DbContext::delete($this->poolName, $this->driver);
+                DbContext::delete($this->poolKey, $this->driver);
             }
         }
     }
@@ -66,9 +72,9 @@ trait ConnectionTrait
      */
     public function setInsertId($conn = null): void
     {
-        $conn = $conn ?? DbContext::get($this->poolName, $this->driver);
+        $conn = $conn ?? DbContext::get($this->poolKey, $this->driver);
         if ($conn !== null) {
-            Context::set($this->poolName . '.id', $conn->lastInsertId());
+            Context::set($this->poolKey . '.id', $conn->lastInsertId());
         }
     }
 
@@ -94,7 +100,7 @@ trait ConnectionTrait
      */
     public function reconnect(int $attempt = 0): void
     {
-        DbContext::delete($this->poolName, $this->driver);
+        DbContext::delete($this->poolKey, $this->driver);
         $this->getPool()->sub();
         App::warning("The $attempt times to Reconnect DB connection: " . $this->shortDsn, 'db');
         $this->open($attempt);

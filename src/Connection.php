@@ -446,7 +446,8 @@ class Connection extends BaseObject implements ConnectionInterface
 
             /* @var $db Connection */
             $db = create($config, ['poolKey' => $this->poolKey . '.slave']);
-
+            $slaveConfig = PoolManager::getPool($this->poolKey . '.slave')->getPoolConfig();
+            $slaveConfig->setConfig(array_merge($slaveConfig->getConfig(), ['conn' => $db]));
             try {
                 $db->open();
                 return $db;

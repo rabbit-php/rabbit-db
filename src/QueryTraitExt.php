@@ -114,17 +114,19 @@ trait QueryTraitExt
                 }
 
                 foreach ($this->join as $join) {
-                    if ($with == $join) {
+                    if ($with === $join) {
                         $field = explode('.', $on[1]);
                         $field = count($field) == 1 ? $field[0] : $field[1];
                         if (is_string($join[1])) {
-                            $tmp = (new Query())->from($join[1])->where([$field => $ids])->all();
+                            $tmp = (new Query($this->db))->from((array)$join[1])->where([$field => $ids]);
                         } else if (is_array($join[1])) {
                             $query = $join[1][key($join[1])];
-                            $tmp = $query->where([$field => $ids])->all();
+                            $tmp = $query->where([$field => $ids]);
                         }
 
-                        foreach ($tmp as $t) {
+                        $res = $this->flag ? $tmp->all() : [$tmp->one()];
+
+                        foreach ($res as $t) {
                             foreach ($result as $k => $r) {
                                 if ($t[$field] === $r[$lfield]) {
                                     if ($this->flag) {
@@ -154,16 +156,6 @@ trait QueryTraitExt
     }
 
     /**
-     * @param array $tableList
-     */
-    public function joinWithOneList(array $tableList): void
-    {
-        foreach ($tableList as $table) {
-            $this->joinWithOne($table);
-        }
-    }
-
-    /**
      * @param array $list
      * @return QueryTraitExt
      */
@@ -174,256 +166,32 @@ trait QueryTraitExt
     }
 
     /**
-     * @param array $tableList
-     */
-    public function joinWithManyList(array $tableList): void
-    {
-        foreach ($tableList as $table) {
-            $this->joinWithMany($table);
-        }
-    }
-
-    /**
      * @param array $list
      * @return $this
      */
     public function group(array $list): self
     {
         foreach ($list as $key => $join) {
-            if (is_array($join)) {
-                $type = "left join";
-                $on = '';
-                if (array_key_exists('type', $join)) {
-                    $type = $join['type'];
+            if (is_array($join) && ($num = count($join)) > 1) {
+                [$table, $on] = $join;
+                if ($num > 2) {
+                    $type = $join[2];
+                } else {
+                    $type = 'left join';
                 }
-                if (array_key_exists('table', $join)) {
-                    $table = $join['table'];
+                if ($num > 3) {
+                    $addOn = $join[3];
+                } else {
+                    $addOn = [];
                 }
-                if (array_key_exists('on', $join)) {
-                    $on = $join['on'];
-                }
-                if (array_key_exists('addOn', $join)) {
-                    if (is_array($join['addOn'])) {
-                        foreach ($join['addOn'] as $val) {
-                            $on = [key($val), $on, $val[key($val)]];
-                        }
-                    }
-                }
-                $this->join($type, $table, $on);
-            }
-            $this->joinWith[$key] = [$type, $table, $on];
-        }
-        return $this;
-    }
 
-    /**
-     * @param array $columns
-     * @return $this
-     */
-    public function querySelect(array $columns): self
-    {
-        foreach ($columns as $key => $val) {
-            $columns[$key] = DBHelper::Search(new Query(), $val);
-        }
-        if ($this->select === null) {
-            $this->select = $columns;
-        } else {
-            $this->select = array_merge($this->select, $columns);
-        }
-        return $this;
-    }
-
-    /**
-     * @param array $condition
-     * @param array $params
-     * @return $this
-     */
-    public function addWhere(array $condition = [], array $params = []): self
-    {
-        if ($condition) {
-            if ($this->where === null) {
-                $this->where = "1=1";
-            }
-            foreach ($condition as $val) {
-                $val = $this->makeWhere($val);
-                $this->where = [key($val), $this->where, $val[key($val)]];
-            }
-            $this->addParams($params);
-        }
-        return $this;
-    }
-
-    /**
-     * @param array $condition
-     * @param array $params
-     * @return $this
-     */
-    public function addFilterWhere(array $condition = [], array $params = []): self
-    {
-        if ($condition) {
-            if ($this->where === null) {
-                $this->where = "1=1";
-            }
-            foreach ($condition as $val) {
-                $val = $this->makeWhere($val);
-                $condition = $this->filterCondition($val[key($val)]);
-                if ($condition !== []) {
-                    $this->where = [key($val), $this->where, $condition];
-                }
-            }
-            $this->addParams($params);
-        }
-        return $this;
-    }
-
-    /**
-     * @author Albert <63851587@qq.com>
-     * @param array $val
-     * @return array
-     */
-    private function makeWhere(array $val): array
-    {
-        if (is_string($val)) {
-            return $val;
-        }
-        if (array_key_exists("query", $val[key($val)])) {
-            $query = $val[key($val)]["query"];
-            unset($val[key($val)]["query"]);
-            $val[key($val)][] = DBHelper::Search((new Query()), $query);
-        } elseif (array_key_exists("model", $val[key($val)])) {
-            $modelparam = $val[key($val)]["model"];
-            unset($val[key($val)]["model"]);
-            $model = key($modelparam);
-            $query = $modelparam[$model];
-            $model = $model;
-            $model = new $model();
-            $val[key($val)][] = DBHelper::Search($model::find(), $query);
-        }
-        return $val;
-    }
-
-    /**
-     * @param array $condition
-     * @param array $params
-     * @return $this
-     */
-    public function queryWhere(array $condition = [], array &$params = []): self
-    {
-        if ($condition) {
-            if ($this->where === null) {
-                $this->where = "1=1";
-            }
-            foreach ($condition as $val) {
-                if (is_array($val)) {
-                    $key = key($val);
-                    $query = $val[key($val)];
-                    $this->where = [$key, $this->where, array(key($query) => DBHelper::Search(new Query(), $query[key($query)]))];
-                }
-            }
-            $this->addParams($params);
-        }
-        return $this;
-    }
-
-    /**
-     * @param array $list
-     * @return $this
-     */
-    public function joinList(array $list): self
-    {
-        if (is_array($list)) {
-            foreach ($list as $join) {
-                if (is_array($join)) {
-                    $type = "left join";
-                    list($table, $on) = $this->getJoinList($join);
-                    $this->join($type, $table, $on);
-                }
-            }
-        }
-        return $this;
-    }
-
-    /**
-     * @param array $list
-     * @return $this
-     */
-    public function innerJoinList(array $list): self
-    {
-        foreach ($list as $join) {
-            if (is_array($join)) {
-                list($table, $on) = $this->getJoinList($join);
-                $this->innerJoin($table, $on);
-            }
-        }
-        return $this;
-    }
-
-    /**
-     * @param array $list
-     * @return $this
-     */
-    public function leftJoinList(array $list): self
-    {
-        foreach ($list as $join) {
-            if (is_array($join)) {
-                list($table, $on) = $this->getJoinList($join);
-                $this->leftJoin($table, $on);
-            }
-        }
-        return $this;
-    }
-
-    /**
-     * @param array $list
-     * @return $this
-     */
-    public function rightJoinList(array $list): self
-    {
-        foreach ($list as $join) {
-            if (is_array($join)) {
-                list($table, $on) = $this->getJoinList($join);
-                $this->rightJoin($table, $on);
-            }
-        }
-        return $this;
-    }
-
-    /**
-     * @param $join
-     * @return array
-     */
-    private function getJoinList(array $join): array
-    {
-        $on = '';
-        if (array_key_exists('table', $join)) {
-            $table = $join['table'];
-        }
-        if (array_key_exists('on', $join)) {
-            $on = $join['on'];
-        }
-        if (array_key_exists('addOn', $join)) {
-            if (is_array($join['addOn'])) {
-                foreach ($join['addOn'] as $val) {
+                foreach ($addOn as $val) {
                     $on = [key($val), $on, $val[key($val)]];
                 }
+                $this->join($type, $table, $on);
+                $this->joinWith[$key] = [$type, $table, $on];
             }
         }
-        if (array_key_exists('addOnFilter', $join)) {
-            if (is_array($join['addOnFilter'])) {
-                foreach ($join['addOnFilter'] as $val) {
-                    $fon = [];
-                    foreach ($val[key($val)] as $fkey => $fval) {
-                        if ($fval) {
-                            $fon[$fkey] = $fval;
-                        }
-                    }
-                    $on = [key($val), $on, $fon];
-                }
-            }
-        }
-        if (empty($table) && empty($on)) {
-            [$table, $on] = $join;
-        }
-        return [$table, $on];
+        return $this;
     }
 }

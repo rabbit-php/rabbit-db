@@ -55,14 +55,14 @@ trait ConnectionTrait
      */
     public function release($release = false): void
     {
-        if (null !== $conn = DbContext::get($this->poolKey, $this->driver)) {
+        if (null !== $conn = DbContext::get($this->poolKey)) {
             $transaction = $this->getTransaction();
             if (!empty($transaction) && $transaction->getIsActive()) { //事务里面不释放连接
                 return;
             }
             if ($this->autoRelease || $release) {
                 $this->getPool()->release($conn);
-                DbContext::delete($this->poolKey, $this->driver);
+                DbContext::delete($this->poolKey);
             }
         }
     }
@@ -72,7 +72,7 @@ trait ConnectionTrait
      */
     public function setInsertId($conn = null): void
     {
-        $conn = $conn ?? DbContext::get($this->poolKey, $this->driver);
+        $conn = $conn ?? DbContext::get($this->poolKey);
         if ($conn !== null) {
             Context::set($this->poolKey . '.id', $conn->lastInsertId());
         }
@@ -100,7 +100,7 @@ trait ConnectionTrait
      */
     public function reconnect(int $attempt = 0): void
     {
-        DbContext::delete($this->poolKey, $this->driver);
+        DbContext::delete($this->poolKey);
         $this->getPool()->sub();
         App::warning("The $attempt times to Reconnect DB connection: " . $this->shortDsn, 'db');
         $this->open($attempt);

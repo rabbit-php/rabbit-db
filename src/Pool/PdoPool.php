@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Rabbit\DB\Pool;
@@ -21,7 +22,7 @@ class PdoPool extends ConnectionPool
         $config = $poolConfig->getConfig();
         $conn = $config['conn'];
         $pdo = $conn->createPdoInstance();
-        DbContext::set($conn->getPoolKey(), $pdo, $conn->driver);
+        DbContext::set($conn->getPoolKey(), $pdo);
         return $conn;
     }
 }

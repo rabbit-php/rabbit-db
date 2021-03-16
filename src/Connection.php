@@ -197,7 +197,7 @@ class Connection extends BaseObject implements ConnectionInterface
     protected ?Connection $slave = null;
     protected ?RetryHandlerInterface $retryHandler = null;
     protected string $commandClass = Command::class;
-    public string $driver = 'pdo';
+    protected string $driver = 'pdo';
     protected ?array $parseDsn = [];
 
     /**
@@ -212,12 +212,17 @@ class Connection extends BaseObject implements ConnectionInterface
         $this->makeShortDsn();
     }
 
+    public function getDriver(): string
+    {
+        return $this->driver;
+    }
+
     /**
      * @return mixed|null
      */
     public function getConn()
     {
-        return DbContext::get($this->poolKey, $this->driver);
+        return DbContext::get($this->poolKey);
     }
 
     /**
@@ -234,7 +239,7 @@ class Connection extends BaseObject implements ConnectionInterface
      */
     public function getIsActive(): bool
     {
-        return DbContext::get($this->poolKey, $this->driver) !== null;
+        return DbContext::get($this->poolKey) !== null;
     }
 
     /**
@@ -275,10 +280,10 @@ class Connection extends BaseObject implements ConnectionInterface
      */
     public function close(): void
     {
-        $pdo = DbContext::get($this->poolKey, $this->driver);
+        $pdo = DbContext::get($this->poolKey);
         if ($this->master) {
             if ($pdo === $this->master->getConn()) {
-                DbContext::delete($this->poolKey, $this->driver);
+                DbContext::delete($this->poolKey);
             }
 
             $this->master->close();
@@ -287,7 +292,7 @@ class Connection extends BaseObject implements ConnectionInterface
 
         if ($pdo !== null) {
             App::warning('Closing DB connection: ' . $this->shortDsn, "db");
-            DbContext::delete($this->poolKey, $this->driver);
+            DbContext::delete($this->poolKey);
             $this->schema = null;
         }
 
@@ -470,14 +475,14 @@ class Connection extends BaseObject implements ConnectionInterface
      */
     public function open(int $attempt = 0)
     {
-        if (DbContext::has($this->poolKey, $this->driver) === true) {
+        if (DbContext::has($this->poolKey) === true) {
             return;
         }
 
         if (!empty($this->masters)) {
             $db = $this->getMaster();
             if ($db !== null) {
-                DbContext::set($this->poolKey, $db, $this->driver);
+                DbContext::set($this->poolKey, $db);
                 return;
             }
 
@@ -490,7 +495,7 @@ class Connection extends BaseObject implements ConnectionInterface
 
         $pdo = $this->getPool()->get();
         if (!$pdo instanceof ConnectionInterface) {
-            DbContext::set($this->poolKey, $pdo, $this->driver);
+            DbContext::set($this->poolKey, $pdo);
         } else {
             $attempt === 0 && ($token = 'Opening DB connection: ' . $this->shortDsn) && App::info($token, "db");
         }
@@ -565,7 +570,7 @@ class Connection extends BaseObject implements ConnectionInterface
     public function getMasterPdo()
     {
         $this->open();
-        return DbContext::get($this->poolKey, $this->driver);
+        return DbContext::get($this->poolKey);
     }
 
     /**
@@ -871,7 +876,7 @@ class Connection extends BaseObject implements ConnectionInterface
         $this->schema = null;
         if (strncmp($this->dsn, 'sqlite::memory:', 15) !== 0) {
             // reset PDO connection, unless its sqlite in-memory, which can only have one connection
-            DbContext::delete($this->poolKey, $this->driver);
+            DbContext::delete($this->poolKey);
         }
     }
 
@@ -883,5 +888,10 @@ class Connection extends BaseObject implements ConnectionInterface
             $parsed['path'] = '/';
         }
         $this->shortDsn = UrlHelper::unParseUrl($parsed, false);
+    }
+
+    public function buildQuery(): QueryInterface
+    {
+        return new Query($this);
     }
 }

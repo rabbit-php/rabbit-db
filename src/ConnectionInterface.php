@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Rabbit\DB;
@@ -9,5 +10,5 @@ namespace Rabbit\DB;
  */
 interface ConnectionInterface extends \Rabbit\Pool\ConnectionInterface
 {
-
+    public function buildQuery(): QueryInterface;
 }

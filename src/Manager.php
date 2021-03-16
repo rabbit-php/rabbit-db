@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Rabbit\DB;
@@ -24,6 +25,10 @@ class Manager extends BaseManager
     {
         foreach ($configs as $name => $config) {
             if (!isset($this->items[$name])) {
+                if (!is_array($config)) {
+                    $this->items[$name] = $config;
+                    continue;
+                }
                 /** @var PdoPool $pool */
                 $pool = ArrayHelper::remove($config, 'pool');
                 $poolConfig = $pool->getPoolConfig();

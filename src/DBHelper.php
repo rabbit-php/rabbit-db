@@ -13,7 +13,6 @@ use Rabbit\Base\Helper\ArrayHelper;
  */
 class DBHelper
 {
-    private static array $splitValue = ['LEFTJOIN', 'JOIN', 'INNERJOIN', 'RIGHTJOIN'];
     /**
      * @param Query $query
      * @param array $filter
@@ -41,7 +40,7 @@ class DBHelper
     {
         foreach ($filter as $method => $value) {
             if (str_ends_with($method, '[]')) {
-                $method = substr($method, 0, strlen($method) - 2);
+                $method = str_replace('[]', '', $method);
                 foreach ($value as $data) {
                     self::Search($query, [$method => $data]);
                 }
@@ -65,7 +64,12 @@ class DBHelper
                 throw new Exception("Sql can not include ';'!");
             }
             if (!empty($value)) {
-                if (in_array(strtoupper($method), self::$splitValue)) {
+                if (str_starts_with($method, '&')) {
+                    $query->setFlag(true);
+                    $method = str_replace('&', '', $method);
+                }
+                if (str_ends_with($method, '>')) {
+                    $method = str_replace('>', '', $method);
                     $query->$method(...$value);
                 } else {
                     $query->$method($value);

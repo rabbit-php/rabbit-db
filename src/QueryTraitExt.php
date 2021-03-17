@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Rabbit\DB;
 
 use Psr\SimpleCache\InvalidArgumentException;
+use Rabbit\Base\Helper\ArrayHelper;
 use Throwable;
 
 /**
@@ -13,16 +14,20 @@ use Throwable;
  */
 trait QueryTraitExt
 {
-    /** @var array */
     protected ?array $joinWith = null;
-    /** @var bool */
-    protected bool $flag = false;
+    protected ?bool $flag = null;
+
+    public function setFlag(bool $flag): self
+    {
+        $this->flag = $flag;
+        return $this;
+    }
 
     /**
      * @param $columns
      * @return array|Expression[]
      */
-    protected function normalizeOrderBy($columns)
+    protected function normalizeOrderBy($columns): array
     {
         if ($columns instanceof Expression) {
             return [$columns];
@@ -101,12 +106,11 @@ trait QueryTraitExt
      * @throws InvalidArgumentException
      * @throws Throwable
      */
-    public function buildWith(array $result): array
+    private function buildWith(array $result): array
     {
-        if (is_array($this->joinWith)) {
+        if ($this->joinWith) {
             foreach ($this->joinWith as $key => $with) {
-                $on = $with[2];
-                $on = explode('=', $on);
+                $on = explode('=', $with[2]);
                 $lfield = explode('.', $on[0]);
                 $lfield = count($lfield) == 1 ? $lfield[0] : $lfield[1];
                 foreach ($result as $row) {
@@ -149,47 +153,17 @@ trait QueryTraitExt
      * @param array $list
      * @return QueryTraitExt
      */
-    public function joinWithOne(array $list): self
+    public function joinWith(array $config, string $on, string $type = 'left join'): self
     {
-        $this->flag = false;
-        return $this->group($list);
-    }
-
-    /**
-     * @param array $list
-     * @return QueryTraitExt
-     */
-    public function joinWithMany(array $list): self
-    {
-        $this->flag = true;
-        return $this->group($list);
-    }
-
-    /**
-     * @param array $list
-     * @return $this
-     */
-    public function group(array $list): self
-    {
-        foreach ($list as $key => $join) {
-            if (is_array($join) && ($num = count($join)) > 1) {
-                [$table, $on] = $join;
-                if ($num > 2) {
-                    $type = $join[2];
-                } else {
-                    $type = 'left join';
-                }
-                if ($num > 3) {
-                    $addOn = $join[3];
-                } else {
-                    $addOn = [];
-                }
-
-                foreach ($addOn as $val) {
-                    $on = [key($val), $on, $val[key($val)]];
-                }
+        if (ArrayHelper::isIndexed($config)) {
+            $table = array_shift($config);
+            $this->join($type, $table, $on);
+            $this->joinWith[$table] = [$type, $table, $on];
+        } else {
+            foreach ($config as $key => $table) {
                 $this->join($type, $table, $on);
                 $this->joinWith[$key] = [$type, $table, $on];
+                break;
             }
         }
         return $this;

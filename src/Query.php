@@ -135,6 +135,8 @@ class Query extends BaseObject implements QueryInterface, ExpressionInterface
 
     protected ?\Rabbit\Pool\ConnectionInterface $db = null;
 
+    protected ?int $share = null;
+
     /**
      * Query constructor.
      * @param \Rabbit\Pool\ConnectionInterface|null $db
@@ -248,6 +250,7 @@ class Query extends BaseObject implements QueryInterface, ExpressionInterface
         [$sql, $params] = $this->db->getQueryBuilder()->build($this);
 
         $command = $this->db->createCommand($sql, $params);
+        $command->share($this->share);
         $this->setCommandCache($command);
 
         return $command;
@@ -485,6 +488,7 @@ PATTERN;
             ->select([$selectExpression])
             ->from(['c' => $this])
             ->createCommand();
+        $command->share($this->share);
         $this->setCommandCache($command);
 
         return $command->queryScalar();
@@ -1214,6 +1218,12 @@ PATTERN;
     public function noCache(): self
     {
         $this->queryCacheDuration = null;
+        return $this;
+    }
+
+    public function share(int $timeout = null): self
+    {
+        $this->share = $timeout;
         return $this;
     }
 

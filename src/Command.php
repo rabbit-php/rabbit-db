@@ -74,6 +74,7 @@ class Command extends BaseObject
     protected ?bool $_isolationLevel = false;
     /** @var CacheInterface|null */
     protected ?CacheInterface $cache = null;
+    protected ?int $share = null;
 
     public function __destruct()
     {
@@ -101,6 +102,11 @@ class Command extends BaseObject
     {
         $this->queryCacheDuration = null;
         return $this;
+    }
+
+    public function share(int $timeout = null)
+    {
+        $this->share = $timeout;
     }
 
     /**
@@ -260,66 +266,74 @@ class Command extends BaseObject
         return $this->queryInternal('');
     }
 
-    /**
-     * Performs the actual DB query of a SQL statement.
-     * @param string $method method of PDOStatement to be called
-     * @param int|null $fetchMode the result fetch mode. Please refer to [PHP manual](http://www.php.net/manual/en/function.PDOStatement-setFetchMode.php)
-     * for valid fetch modes. If this parameter is null, the value set in [[fetchMode]] will be used.
-     * @return mixed the method execution result
-     * @throws InvalidArgumentException
-     * @throws Throwable
-     * @throws ReflectionException
-     * @since 2.0.1 this method is protected (was private before).
-     */
     protected function queryInternal(string $method, int $fetchMode = null)
     {
         $rawSql = $this->getRawSql();
-
-        if ($method !== '') {
-            $info = $this->db->getQueryCacheInfo($this->queryCacheDuration, $this->cache);
-            if (is_array($info)) {
-                /* @var $cache CacheInterface */
-                $cache = $info[0];
-                $cacheKey = array_filter([
-                    __CLASS__,
-                    $method,
-                    $fetchMode,
-                    $this->db->dsn,
-                    $rawSql ?: $rawSql = $this->getRawSql(),
-                ]);
-                if (!empty($ret = $cache->get($cacheKey))) {
-                    $result = unserialize($ret);
-                    if (is_array($result) && isset($result[0])) {
-                        $this->logQuery($rawSql . '; [Query result read from cache]');
-                        return $result[0];
+        $share = $this->share ?? $this->db->share;
+        $func = function () use ($method, &$rawSql, $fetchMode) {
+            if ($method !== '') {
+                $info = $this->db->getQueryCacheInfo($this->queryCacheDuration, $this->cache);
+                if (is_array($info)) {
+                    /* @var $cache CacheInterface */
+                    $cache = $info[0];
+                    $cacheKey = array_filter([
+                        __CLASS__,
+                        $method,
+                        $fetchMode,
+                        $this->db->dsn,
+                        $rawSql ?: $rawSql = $this->getRawSql(),
+                    ]);
+                    if (!empty($ret = $cache->get($cacheKey))) {
+                        $result = unserialize($ret);
+                        if (is_array($result) && isset($result[0])) {
+                            $this->logQuery($rawSql . '; [Query result read from cache]');
+                            return $result[0];
+                        }
                     }
                 }
             }
-        }
 
-        $this->logQuery($rawSql);
+            $this->logQuery($rawSql);
 
-        try {
-            $this->internalExecute($rawSql);
+            try {
+                $this->internalExecute($rawSql);
 
-            if ($method === '') {
-                $result = new DataReader($this);
-            } else {
-                if ($fetchMode === null) {
-                    $fetchMode = $this->fetchMode;
+                if ($method === '') {
+                    $result = new DataReader($this);
+                } else {
+                    if ($fetchMode === null) {
+                        $fetchMode = $this->fetchMode;
+                    }
+                    $result = call_user_func_array([$this->pdoStatement, $method], (array)$fetchMode);
+                    $this->pdoStatement->closeCursor();
                 }
-                $result = call_user_func_array([$this->pdoStatement, $method], (array)$fetchMode);
-                $this->pdoStatement->closeCursor();
+            } catch (Throwable $e) {
+                throw $e;
             }
-        } catch (Throwable $e) {
-            throw $e;
-        }
 
-        if (isset($cache, $cacheKey, $info)) {
-            !$cache->has($cacheKey) && $cache->set($cacheKey, serialize([$result]), $info[1]) && $this->logQuery('Saved query result in cache');
-        }
+            if (isset($cache, $cacheKey, $info)) {
+                !$cache->has($cacheKey) && $cache->set($cacheKey, serialize([$result]), $info[1]) && $this->logQuery('Saved query result in cache');
+            }
 
-        return $result;
+            return $result;
+        };
+        if ($share > 0) {
+            $cacheKey = array_filter([
+                __CLASS__,
+                $method,
+                $fetchMode,
+                $this->db->dsn,
+                $rawSql ?: $rawSql = $this->getRawSql(),
+            ]);
+            $key = extension_loaded('igbinary') ? igbinary_serialize($cacheKey) : serialize($cacheKey);
+            $key = md5($key);
+            $s = share($key, $func, $share);
+            if ($s->getStatus() === SWOOLE_CHANNEL_CLOSED) {
+                $this->logQuery($rawSql . '; [Query result read from share]');
+            }
+            return $s->result;
+        }
+        return $func();
     }
 
     /**

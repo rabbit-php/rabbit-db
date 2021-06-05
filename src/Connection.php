@@ -190,6 +190,7 @@ class Connection extends BaseObject implements ConnectionInterface
     public bool $shuffleMasters = true;
     public bool $enableLogging = true;
     public int $maxLog = 1024;
+    public int $share = 3;
     protected string $transactionClass = Transaction::class;
     protected ?Schema $schema = null;
     protected ?string $_driverName = null;

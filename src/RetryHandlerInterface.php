@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Rabbit\DB;
@@ -11,21 +12,19 @@ use Throwable;
  */
 abstract class RetryHandlerInterface
 {
+    const RETRY_NO = 0;
+    const RETRY_CONNECT = 1;
+    const RETRY_NOCONNECT = 2;
     /** @var int */
     protected int $totalCount;
     /**
      * @return int
      */
-    abstract public function getTotalCount():int;
+    abstract public function getTotalCount(): int;
     /**
      * @param int $count
      */
     abstract public function setTotalCount(int $count): void;
 
-    /**
-     * @param Throwable $e
-     * @param int $count
-     * @return bool
-     */
-    abstract public function handle(Throwable $e, int $count): bool;
+    abstract public function handle(Throwable $e, int $count): int;
 }

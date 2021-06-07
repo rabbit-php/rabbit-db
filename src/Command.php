@@ -70,7 +70,7 @@ class Command extends BaseObject
     public ?float $queryCacheDuration = null;
     protected array $_pendingParams = [];
     protected ?string $sql = null;
-    protected ?string $_refreshTableName;
+    protected ?string $_refreshTableName = null;
     protected ?bool $_isolationLevel = false;
     /** @var CacheInterface|null */
     protected ?CacheInterface $cache = null;
@@ -409,8 +409,12 @@ class Command extends BaseObject
                     && $this->_isolationLevel !== false
                     && $this->db->getTransaction() === null
                 ) {
-                    $this->db->transaction(function () use ($rawSql) {
-                        $this->internalExecute($rawSql);
+                    $this->db->transaction(function () {
+                        $this->pdoStatement->execute();
+                        if ($this->pdoStatement->errorCode() !== '00000') {
+                            $errArr = $this->pdoStatement->errorInfo();
+                            throw new Exception(end($errArr), $this->pdoStatement->errorInfo());
+                        }
                     }, $this->_isolationLevel);
                 } else {
                     $this->pdoStatement->execute();
@@ -424,11 +428,14 @@ class Command extends BaseObject
             } catch (\Exception $e) {
                 $rawSql = $rawSql ?: $this->getRawSql();
                 $e = $this->db->getSchema()->convertException($e, $rawSql);
-                $this->pdoStatement = null;
-                if (($retryHandler = $this->db->getRetryHandler()) === null || !$retryHandler->handle($e, $attempt)) {
+                if (($retryHandler = $this->db->getRetryHandler()) === null || (RetryHandlerInterface::RETRY_NO === $code = $retryHandler->handle($e, $attempt))) {
+                    $this->pdoStatement = null;
                     throw $e;
                 }
-                $this->db->reconnect($attempt);
+                if ($code === RetryHandlerInterface::RETRY_CONNECT) {
+                    $this->pdoStatement = null;
+                    $this->db->reconnect($attempt);
+                }
             }
         }
     }

@@ -40,17 +40,12 @@ class RetryHandler extends RetryHandlerInterface
         $this->totalCount = $count;
     }
 
-    /**
-     * @param Throwable $e
-     * @param int $count
-     * @return bool
-     */
-    public function handle(Throwable $e, int $count): bool
+    public function handle(Throwable $e, int $count): int
     {
         if ($count < $this->totalCount) {
             $count > 1 && sleep($this->sleep);
-            return true;
+            return static::RETRY_CONNECT;
         }
-        return false;
+        return static::RETRY_NO;
     }
 }

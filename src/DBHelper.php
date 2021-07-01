@@ -39,8 +39,8 @@ class DBHelper
     public static function Search(Query $query, array $filter = []): Query
     {
         foreach ($filter as $method => $value) {
-            if (str_ends_with($method, '[]')) {
-                $method = str_replace('[]', '', $method);
+            if (str_ends_with($method, '{}')) {
+                $method = str_replace('{}', '', $method);
                 foreach ($value as $data) {
                     self::Search($query, [$method => $data]);
                 }

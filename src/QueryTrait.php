@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 /**
  * @link http://www.yiiframework.com/
@@ -126,7 +127,7 @@ trait QueryTrait
      * @return array the condition with [[isEmpty()|empty operands]] removed.
      * @throws NotSupportedException if the condition operator is not supported
      */
-    protected function filterCondition($condition)
+    protected function filterCondition(array $condition): array
     {
         if (!is_array($condition)) {
             return $condition;

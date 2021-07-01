@@ -1,40 +1,21 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Rabbit\DB;
 
-use DI\DependencyException;
-use DI\NotFoundException;
 use Rabbit\DB\Pool\PdoPool;
 use Rabbit\Pool\PoolProperties;
-use Throwable;
 
-/**
- * Class MakePdoConnection
- * @package rabbit\db\mysql
- */
 class MakePdoConnection
 {
-    /**
-     * @param string $class
-     * @param string $name
-     * @param string $dsn
-     * @param array $pool
-     * @param array $retryHandler
-     * @param array $config
-     * @throws DependencyException
-     * @throws NotFoundException
-     * @throws Throwable
-     */
     public static function addConnection(
         string $class,
         string $name,
         string $dsn,
         array $pool,
-        array $retryHandler = [],
-        array $config = null
-    ): void
-    {
+        array $retryHandler = []
+    ): void {
         /** @var Manager $manager */
         $manager = getDI('db');
         if (!$manager->has($name)) {
@@ -46,10 +27,10 @@ class MakePdoConnection
                         'class' => PdoPool::class,
                         'poolConfig' => create([
                             'class' => PoolProperties::class,
-                            'minActive' => intval($pool['min']),
-                            'maxActive' => intval($pool['max']),
-                            'maxWait' => $pool['wait'],
-                            'maxRetry' => $pool['retry']
+                            'minActive' => intval($pool['min'] ?? 3),
+                            'maxActive' => intval($pool['max'] ?? 5),
+                            'maxWait' => $pool['wait'] ?? 0,
+                            'maxRetry' => $pool['retry'] ?? 3
                         ], [], false)
                     ], [], false)
                 ]

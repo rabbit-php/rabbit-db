@@ -484,7 +484,7 @@ class Command extends BaseObject
      * @throws InvalidArgumentException
      * @throws Throwable
      */
-    public function queryScalar(): ?string
+    public function queryScalar()
     {
         $result = $this->queryInternal('fetchColumn', 0);
         if (is_resource($result) && get_resource_type($result) === 'stream') {
@@ -494,7 +494,7 @@ class Command extends BaseObject
             return $res;
         }
 
-        return (string)$result;
+        return $result;
     }
 
     /**

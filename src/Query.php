@@ -453,7 +453,7 @@ PATTERN;
      * @throws InvalidArgumentException
      * @throws Throwable
      */
-    protected function queryScalar($selectExpression): ?string
+    protected function queryScalar(string $selectExpression)
     {
         if ($this->emulateExecution) {
             return null;

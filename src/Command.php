@@ -376,12 +376,12 @@ class Command extends BaseObject
                 $params[$name] = $value;
             }
         }
-        if (!isset($params[0])) {
+        if (!isset($params[1])) {
             return strtr($this->sql, $params);
         }
         $sql = '';
         foreach (explode('?', $this->sql) as $i => $part) {
-            $sql .= $part . ($params[$i] ?? '');
+            $sql .= ($params[$i] ?? '') . $part;
         }
 
         return $sql;

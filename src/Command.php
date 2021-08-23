@@ -361,12 +361,23 @@ class Command extends BaseObject
         if (empty($this->params)) {
             return $this->sql;
         }
-        $params = [];
         $sql = '';
-        foreach (explode('?', $this->sql) as $i => $part) {
-            $sql .= ($params[$i] ?? '') . $part;
+        $sqlArr = explode('?', $this->sql);
+        foreach ($this->params as $i => $value) {
+            $sql .= $sqlArr[$i];
+            if (is_string($value)) {
+                $sql .= $this->db->quoteValue($value);
+            } elseif (is_bool($value)) {
+                $sql .=  ($value ? 'TRUE' : 'FALSE');
+            } elseif ($value === null) {
+                $sql .=  'NULL';
+            } elseif ((!is_object($value) && !is_resource($value)) || $value instanceof Expression) {
+                $sql .= $value;
+            }
         }
-
+        if ($i !== count($sqlArr) - 1) {
+            $sql .= end($sqlArr);
+        }
         return $sql;
     }
 

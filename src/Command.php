@@ -270,7 +270,7 @@ class Command extends BaseObject
     {
         $rawSql = $this->getRawSql();
         $share = $this->share ?? $this->db->share;
-        $func = function () use ($method, &$rawSql, $fetchMode) {
+        $func = function () use ($method, $rawSql, $fetchMode) {
             if ($method !== '') {
                 $info = $this->db->getQueryCacheInfo($this->queryCacheDuration, $this->cache);
                 if (is_array($info)) {

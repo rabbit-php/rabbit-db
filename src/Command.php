@@ -281,7 +281,7 @@ class Command extends BaseObject
                         $method,
                         $fetchMode,
                         $this->db->dsn,
-                        $rawSql ?: $rawSql = $this->getRawSql(),
+                        $rawSql,
                     ]);
                     if (!empty($ret = $cache->get($cacheKey))) {
                         $result = unserialize($ret);
@@ -323,7 +323,7 @@ class Command extends BaseObject
                 $method,
                 $fetchMode,
                 $this->db->dsn,
-                $rawSql ?: $rawSql = $this->getRawSql(),
+                $rawSql,
             ]);
             $key = extension_loaded('igbinary') ? igbinary_serialize($cacheKey) : serialize($cacheKey);
             $key = md5($key);
@@ -381,7 +381,7 @@ class Command extends BaseObject
      * @throws Throwable
      * @since 2.0.14
      */
-    protected function internalExecute(?string $rawSql): void
+    protected function internalExecute(string $rawSql): void
     {
         $attempt = 0;
         while (true) {
@@ -409,7 +409,6 @@ class Command extends BaseObject
                 $this->_pendingParams = [];
                 break;
             } catch (\Exception $e) {
-                $rawSql = $rawSql ?: $this->getRawSql();
                 $e = $this->db->getSchema()->convertException($e, $rawSql);
                 if (($retryHandler = $this->db->getRetryHandler()) === null || (RetryHandlerInterface::RETRY_NO === $code = $retryHandler->handle($e, $attempt))) {
                     $this->pdoStatement = null;
@@ -1313,7 +1312,7 @@ class Command extends BaseObject
         $sql = $this->sql;
         $rawSql = $this->getRawSql();
         $this->logQuery($rawSql);
-        if ($sql == '') {
+        if ($sql === '') {
             return 0;
         }
 

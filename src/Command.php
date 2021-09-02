@@ -14,7 +14,6 @@ use Throwable;
 use PDOException;
 use PDOStatement;
 use Rabbit\Base\App;
-use ReflectionException;
 use Rabbit\Base\Core\BaseObject;
 use Psr\SimpleCache\CacheInterface;
 use Psr\SimpleCache\InvalidArgumentException;
@@ -270,7 +269,7 @@ class Command extends BaseObject
     {
         $rawSql = $this->getRawSql();
         $share = $this->share ?? $this->db->share;
-        $func = function () use ($method, $rawSql, $fetchMode) {
+        $func = function () use ($method, &$rawSql, $fetchMode) {
             if ($method !== '') {
                 $info = $this->db->getQueryCacheInfo($this->queryCacheDuration, $this->cache);
                 if (is_array($info)) {
@@ -342,7 +341,7 @@ class Command extends BaseObject
      * @return void
      * @throws Throwable
      */
-    protected function logQuery(string $rawSql, string $module = 'db'): void
+    protected function logQuery(string &$rawSql, string $module = 'db'): void
     {
         if ($this->db->enableLogging && ($this->db->maxLog === 0 || ($this->db->maxLog > 0 && strlen($rawSql) < $this->db->maxLog))) {
             App::info($this->db->shortDsn . PHP_EOL . $rawSql, $module);
@@ -392,7 +391,7 @@ class Command extends BaseObject
      * @throws Throwable
      * @since 2.0.14
      */
-    protected function internalExecute(string $rawSql): void
+    protected function internalExecute(string &$rawSql): void
     {
         $attempt = 0;
         while (true) {

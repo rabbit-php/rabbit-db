@@ -285,7 +285,8 @@ class Command extends BaseObject
                     if (!empty($ret = $cache->get($cacheKey))) {
                         $result = unserialize($ret);
                         if (is_array($result) && isset($result[0])) {
-                            $this->logQuery($rawSql . '; [Query result read from cache]');
+                            $rawSql .= '; [Query result read from cache]';
+                            $this->logQuery($rawSql);
                             return $result[0];
                         }
                     }
@@ -311,7 +312,8 @@ class Command extends BaseObject
             }
 
             if (isset($cache, $cacheKey, $info)) {
-                !$cache->has($cacheKey) && $cache->set($cacheKey, serialize([$result]), $info[1]) && $this->logQuery('Saved query result in cache');
+                $log = 'Saved query result in cache';
+                !$cache->has($cacheKey) && $cache->set($cacheKey, serialize([$result]), $info[1]) && $this->logQuery($log);
             }
 
             return $result;
@@ -328,7 +330,8 @@ class Command extends BaseObject
             $key = md5($key);
             $s = share($key, $func, $share);
             if ($s->getStatus() === SWOOLE_CHANNEL_CLOSED) {
-                $this->logQuery($rawSql . '; [Query result read from share]');
+                $rawSql .= '; [Query result read from share]';
+                $this->logQuery($rawSql);
             }
             return $s->result;
         }

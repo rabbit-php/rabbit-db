@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 /**
  * @link http://www.yiiframework.com/
@@ -8,17 +9,8 @@ declare(strict_types=1);
 
 namespace Rabbit\DB;
 
-/**
- * Class PdoValueBuilder builds object of the [[PdoValue]] expression class.
- *
- * @author Dmytro Naumenko <d.naumenko.a@gmail.com>
- * @since 2.0.14
- */
 class PdoValueBuilder implements ExpressionBuilderInterface
 {
-    /**
-     * {@inheritdoc}
-     */
     public function build(ExpressionInterface $expression, array &$params = []): string
     {
         $params[count($params)] = $expression;

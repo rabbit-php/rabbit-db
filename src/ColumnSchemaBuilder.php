@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 /**
  * @link http://www.yiiframework.com/
@@ -10,28 +11,14 @@ namespace Rabbit\DB;
 
 use Rabbit\Base\Helper\StringHelper;
 
-/**
- * ColumnSchemaBuilder helps to define database schema types using a PHP interface.
- *
- * See [[SchemaBuilderTrait]] for more detailed description and usage examples.
- *
- * @author Vasenin Matvey <vaseninm@gmail.com>
- * @since 2.0.6
- */
 class ColumnSchemaBuilder
 {
-    // Internally used constants representing categories that abstract column types fall under.
-    // See [[$categoryMap]] for mappings of abstract column types to category.
-    // @since 2.0.8
     const CATEGORY_PK = 'pk';
     const CATEGORY_STRING = 'string';
     const CATEGORY_NUMERIC = 'numeric';
     const CATEGORY_TIME = 'time';
     const CATEGORY_OTHER = 'other';
-    /**
-     * @var array mapping of abstract column types (keys) to type categories (values).
-     * @since 2.0.8
-     */
+
     public array $categoryMap = [
         Schema::TYPE_PK => self::CATEGORY_PK,
         Schema::TYPE_UPK => self::CATEGORY_PK,
@@ -55,116 +42,57 @@ class ColumnSchemaBuilder
         Schema::TYPE_BOOLEAN => self::CATEGORY_NUMERIC,
         Schema::TYPE_MONEY => self::CATEGORY_NUMERIC,
     ];
-    /**
-     * @var Connection the current database connection. It is used mainly to escape strings
-     * safely when building the final column schema string.
-     * @since 2.0.8
-     */
+
     public ?Connection $db;
-    /**
-     * @var string comment value of the column.
-     * @since 2.0.8
-     */
+
     public string $comment;
-    /**
-     * @var string the column type definition such as INTEGER, VARCHAR, DATETIME, etc.
-     */
+
     protected string $type;
-    /**
-     * @var int|string|array column size or precision definition. This is what goes into the parenthesis after
-     * the column type. This can be either a string, an integer or an array. If it is an array, the array values will
-     * be joined into a string separated by comma.
-     */
-    protected $length;
-    /**
-     * @var bool|null whether the column is or not nullable. If this is `true`, a `NOT NULL` constraint will be added.
-     * If this is `false`, a `NULL` constraint will be added.
-     */
+
+    protected int|string|array $length;
+
     protected ?bool $isNotNull;
-    /**
-     * @var bool whether the column values should be unique. If this is `true`, a `UNIQUE` constraint will be added.
-     */
+
     protected bool $isUnique = false;
-    /**
-     * @var string the `CHECK` constraint for the column.
-     */
+
     protected string $check;
-    /**
-     * @var mixed default value of the column.
-     */
-    protected $default;
-    /**
-     * @var mixed SQL string to be appended to column schema definition.
-     * @since 2.0.9
-     */
+
+    protected ExpressionInterface|PdoValue|Query|string|bool|array|int|float|null $default;
+
     protected $append;
-    /**
-     * @var bool whether the column values should be unsigned. If this is `true`, an `UNSIGNED` keyword will be added.
-     * @since 2.0.7
-     */
+
     protected bool $isUnsigned = false;
-    /**
-     * @var string the column after which this column will be added.
-     * @since 2.0.8
-     */
+
     protected string $after;
-    /**
-     * @var bool whether this column is to be inserted at the beginning of the table.
-     * @since 2.0.8
-     */
+
     protected bool $isFirst;
 
-    /**
-     * Create a column schema builder instance giving the type and value precision.
-     *
-     * @param string $type type of the column. See [[$type]].
-     * @param int|string|array $length length or precision of the column. See [[$length]].
-     * @param Connection $db the current database connection. See [[$db]].
-     */
-    public function __construct(string $type, $length = null, Connection $db = null)
+    public function __construct(string $type, int|string|array $length = null, Connection $db = null)
     {
         $this->type = $type;
         $this->length = $length;
         $this->db = $db;
     }
 
-    /**
-     * Adds a `NOT NULL` constraint to the column.
-     * @return $this
-     */
     public function notNull(): self
     {
         $this->isNotNull = true;
         return $this;
     }
 
-    /**
-     * Adds a `UNIQUE` constraint to the column.
-     * @return $this
-     */
     public function unique(): self
     {
         $this->isUnique = true;
         return $this;
     }
 
-    /**
-     * Sets a `CHECK` constraint for the column.
-     * @param string $check the SQL of the `CHECK` constraint to be added.
-     * @return $this
-     */
     public function check(string $check): self
     {
         $this->check = $check;
         return $this;
     }
 
-    /**
-     * Specify the default value for the column.
-     * @param mixed $default the default value.
-     * @return $this
-     */
-    public function defaultValue($default): self
+    public function defaultValue(ExpressionInterface|PdoValue|Query|string|bool|array|int|float|null $default): self
     {
         if ($default === null) {
             $this->null();
@@ -174,34 +102,18 @@ class ColumnSchemaBuilder
         return $this;
     }
 
-    /**
-     * Adds a `NULL` constraint to the column.
-     * @return $this
-     * @since 2.0.9
-     */
     public function null(): self
     {
         $this->isNotNull = false;
         return $this;
     }
 
-    /**
-     * Specifies the comment for column.
-     * @param string $comment the comment
-     * @return $this
-     * @since 2.0.8
-     */
     public function comment(string $comment): self
     {
         $this->comment = $comment;
         return $this;
     }
 
-    /**
-     * Marks column as unsigned.
-     * @return $this
-     * @since 2.0.7
-     */
     public function unsigned(): self
     {
         switch ($this->type) {
@@ -216,60 +128,30 @@ class ColumnSchemaBuilder
         return $this;
     }
 
-    /**
-     * Adds an `AFTER` constraint to the column.
-     * Note: MySQL, Oracle support only.
-     * @param string $after the column after which $this column will be added.
-     * @return $this
-     * @since 2.0.8
-     */
     public function after(string $after): self
     {
         $this->after = $after;
         return $this;
     }
 
-    /**
-     * Adds an `FIRST` constraint to the column.
-     * Note: MySQL, Oracle support only.
-     * @return $this
-     * @since 2.0.8
-     */
     public function first(): self
     {
         $this->isFirst = true;
         return $this;
     }
 
-    /**
-     * Specify the default SQL expression for the column.
-     * @param string $default the default value expression.
-     * @return $this
-     * @since 2.0.7
-     */
     public function defaultExpression(string $default): self
     {
         $this->default = new Expression($default);
         return $this;
     }
 
-    /**
-     * Specify additional SQL to be appended to column definition.
-     * Position modifiers will be appended after column definition in databases that support them.
-     * @param string $sql the SQL string to be appended.
-     * @return $this
-     * @since 2.0.9
-     */
     public function append(string $sql): self
     {
         $this->append = $sql;
         return $this;
     }
 
-    /**
-     * Builds the full string for the column's schema.
-     * @return string
-     */
     public function __toString()
     {
         switch ($this->getTypeCategory()) {
@@ -283,22 +165,11 @@ class ColumnSchemaBuilder
         return $this->buildCompleteString($format);
     }
 
-    /**
-     * Returns the category of the column type.
-     * @return string a string containing the column type category name.
-     * @since 2.0.8
-     */
     protected function getTypeCategory(): ?string
     {
         return isset($this->categoryMap[$this->type]) ? $this->categoryMap[$this->type] : null;
     }
 
-    /**
-     * Returns the complete column definition from input format.
-     * @param string $format the format of the definition.
-     * @return string a string containing the complete column definition.
-     * @since 2.0.8
-     */
     protected function buildCompleteString(string $format): string
     {
         $placeholderValues = [
@@ -316,10 +187,6 @@ class ColumnSchemaBuilder
         return strtr($format, $placeholderValues);
     }
 
-    /**
-     * Builds the length/precision part of the column.
-     * @return string
-     */
     protected function buildLengthString(): string
     {
         if ($this->length === null || $this->length === []) {
@@ -332,21 +199,11 @@ class ColumnSchemaBuilder
         return "({$this->length})";
     }
 
-    /**
-     * Builds the unsigned string for column. Defaults to unsupported.
-     * @return string a string containing UNSIGNED keyword.
-     * @since 2.0.7
-     */
     protected function buildUnsignedString(): string
     {
         return '';
     }
 
-    /**
-     * Builds the not null constraint for the column.
-     * @return string returns 'NOT NULL' if [[isNotNull]] is true,
-     * 'NULL' if [[isNotNull]] is false or an empty string otherwise.
-     */
     protected function buildNotNullString(): string
     {
         if ($this->isNotNull === true) {
@@ -358,19 +215,11 @@ class ColumnSchemaBuilder
         return '';
     }
 
-    /**
-     * Builds the unique constraint for the column.
-     * @return string returns string 'UNIQUE' if [[isUnique]] is true, otherwise it returns an empty string.
-     */
     protected function buildUniqueString(): string
     {
         return $this->isUnique ? ' UNIQUE' : '';
     }
 
-    /**
-     * Builds the default value specification for the column.
-     * @return string string with default value of column.
-     */
     protected function buildDefaultString(): string
     {
         if ($this->default === null) {
@@ -397,50 +246,26 @@ class ColumnSchemaBuilder
         return $string;
     }
 
-    /**
-     * Builds the check constraint for the column.
-     * @return string a string containing the CHECK constraint.
-     */
     protected function buildCheckString(): string
     {
         return $this->check !== null ? " CHECK ({$this->check})" : '';
     }
 
-    /**
-     * Builds the comment specification for the column.
-     * @return string a string containing the COMMENT keyword and the comment itself
-     * @since 2.0.8
-     */
     protected function buildCommentString(): string
     {
         return '';
     }
 
-    /**
-     * Builds the first constraint for the column. Defaults to unsupported.
-     * @return string a string containing the FIRST constraint.
-     * @since 2.0.8
-     */
     protected function buildFirstString(): string
     {
         return '';
     }
 
-    /**
-     * Builds the after constraint for the column. Defaults to unsupported.
-     * @return string a string containing the AFTER constraint.
-     * @since 2.0.8
-     */
     protected function buildAfterString(): string
     {
         return '';
     }
 
-    /**
-     * Builds the custom string that's appended to column definition.
-     * @return string custom string to append.
-     * @since 2.0.9
-     */
     protected function buildAppendString(): string
     {
         return $this->append !== null ? ' ' . $this->append : '';

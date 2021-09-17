@@ -15,15 +15,11 @@ abstract class RetryHandlerInterface
     const RETRY_NO = 0;
     const RETRY_CONNECT = 1;
     const RETRY_NOCONNECT = 2;
-    /** @var int */
+
     protected int $totalCount;
-    /**
-     * @return int
-     */
+
     abstract public function getTotalCount(): int;
-    /**
-     * @param int $count
-     */
+
     abstract public function setTotalCount(int $count): void;
 
     abstract public function handle(Throwable $e, int $count): int;

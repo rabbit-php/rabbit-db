@@ -13,12 +13,6 @@ use Rabbit\Base\Helper\ArrayHelper;
  */
 class DBHelper
 {
-    /**
-     * @param Query $query
-     * @param array $filter
-     * @param string $handle
-     * @return mixed
-     */
     public static function PubSearch(Query $query, array $filter, string $handle)
     {
         $query = static::Search($query, $filter);
@@ -31,11 +25,6 @@ class DBHelper
         return $result;
     }
 
-    /**
-     * @param Query $query
-     * @param array|null $filter
-     * @return Query
-     */
     public static function Search(Query $query, array $filter = []): Query
     {
         foreach ($filter as $method => $value) {
@@ -79,14 +68,6 @@ class DBHelper
         return $query;
     }
 
-    /**
-     * @param Query $query
-     * @param array|null $filter
-     * @param int $page
-     * @param int $duration
-     * @param CacheInterface|null $cache
-     * @return array
-     */
     public static function SearchList(
         Query $query,
         array $filter = [],

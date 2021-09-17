@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 /**
  * @link http://www.yiiframework.com/
@@ -8,16 +9,7 @@ declare(strict_types=1);
 
 namespace Rabbit\DB;
 
-/**
- * DefaultValueConstraint represents the metadata of a table `DEFAULT` constraint.
- *
- * @author Sergey Makinen <sergey@makinen.ru>
- * @since 2.0.13
- */
 class DefaultValueConstraint extends Constraint
 {
-    /**
-     * @var mixed default value as returned by the DBMS.
-     */
     public $value;
 }

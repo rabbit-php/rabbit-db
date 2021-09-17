@@ -12,29 +12,18 @@ use Throwable;
  */
 class RetryHandler extends RetryHandlerInterface
 {
-    /** @var int */
     protected int $sleep = 1;
 
-    /**
-     * RetryHandler constructor.
-     * @param int $totalCount
-     */
     public function __construct(int $totalCount = 3)
     {
         $this->totalCount = $totalCount;
     }
 
-    /**
-     * @return int
-     */
     public function getTotalCount(): int
     {
         return $this->totalCount;
     }
 
-    /**
-     * @param int $count
-     */
     public function setTotalCount(int $count): void
     {
         $this->totalCount = $count;

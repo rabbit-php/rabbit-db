@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Rabbit\DB;
@@ -116,7 +117,7 @@ class BatchInsert implements BatchInterface
         return true;
     }
 
-    public function clearData()
+    public function clearData(): void
     {
         $this->sql = 'INSERT INTO ' . $this->schema->quoteTableName($this->table);
         $this->hasRows = 0;

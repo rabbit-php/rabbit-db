@@ -16,11 +16,6 @@ use Rabbit\Pool\BaseManager;
  */
 class Manager extends BaseManager
 {
-    /**
-     * @param array $configs
-     * @throws DependencyException
-     * @throws NotFoundException
-     */
     public function add(array $configs): void
     {
         foreach ($configs as $name => $config) {

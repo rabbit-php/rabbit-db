@@ -16,21 +16,10 @@ use Throwable;
  */
 trait ConnectionTrait
 {
-    /**
-     * @var string
-     */
     protected string $poolKey;
 
-    /**
-     * @var bool
-     */
     protected bool $autoRelease = true;
 
-    /**
-     * Whether or not the package has been recv,default true
-     *
-     * @var bool
-     */
     protected bool $recv = true;
 
     public function createConnection(): void
@@ -42,18 +31,12 @@ trait ConnectionTrait
         return $this->poolKey;
     }
 
-    /**
-     * @return PoolInterface
-     */
     public function getPool(): ?PoolInterface
     {
         return PoolManager::getPool($this->poolKey);
     }
 
-    /**
-     * @param bool $release
-     */
-    public function release($release = false): void
+    public function release(bool $release = false): void
     {
         if (null !== $conn = DbContext::get($this->poolKey)) {
             $transaction = $this->getTransaction();
@@ -67,10 +50,7 @@ trait ConnectionTrait
         }
     }
 
-    /**
-     * @param $conn
-     */
-    public function setInsertId($conn = null): void
+    public function setInsertId(object $conn = null): void
     {
         $conn = $conn ?? DbContext::get($this->poolKey);
         if ($conn !== null) {
@@ -78,26 +58,16 @@ trait ConnectionTrait
         }
     }
 
-    /**
-     * @return bool
-     */
     public function isAutoRelease(): bool
     {
         return $this->autoRelease;
     }
 
-    /**
-     * @param bool $autoRelease
-     */
     public function setAutoRelease(bool $autoRelease): void
     {
         $this->autoRelease = $autoRelease;
     }
 
-    /**
-     * @param int $attempt
-     * @throws Throwable
-     */
     public function reconnect(int $attempt = 0): void
     {
         DbContext::delete($this->poolKey);

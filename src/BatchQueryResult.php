@@ -13,25 +13,6 @@ use Psr\SimpleCache\InvalidArgumentException;
 use Rabbit\Base\Core\BaseObject;
 use Throwable;
 
-/**
- * BatchQueryResult represents a batch query from which you can retrieve data in batches.
- *
- * You usually do not instantiate BatchQueryResult directly. Instead, you obtain it by
- * calling [[Query::batch()]] or [[Query::each()]]. Because BatchQueryResult implements the [[\Iterator]] interface,
- * you can iterate it to obtain a batch of data in each iteration. For example,
- *
- * ```php
- * $query = (new Query)->from('user');
- * foreach ($query->batch() as $i => $users) {
- *     // $users represents the rows in the $i-th batch
- * }
- * foreach ($query->each() as $user) {
- * }
- * ```
- *
- * @author Qiang Xue <qiang.xue@gmail.com>
- * @since 2.0
- */
 class BatchQueryResult extends BaseObject implements \Iterator
 {
     public Connection $db;
@@ -72,7 +53,7 @@ class BatchQueryResult extends BaseObject implements \Iterator
      * @throws InvalidArgumentException
      * @throws Throwable
      */
-    public function rewind()
+    public function rewind(): void
     {
         $this->reset();
         $this->next();
@@ -82,7 +63,7 @@ class BatchQueryResult extends BaseObject implements \Iterator
      * @throws InvalidArgumentException
      * @throws Throwable
      */
-    public function next()
+    public function next(): void
     {
         if ($this->batch === null || !$this->each || $this->each && next($this->batch) === false) {
             $this->batch = $this->fetchData();
@@ -130,7 +111,7 @@ class BatchQueryResult extends BaseObject implements \Iterator
      * This method is required by the interface [[\Iterator]].
      * @return int the index of the current row.
      */
-    public function key()
+    public function key(): int
     {
         return $this->key;
     }
@@ -140,7 +121,7 @@ class BatchQueryResult extends BaseObject implements \Iterator
      * This method is required by the interface [[\Iterator]].
      * @return mixed the current dataset.
      */
-    public function current()
+    public function current(): null|float|int|string|bool|array
     {
         return $this->value;
     }
@@ -150,7 +131,7 @@ class BatchQueryResult extends BaseObject implements \Iterator
      * This method is required by the interface [[\Iterator]].
      * @return bool whether there is a valid dataset at the current position.
      */
-    public function valid()
+    public function valid(): bool
     {
         return !empty($this->batch);
     }

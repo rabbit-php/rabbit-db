@@ -9,107 +9,26 @@ declare(strict_types=1);
 
 namespace Rabbit\DB;
 
-use Rabbit\Base\Exception\NotSupportedException;
-
-/**
- * The BaseQuery trait represents the minimum method set of a database Query.
- *
- * It is supposed to be used in a class that implements the [[QueryInterface]].
- *
- * @author Qiang Xue <qiang.xue@gmail.com>
- * @author Carsten Brandt <mail@cebe.cc>
- * @since 2.0
- */
 trait QueryTrait
 {
-    /**
-     * @var string|array query condition. This refers to the WHERE clause in a SQL statement.
-     * For example, `['age' => 31, 'team' => 1]`.
-     * @see where() for valid syntax on specifying this value.
-     */
-    public $where;
-    /**
-     * @var int|ExpressionInterface maximum number of records to be returned. May be an instance of [[ExpressionInterface]].
-     * If not set or less than 0, it means no limit.
-     */
-    public $limit;
-    /**
-     * @var int|ExpressionInterface zero-based offset from where the records are to be returned.
-     * May be an instance of [[ExpressionInterface]]. If not set or less than 0, it means starting from the beginning.
-     */
-    public $offset;
-    /**
-     * @var array how to sort the query results. This is used to construct the ORDER BY clause in a SQL statement.
-     * The array keys are the columns to be sorted by, and the array values are the corresponding sort directions which
-     * can be either [SORT_ASC](http://php.net/manual/en/array.constants.php#constant.sort-asc)
-     * or [SORT_DESC](http://php.net/manual/en/array.constants.php#constant.sort-desc).
-     * The array may also contain [[ExpressionInterface]] objects. If that is the case, the expressions
-     * will be converted into strings without any change.
-     */
+    public null|string|array $where = null;
+
+    public null|int|ExpressionInterface $limit = null;
+
+    public null|int|ExpressionInterface $offset = null;
+
     public ?array $orderBy = null;
-    /**
-     * @var string|callable the name of the column by which the query results should be indexed by.
-     * This can also be a callable (e.g. anonymous function) that returns the index value based on the given
-     * row data. For more details, see [[indexBy()]]. This property is only used by [[QueryInterface::all()|all()]].
-     */
-    public $indexBy;
-    /**
-     * @var bool whether to emulate the actual query execution, returning empty or false results.
-     * @see emulateExecution()
-     * @since 2.0.11
-     */
+
+    public ?string $indexBy = null;
+
     public bool $emulateExecution = false;
 
-
-    /**
-     * Sets the [[indexBy]] property.
-     * @param string|callable $column the name of the column by which the query results should be indexed by.
-     * This can also be a callable (e.g. anonymous function) that returns the index value based on the given
-     * row data. The signature of the callable should be:
-     *
-     * ```php
-     * function ($row)
-     * {
-     *     // return the index value corresponding to $row
-     * }
-     * ```
-     *
-     * @return $this the query object itself
-     */
-    public function indexBy($column): QueryInterface
+    public function indexBy(string|callable $column): QueryInterface
     {
         $this->indexBy = $column;
         return $this;
     }
 
-    /**
-     * Sets the WHERE part of the query but ignores [[isEmpty()|empty operands]].
-     *
-     * This method is similar to [[where()]]. The main difference is that this method will
-     * remove [[isEmpty()|empty query operands]]. As a result, this method is best suited
-     * for building query conditions based on filter values entered by users.
-     *
-     * The following code shows the difference between this method and [[where()]]:
-     *
-     * ```php
-     * // WHERE `age`=:age
-     * $query->filterWhere(['name' => null, 'age' => 20]);
-     * // WHERE `age`=:age
-     * $query->where(['age' => 20]);
-     * // WHERE `name` IS NULL AND `age`=:age
-     * $query->where(['name' => null, 'age' => 20]);
-     * ```
-     *
-     * Note that unlike [[where()]], you cannot pass binding parameters to this method.
-     *
-     * @param array $condition the conditions that should be put in the WHERE part.
-     * See [[where()]] on how to specify this parameter.
-     * @return $this the query object itself
-     * @throws NotSupportedException
-     * @see andFilterWhere()
-     * @see orFilterWhere()
-     * @see where()
-     */
     public function filterWhere(array $condition): self
     {
         $condition = $this->filterCondition($condition);
@@ -120,13 +39,6 @@ trait QueryTrait
         return $this;
     }
 
-    /**
-     * Removes [[isEmpty()|empty operands]] from the given query condition.
-     *
-     * @param array $condition the original condition
-     * @return array the condition with [[isEmpty()|empty operands]] removed.
-     * @throws NotSupportedException if the condition operator is not supported
-     */
     protected function filterCondition(array $condition): array
     {
         if (!is_array($condition)) {
@@ -184,55 +96,17 @@ trait QueryTrait
         return $condition;
     }
 
-    /**
-     * Returns a value indicating whether the give value is "empty".
-     *
-     * The value is considered "empty", if one of the following conditions is satisfied:
-     *
-     * - it is `null`,
-     * - an empty string (`''`),
-     * - a string containing only whitespace characters,
-     * - or an empty array.
-     *
-     * @param mixed $value
-     * @return bool if the value is empty
-     */
-    protected function isEmpty($value): bool
+    protected function isEmpty(null|string|array $value): bool
     {
         return $value === '' || $value === [] || $value === null || is_string($value) && trim($value) === '';
     }
 
-    /**
-     * Sets the WHERE part of the query.
-     *
-     * See [[QueryInterface::where()]] for detailed documentation.
-     *
-     * @param array $condition the conditions that should be put in the WHERE part.
-     * @return $this the query object itself
-     * @see andWhere()
-     * @see orWhere()
-     */
-    public function where($condition): self
+    public function where(string|array $condition): self
     {
         $this->where = $condition;
         return $this;
     }
 
-    /**
-     * Adds an additional WHERE condition to the existing one but ignores [[isEmpty()|empty operands]].
-     * The new condition and the existing one will be joined using the 'AND' operator.
-     *
-     * This method is similar to [[andWhere()]]. The main difference is that this method will
-     * remove [[isEmpty()|empty query operands]]. As a result, this method is best suited
-     * for building query conditions based on filter values entered by users.
-     *
-     * @param array $condition the new WHERE condition. Please refer to [[where()]]
-     * on how to specify this parameter.
-     * @return $this the query object itself
-     * @throws NotSupportedException
-     * @see orFilterWhere()
-     * @see filterWhere()
-     */
     public function andFilterWhere(array $condition): self
     {
         $condition = $this->filterCondition($condition);
@@ -243,16 +117,7 @@ trait QueryTrait
         return $this;
     }
 
-    /**
-     * Adds an additional WHERE condition to the existing one.
-     * The new condition and the existing one will be joined using the 'AND' operator.
-     * @param array $condition the new WHERE condition. Please refer to [[where()]]
-     * on how to specify this parameter.
-     * @return $this the query object itself
-     * @see where()
-     * @see orWhere()
-     */
-    public function andWhere($condition): self
+    public function andWhere(string|array $condition): self
     {
         if ($this->where === null) {
             $this->where = $condition;
@@ -263,21 +128,6 @@ trait QueryTrait
         return $this;
     }
 
-    /**
-     * Adds an additional WHERE condition to the existing one but ignores [[isEmpty()|empty operands]].
-     * The new condition and the existing one will be joined using the 'OR' operator.
-     *
-     * This method is similar to [[orWhere()]]. The main difference is that this method will
-     * remove [[isEmpty()|empty query operands]]. As a result, this method is best suited
-     * for building query conditions based on filter values entered by users.
-     *
-     * @param array $condition the new WHERE condition. Please refer to [[where()]]
-     * on how to specify this parameter.
-     * @return $this the query object itself
-     * @throws NotSupportedException
-     * @see andFilterWhere()
-     * @see filterWhere()
-     */
     public function orFilterWhere(array $condition): self
     {
         $condition = $this->filterCondition($condition);
@@ -288,16 +138,7 @@ trait QueryTrait
         return $this;
     }
 
-    /**
-     * Adds an additional WHERE condition to the existing one.
-     * The new condition and the existing one will be joined using the 'OR' operator.
-     * @param array $condition the new WHERE condition. Please refer to [[where()]]
-     * on how to specify this parameter.
-     * @return $this the query object itself
-     * @see where()
-     * @see andWhere()
-     */
-    public function orWhere($condition): self
+    public function orWhere(string|array $condition): self
     {
         if ($this->where === null) {
             $this->where = $condition;
@@ -308,47 +149,13 @@ trait QueryTrait
         return $this;
     }
 
-    /**
-     * Sets the ORDER BY part of the query.
-     * @param string|array|ExpressionInterface $columns the columns (and the directions) to be ordered by.
-     * Columns can be specified in either a string (e.g. `"id ASC, name DESC"`) or an array
-     * (e.g. `['id' => SORT_ASC, 'name' => SORT_DESC]`).
-     *
-     * The method will automatically quote the column names unless a column contains some parenthesis
-     * (which means the column contains a DB expression).
-     *
-     * Note that if your order-by is an expression containing commas, you should always use an array
-     * to represent the order-by information. Otherwise, the method will not be able to correctly determine
-     * the order-by columns.
-     *
-     * Since version 2.0.7, an [[ExpressionInterface]] object can be passed to specify the ORDER BY part explicitly in plain SQL.
-     * @return $this the query object itself
-     * @see addOrderBy()
-     */
-    public function orderBy($columns): self
+    public function orderBy(string|array|ExpressionInterface $columns): self
     {
         $this->orderBy = $this->normalizeOrderBy($columns);
         return $this;
     }
 
-    /**
-     * Adds additional ORDER BY columns to the query.
-     * @param string|array|ExpressionInterface $columns the columns (and the directions) to be ordered by.
-     * Columns can be specified in either a string (e.g. "id ASC, name DESC") or an array
-     * (e.g. `['id' => SORT_ASC, 'name' => SORT_DESC]`).
-     *
-     * The method will automatically quote the column names unless a column contains some parenthesis
-     * (which means the column contains a DB expression).
-     *
-     * Note that if your order-by is an expression containing commas, you should always use an array
-     * to represent the order-by information. Otherwise, the method will not be able to correctly determine
-     * the order-by columns.
-     *
-     * Since version 2.0.7, an [[ExpressionInterface]] object can be passed to specify the ORDER BY part explicitly in plain SQL.
-     * @return $this the query object itself
-     * @see orderBy()
-     */
-    public function addOrderBy($columns): self
+    public function addOrderBy(string|array|ExpressionInterface $columns): self
     {
         $columns = $this->normalizeOrderBy($columns);
         if ($this->orderBy === null) {
@@ -360,38 +167,18 @@ trait QueryTrait
         return $this;
     }
 
-    /**
-     * Sets the LIMIT part of the query.
-     * @param int|ExpressionInterface|null $limit the limit. Use null or negative value to disable limit.
-     * @return $this the query object itself
-     */
-    public function limit($limit): self
+    public function limit(int|ExpressionInterface|null $limit): self
     {
         $this->limit = $limit;
         return $this;
     }
 
-    /**
-     * Sets the OFFSET part of the query.
-     * @param int|ExpressionInterface|null $offset the offset. Use null or negative value to disable offset.
-     * @return $this the query object itself
-     */
-    public function offset($offset): self
+    public function offset(int|ExpressionInterface|null $offset): self
     {
         $this->offset = $offset;
         return $this;
     }
 
-    /**
-     * Sets whether to emulate query execution, preventing any interaction with data storage.
-     * After this mode is enabled, methods, returning query results like [[QueryInterface::one()]],
-     * [[QueryInterface::all()]], [[QueryInterface::exists()]] and so on, will return empty or false values.
-     * You should use this method in case your program logic indicates query should not return any results, like
-     * in case you set false where condition like `0=1`.
-     * @param bool $value whether to prevent query execution.
-     * @return $this the query object itself.
-     * @since 2.0.11
-     */
     public function emulateExecution(bool $value = true): self
     {
         $this->emulateExecution = $value;

@@ -11,95 +11,42 @@ namespace Rabbit\DB;
 
 use Rabbit\Base\Helper\StringHelper;
 
-/**
- * ColumnSchema class describes the metadata of a column in a database table.
- *
- * @author Qiang Xue <qiang.xue@gmail.com>
- * @since 2.0
- */
 class ColumnSchema
 {
-    /**
-     * @var string name of this column (without quotes).
-     */
     public string $name;
-    /**
-     * @var bool whether this column can be null.
-     */
+
     public bool $allowNull;
-    /**
-     * @var string abstract type of this column. Possible abstract types include:
-     * char, string, text, boolean, smallint, integer, bigint, float, decimal, datetime,
-     * timestamp, time, date, binary, and money.
-     */
+
     public string $type;
-    /**
-     * @var string the PHP type of this column. Possible PHP types include:
-     * `string`, `boolean`, `integer`, `double`, `array`.
-     */
+
     public string $phpType;
-    /**
-     * @var string the DB type of this column. Possible DB types vary according to the type of DBMS.
-     */
+
     public string $dbType;
-    /**
-     * @var mixed default value of this column
-     */
-    public $defaultValue;
-    /**
-     * @var array enumerable values. This is set only if the column is declared to be an enumerable type.
-     */
+
+    public ExpressionInterface|PdoValue|Query|string|bool|array|int|float|null $defaultValue;
+
     public array $enumValues;
-    /**
-     * @var int display size of the column.
-     */
+
     public int $size;
-    /**
-     * @var int precision of the column data, if it is numeric.
-     */
+
     public int $precision;
-    /**
-     * @var int scale of the column data, if it is numeric.
-     */
+
     public int $scale;
-    /**
-     * @var bool whether this column is a primary key
-     */
+
     public bool $isPrimaryKey;
-    /**
-     * @var bool whether this column is auto-incremental
-     */
+
     public bool $autoIncrement = false;
-    /**
-     * @var bool whether this column is unsigned. This is only meaningful
-     * when [[type]] is `smallint`, `integer` or `bigint`.
-     */
+
     public bool $unsigned;
-    /**
-     * @var string comment of this column. Not all DBMS support this.
-     */
+
     public string $comment;
 
-
-    /**
-     * Converts the input value according to [[phpType]] after retrieval from the database.
-     * If the value is null or an [[Expression]], it will not be converted.
-     * @param mixed $value input value
-     * @return mixed converted value
-     */
-    public function phpTypecast($value)
+    public function phpTypecast(ExpressionInterface|PdoValue|Query|string|bool|array|int|float|null $value): ExpressionInterface|PdoValue|Query|string|bool|array|int|float|null
     {
         return $this->typecast($value);
     }
 
-    /**
-     * Converts the input value according to [[phpType]] after retrieval from the database.
-     * If the value is null or an [[Expression]], it will not be converted.
-     * @param mixed $value input value
-     * @return mixed converted value
-     * @since 2.0.3
-     */
-    protected function typecast($value)
+    protected function typecast(ExpressionInterface|PdoValue|Query|string|bool|array|int|float|null $value): ExpressionInterface|PdoValue|Query|string|bool|array|int|float|null
     {
         if (
             $value === ''
@@ -162,9 +109,6 @@ class ColumnSchema
         return $value;
     }
 
-    /**
-     * @return int[] array of numbers that represent possible PDO parameter types
-     */
     protected function getPdoParamTypes(): array
     {
         return [
@@ -177,17 +121,8 @@ class ColumnSchema
         ];
     }
 
-    /**
-     * Converts the input value according to [[type]] and [[dbType]] for use in a db query.
-     * If the value is null or an [[Expression]], it will not be converted.
-     * @param mixed $value input value
-     * @return mixed converted value. This may also be an array containing the value as the first element
-     * and the PDO type as the second element.
-     */
-    public function dbTypecast($value)
+    public function dbTypecast(ExpressionInterface|PdoValue|Query|string|bool|array|int|float|null $value): ExpressionInterface|PdoValue|Query|string|bool|array|int|float|null
     {
-        // the default implementation does the same as casting for PHP, but it should be possible
-        // to override this with annotation of explicit PDO type.
         return $this->typecast($value);
     }
 }

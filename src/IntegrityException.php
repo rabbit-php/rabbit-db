@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 /**
  * @link http://www.yiiframework.com/
@@ -8,17 +9,8 @@ declare(strict_types=1);
 
 namespace Rabbit\DB;
 
-/**
- * Exception represents an exception that is caused by violation of DB constraints.
- *
- * @author Alexander Makarov <sam@rmcreative.ru>
- * @since 2.0
- */
 class IntegrityException extends Exception
 {
-    /**
-     * @return string the user-friendly name of this exception
-     */
     public function getName(): string
     {
         return 'Integrity constraint violation';

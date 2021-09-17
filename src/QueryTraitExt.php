@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Rabbit\DB;
 
-use Psr\SimpleCache\InvalidArgumentException;
 use Rabbit\Base\Helper\ArrayHelper;
 use Throwable;
 
@@ -23,11 +22,7 @@ trait QueryTraitExt
         return $this;
     }
 
-    /**
-     * @param $columns
-     * @return array|Expression[]
-     */
-    protected function normalizeOrderBy($columns): array
+    protected function normalizeOrderBy(array $columns): array
     {
         if ($columns instanceof Expression) {
             return [$columns];
@@ -56,12 +51,6 @@ trait QueryTraitExt
         }
     }
 
-    /**
-     * @param array $rows
-     * @return array
-     * @throws InvalidArgumentException
-     * @throws Throwable
-     */
     public function populate(array $rows): array
     {
         $rows = $this->buildWith($rows);
@@ -81,12 +70,7 @@ trait QueryTraitExt
         return $this->buildWith($result);
     }
 
-    /**
-     * @return mixed|null
-     * @throws InvalidArgumentException
-     * @throws Throwable
-     */
-    public function one()
+    public function one(): ?array
     {
         if ($this->emulateExecution) {
             return null;
@@ -100,12 +84,6 @@ trait QueryTraitExt
         return $result;
     }
 
-    /**
-     * @param array $result
-     * @return array
-     * @throws InvalidArgumentException
-     * @throws Throwable
-     */
     private function buildWith(array $result): array
     {
         if ($this->joinWith) {
@@ -149,11 +127,7 @@ trait QueryTraitExt
         return $result;
     }
 
-    /**
-     * @param array $list
-     * @return QueryTraitExt
-     */
-    public function joinWith(array $config, string $on, string $type = 'left join'): self
+    public function joinWith(array $config, string|bool $on, string $type = 'left join'): self
     {
         if (ArrayHelper::isIndexed($config)) {
             $table = array_shift($config);

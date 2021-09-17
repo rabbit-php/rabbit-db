@@ -16,7 +16,7 @@ class PdoPool extends ConnectionPool
     /**
      * @return mixed
      */
-    public function create()
+    public function create(): object
     {
         $poolConfig = $this->getPoolConfig();
         $config = $poolConfig->getConfig();

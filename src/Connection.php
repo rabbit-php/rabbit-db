@@ -269,8 +269,6 @@ class Connection extends BaseObject implements ConnectionInterface
         $pdo = $this->getPool()->get();
         if (!$pdo instanceof ConnectionInterface) {
             DbContext::set($this->poolKey, $pdo);
-        } else {
-            $attempt === 0 && ($token = 'Opening DB connection: ' . $this->shortDsn) && App::info($token, "db");
         }
     }
 
@@ -313,6 +311,7 @@ class Connection extends BaseObject implements ConnectionInterface
         if ($this->charset !== null && in_array($this->getDriverName(), ['pgsql', 'mysql', 'mysqli', 'cubrid'], true)) {
             $pdo->exec('SET NAMES ' . $pdo->quote($this->charset));
         }
+        ($token = 'Opening DB connection: ' . $this->shortDsn) && App::info($token, "db");
         return $pdo;
     }
 

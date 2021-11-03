@@ -1,11 +1,6 @@
 <?php
 
 declare(strict_types=1);
-/**
- * @link http://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license http://www.yiiframework.com/license/
- */
 
 namespace Rabbit\DB;
 
@@ -35,8 +30,8 @@ class Transaction extends BaseObject
 
     public function begin(?string $isolationLevel = null): void
     {
-        if ($this->db === null) {
-            throw new \InvalidArgumentException('Transaction::db must be set.');
+        if (!$this->db->canTransaction) {
+            return;
         }
         $this->db->open();
 
@@ -55,9 +50,9 @@ class Transaction extends BaseObject
         if ($schema->supportsSavepoint()) {
             App::debug('Set savepoint ' . $this->_level, "db");
             if (!$pdo->getAttribute(PDO::ATTR_EMULATE_PREPARES)) {
-                $pdo->getConn()->setAttribute(PDO::ATTR_EMULATE_PREPARES, true);
+                $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, true);
                 $schema->createSavepoint('LEVEL' . $this->_level);
-                $pdo->getConn()->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+                $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
             } else {
                 $schema->createSavepoint('LEVEL' . $this->_level);
             }
@@ -70,7 +65,11 @@ class Transaction extends BaseObject
 
     public function commit(): void
     {
+        if (!$this->db->canTransaction) {
+            return;
+        }
         if (!$this->getIsActive()) {
+            $this->db->release(true);
             throw new Exception('Failed to commit transaction: transaction was inactive.');
         }
 
@@ -87,9 +86,9 @@ class Transaction extends BaseObject
         if ($schema->supportsSavepoint()) {
             App::debug('Release savepoint ' . $this->_level, "db");
             if (!$pdo->getAttribute(PDO::ATTR_EMULATE_PREPARES)) {
-                $pdo->getConn()->setAttribute(PDO::ATTR_EMULATE_PREPARES, true);
+                $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, true);
                 $schema->releaseSavepoint('LEVEL' . $this->_level);
-                $pdo->getConn()->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+                $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
             } else {
                 $schema->releaseSavepoint('LEVEL' . $this->_level);
             }
@@ -105,9 +104,11 @@ class Transaction extends BaseObject
 
     public function rollBack(): void
     {
+        if (!$this->db->canTransaction) {
+            return;
+        }
         if (!$this->getIsActive()) {
-            // do nothing if transaction is not active: this could be the transaction is committed
-            // but the event handler to "commitTransaction" throw an exception
+            $this->db->release(true);
             return;
         }
 
@@ -137,7 +138,11 @@ class Transaction extends BaseObject
 
     public function setIsolationLevel(string $level): void
     {
+        if (!$this->db->canTransaction) {
+            return;
+        }
         if (!$this->getIsActive()) {
+            $this->db->release(true);
             throw new Exception('Failed to set isolation level: transaction was inactive.');
         }
         App::debug('Setting transaction isolation level to ' . $level, "db");

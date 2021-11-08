@@ -106,6 +106,8 @@ trait QueryTraitExt
                             $tmp = $query->where([$field => $ids]);
                         }
 
+                        $tmp->cache($this->queryCacheDuration, $this->cache);
+
                         $res = $this->flag ? $tmp->all() : [$tmp->one()];
 
                         foreach ($res as $t) {

@@ -68,7 +68,9 @@ class Query extends BaseObject implements QueryInterface, ExpressionInterface
             'join' => $from->join,
             'having' => $from->having,
             'union' => $from->union,
-            'params' => $from->params
+            'params' => $from->params,
+            'queryCacheDuration' => $from->queryCacheDuration,
+            'cache' => $from->cache,
         ]);
     }
 

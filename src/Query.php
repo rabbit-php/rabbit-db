@@ -611,7 +611,7 @@ PATTERN;
         return $this;
     }
 
-    public function cache(int $duration = 0, ?CacheInterface $cache = null): self
+    public function cache(?int $duration = 0, ?CacheInterface $cache = null): self
     {
         $this->queryCacheDuration = $duration;
         $this->cache = $cache;

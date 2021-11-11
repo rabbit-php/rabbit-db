@@ -302,7 +302,7 @@ class Command extends BaseObject
     public function queryAll(int $fetchMode = null): array
     {
         $res = $this->queryInternal('fetchAll', $fetchMode);
-        if ($res === false) {
+        if (!is_array($res)) {
             return [];
         }
         return $res;

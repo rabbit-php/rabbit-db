@@ -334,10 +334,10 @@ class Command extends BaseObject
         return $this->queryInternal('fetchAll', \PDO::FETCH_COLUMN);
     }
 
-    public function insert(string $table, array|Query $columns): self
+    public function insert(string $table, array|Query $columns, bool $withUpdate = false): self
     {
         $params = [];
-        $sql = $this->db->getQueryBuilder()->insert($table, $columns, $params);
+        $sql = $this->db->getQueryBuilder()->insert($table, $columns, $params, $withUpdate);
 
         return $this->setSql($sql)->bindValues($params);
     }

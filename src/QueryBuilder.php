@@ -87,12 +87,20 @@ class QueryBuilder
         $this->conditionClasses = array_merge($this->conditionClasses, $classes);
     }
 
-    public function insert(string $table, array|Query $columns, array &$params = []): string
+    public function insert(string $table, array|Query $columns, array &$params = [], bool $withUpdate = false): string
     {
         [$names, $placeholders, $values, $params] = $this->prepareInsertValues($table, $columns, $params);
-        return 'INSERT INTO ' . $this->db->quoteTableName($table)
+        $sql = 'INSERT INTO ' . $this->db->quoteTableName($table)
             . (!empty($names) ? ' (' . implode(', ', $names) . ')' : '')
             . (!empty($placeholders) ? ' VALUES (' . implode(', ', $placeholders) . ')' : $values);
+        if ($withUpdate) {
+            $updates = [];
+            foreach ($names as $name) {
+                $updates[] = "{$name}=values($name)";
+            }
+            $sql .= " on duplicate key update " . implode(', ', $updates);
+        }
+        return $sql;
     }
 
     protected function prepareInsertValues(string $table, array|Query $columns, array $params = []): array

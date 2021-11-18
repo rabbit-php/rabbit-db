@@ -270,6 +270,8 @@ class Connection extends BaseObject implements ConnectionInterface
         $pdo = $this->getPool()->get();
         if (!$pdo instanceof ConnectionInterface) {
             DbContext::set($this->poolKey, $pdo);
+        } else {
+            DbContext::set($this->poolKey, $pdo->createPdoInstance());
         }
     }
 

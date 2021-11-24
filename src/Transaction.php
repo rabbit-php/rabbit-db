@@ -77,7 +77,7 @@ class Transaction extends BaseObject
         $pdo = $this->db->getConn();
         if ($this->_level === 0) {
             App::debug('Commit transaction', "db");
-            $pdo->commit();
+            $pdo->inTransaction() && $pdo->commit();
             $this->db->release(true);
             return;
         }
@@ -116,7 +116,7 @@ class Transaction extends BaseObject
         $pdo = $this->db->getConn();
         if ($this->_level === 0) {
             App::debug('Roll back transaction', "db");
-            $pdo->rollBack();
+            $pdo->inTransaction() && $pdo->rollBack();
             $this->db->release(true);
             return;
         }

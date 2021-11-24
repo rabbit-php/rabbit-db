@@ -331,7 +331,7 @@ class Connection extends BaseObject implements ConnectionInterface
 
         try {
             $result = call_user_func($callback, $this);
-            if ($transaction->isActive && $transaction->level === $level) {
+            if ($transaction->getIsActive() && $transaction->level === $level) {
                 $transaction->commit();
             }
         } catch (Throwable $e) {

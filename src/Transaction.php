@@ -99,7 +99,7 @@ class Transaction extends BaseObject
 
     public function getIsActive(): bool
     {
-        return $this->_level > 0 && $this->db && $this->db->getIsActive();
+        return $this->_level > 0;
     }
 
     public function rollBack(): void

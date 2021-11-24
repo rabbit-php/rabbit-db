@@ -93,7 +93,7 @@ class Connection extends BaseObject implements ConnectionInterface
 
     public function getIsActive(): bool
     {
-        return DbContext::get($this->poolKey) !== null;
+        return true;
     }
 
     public function getQueryCacheInfo(?float $duration, ?CacheInterface $cache = null): ?array
@@ -346,7 +346,7 @@ class Connection extends BaseObject implements ConnectionInterface
     {
         $this->open();
 
-        if (($transaction = $this->getTransaction()) === null) {
+        if (null === $transaction = $this->getTransaction()) {
             $transaction = new $this->transactionClass($this);
             Context::set('db.transaction', $transaction, $this->poolKey);
         }
@@ -357,8 +357,7 @@ class Connection extends BaseObject implements ConnectionInterface
 
     public function getTransaction(): ?Transaction
     {
-        $transaction = Context::get('db.transaction', $this->poolKey);
-        return $transaction && $transaction->getIsActive() ? $transaction : null;
+        return Context::get('db.transaction', $this->poolKey);
     }
 
     private function rollbackTransactionOnLevel(Transaction $transaction, int $level): void

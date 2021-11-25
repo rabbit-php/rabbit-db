@@ -263,6 +263,7 @@ class Command extends BaseObject
         $attempt = 0;
         while (true) {
             try {
+                $attempt++;
                 $this->prepare(true);
                 $this->pdoStatement->execute();
                 if ($this->pdoStatement->errorCode() !== '00000') {

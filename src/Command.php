@@ -264,24 +264,10 @@ class Command extends BaseObject
         while (true) {
             try {
                 $this->prepare(true);
-                if (
-                    ++$attempt === 1
-                    && $this->_isolationLevel !== false
-                    && $this->db->getTransaction() === null
-                ) {
-                    $this->db->transaction(function () {
-                        $this->pdoStatement->execute();
-                        if ($this->pdoStatement->errorCode() !== '00000') {
-                            $errArr = $this->pdoStatement->errorInfo();
-                            throw new Exception(end($errArr), $this->pdoStatement->errorInfo());
-                        }
-                    }, $this->_isolationLevel);
-                } else {
-                    $this->pdoStatement->execute();
-                    if ($this->pdoStatement->errorCode() !== '00000') {
-                        $errArr = $this->pdoStatement->errorInfo();
-                        throw new Exception(end($errArr), $this->pdoStatement->errorInfo());
-                    }
+                $this->pdoStatement->execute();
+                if ($this->pdoStatement->errorCode() !== '00000') {
+                    $errArr = $this->pdoStatement->errorInfo();
+                    throw new Exception(end($errArr), $this->pdoStatement->errorInfo());
                 }
                 $this->_pendingParams = [];
                 break;

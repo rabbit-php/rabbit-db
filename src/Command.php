@@ -270,7 +270,7 @@ class Command extends BaseObject
                     throw new Exception(end($errArr), $this->pdoStatement->errorInfo());
                 }
                 $this->_pendingParams = [];
-                break;
+                return;
             } catch (\Exception $e) {
                 $e = $this->db->getSchema()->convertException($e, $rawSql);
                 if (($retryHandler = $this->db->getRetryHandler()) === null || (RetryHandlerInterface::RETRY_NO === $code = $retryHandler->handle($e, $attempt))) {

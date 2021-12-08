@@ -33,8 +33,11 @@ class Command extends BaseObject
 
     public function __destruct()
     {
-        $this->db && $this->db->release();
+        if ($this->pdoStatement !== null && method_exists($this->pdoStatement, 'closeCursor')) {
+            $this->pdoStatement->closeCursor();
+        }
         $this->pdoStatement = null;
+        $this->db && $this->db->release();
     }
 
     public function cache(float $duration = 0, ?CacheInterface $cache = null): self
@@ -188,7 +191,6 @@ class Command extends BaseObject
                         $fetchMode = $this->fetchMode;
                     }
                     $result = call_user_func_array([$this->pdoStatement, $method], (array)$fetchMode);
-                    $this->pdoStatement->closeCursor();
                 }
             } catch (Throwable $e) {
                 throw $e;

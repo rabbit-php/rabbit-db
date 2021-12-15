@@ -31,6 +31,7 @@ class Command extends BaseObject
     protected ?bool $_isolationLevel = false;
     protected ?CacheInterface $cache = null;
     protected ?int $share = null;
+    protected string $shareType = Connection::SHARE_PROCESS;
 
     public function __destruct()
     {
@@ -54,9 +55,16 @@ class Command extends BaseObject
         return $this;
     }
 
-    public function share(int $timeout = null): void
+    public function share(int $timeout = null): self
     {
         $this->share = $timeout;
+        return $this;
+    }
+
+    public function shareType(string $type): self
+    {
+        $this->shareType = $type;
+        return $this;
     }
 
     public function bindParam(string $name, string|float|int|array|null &$value, ?int $dataType = null, ?int $length = null, $driverOptions = null): self
@@ -214,7 +222,7 @@ class Command extends BaseObject
             ]);
             $cacheKey = extension_loaded('igbinary') ? igbinary_serialize($cacheKey) : serialize($cacheKey);
             $cacheKey = md5($cacheKey);
-            $type = $this->db->shareType;
+            $type = $this->shareType;
             $s = $type($cacheKey, $func, $share);
             $status = $s->getStatus();
             if ($status === SWOOLE_CHANNEL_CLOSED) {

@@ -42,6 +42,7 @@ class Query extends BaseObject implements QueryInterface, ExpressionInterface
     protected ?\Rabbit\Pool\ConnectionInterface $db = null;
 
     protected ?int $share = null;
+    protected string $shareType = Connection::SHARE_PROCESS;
 
     public function __construct(?\Rabbit\Pool\ConnectionInterface $db = null, array $config = [])
     {
@@ -117,6 +118,7 @@ class Query extends BaseObject implements QueryInterface, ExpressionInterface
 
         $command = $this->db->createCommand($sql, $params);
         $command->share($this->share);
+        $command->shareType($this->shareType);
         $this->setCommandCache($command);
 
         return $command;
@@ -627,6 +629,12 @@ PATTERN;
     public function share(int $timeout = null): self
     {
         $this->share = $timeout;
+        return $this;
+    }
+
+    public function shareType(string $type): self
+    {
+        $this->shareType = $type;
         return $this;
     }
 

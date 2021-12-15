@@ -25,6 +25,9 @@ class Connection extends BaseObject implements ConnectionInterface
 {
     use ConnectionTrait;
 
+    const SHARE_ARRAY = 'share';
+    const SHARE_PROCESS = 'process_share';
+
     public ?string $dsn;
     public ?string $shortDsn;
     public ?string $username = null;
@@ -53,6 +56,7 @@ class Connection extends BaseObject implements ConnectionInterface
     public bool $enableLogging = true;
     public int $maxLog = 1024;
     public int $share = 3;
+    public string $shareType = self::SHARE_ARRAY;
     public bool $canTransaction = true;
     protected string $transactionClass = Transaction::class;
     protected ?Schema $schema = null;

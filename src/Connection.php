@@ -56,6 +56,7 @@ class Connection extends BaseObject implements ConnectionInterface
     public bool $enableLogging = true;
     public int $maxLog = 1024;
     public int $share = 3;
+    public string $shareCache = 'share';
     public bool $canTransaction = true;
     protected string $transactionClass = Transaction::class;
     protected ?Schema $schema = null;

@@ -73,7 +73,9 @@ class DBHelper
         array $filter = [],
         int $page = 0,
         int $duration = -1,
-        ?CacheInterface $cache = null
+        ?CacheInterface $cache = null,
+        string $totalKey = 'total',
+        string $listKey = 'data'
     ): array {
         $limit = ArrayHelper::remove($filter, 'limit', 20);
         $offset = ArrayHelper::remove($filter, 'offset', ($page ? ($page - 1) : 0) * (int)$limit);
@@ -87,6 +89,6 @@ class DBHelper
         } else {
             $total = count($rows);
         }
-        return ['total' => $total, 'data' => $rows];
+        return [$totalKey => $total, $listKey => $rows];
     }
 }

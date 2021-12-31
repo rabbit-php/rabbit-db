@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 /**
  * @link http://www.yiiframework.com/
@@ -77,7 +78,7 @@ class LikeConditionBuilder implements ExpressionBuilderInterface
                 $phName = $this->queryBuilder->buildExpression($value, $params);
             } else {
                 $phName = $this->queryBuilder->bindParam(
-                    empty($escape) ? $value : ('%' . strtr($value, $escape) . '%'),
+                    empty($escape) ? $value : ('%' . strtr((string)$value, $escape) . '%'),
                     $params
                 );
             }

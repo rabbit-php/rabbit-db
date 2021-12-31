@@ -86,7 +86,7 @@ trait QueryTrait
                 }
                 break;
             default:
-                if (array_key_exists(1, $condition) && $this->isEmpty($condition[1])) {
+                if (array_key_exists(1, $condition) && $this->isEmpty($condition[1] = is_numeric($condition[1]) ? (string)$condition[1] : $condition[1])) {
                     return [];
                 }
         }

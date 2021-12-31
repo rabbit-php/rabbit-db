@@ -431,8 +431,7 @@ PATTERN;
 
     public function where(string|array|ExpressionInterface $condition, array $params = []): self
     {
-        $this->where = $condition;
-        $this->addParams($params);
+        $this->andWhere($condition, $params);
         return $this;
     }
 

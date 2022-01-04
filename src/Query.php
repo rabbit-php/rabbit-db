@@ -490,7 +490,7 @@ PATTERN;
         return $this->andFilterWhere([$operator, $name, $value]);
     }
 
-    public function join(string|array $type, $table, string $on = '', array $params = []): self
+    public function join(string|array $type, string|array $table, string|array $on = '', array $params = []): self
     {
         $this->join[] = [$type, $table, $on];
         return $this->addParams($params);

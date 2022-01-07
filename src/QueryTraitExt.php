@@ -144,26 +144,4 @@ trait QueryTraitExt
         }
         return $this;
     }
-
-    public function andJson(array $config): self
-    {
-        foreach ($config as $key => $value) {
-            [$func, $field] = explode('.', $key, 2);
-            $plo = implode(',', array_fill(0, count($value), '?'));
-            $value = array_map(fn ($val) => (string)$val, $value);
-            $this->andWhere("{$func}({$field},{$plo})", $value);
-        }
-        return $this;
-    }
-
-    public function orJson(array $config): self
-    {
-        foreach ($config as $key => $value) {
-            [$func, $field] = explode('.', $key, 2);
-            $plo = implode(',', array_fill(0, count($value), '?'));
-            $value = array_map(fn ($val) => (string)$val, $value);
-            $this->orWhere("{$func}({$field},{$plo})", $value);
-        }
-        return $this;
-    }
 }

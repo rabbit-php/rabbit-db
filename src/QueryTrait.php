@@ -161,7 +161,7 @@ trait QueryTrait
         if ($this->orderBy === null) {
             $this->orderBy = $columns;
         } else {
-            $this->orderBy = array_merge($this->orderBy, $columns);
+            $this->orderBy = [...$this->orderBy, ...$columns];
         }
 
         return $this;

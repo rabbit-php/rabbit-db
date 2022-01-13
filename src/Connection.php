@@ -221,7 +221,7 @@ class Connection extends BaseObject implements ConnectionInterface
             PoolManager::setPool($slavePool);
         }
         foreach ($pool as $config) {
-            $config = array_merge($sharedConfig, $config);
+            $config = [...$sharedConfig, ...$config];
             if (empty($config['dsn'])) {
                 throw new \InvalidArgumentException('The "dsn" option must be specified.');
             }
@@ -235,7 +235,7 @@ class Connection extends BaseObject implements ConnectionInterface
             /* @var $db Connection */
             $db = create($config, ['poolKey' => $this->poolKey . '.slave']);
             $slaveConfig = PoolManager::getPool($this->poolKey . '.slave')->getPoolConfig();
-            $slaveConfig->setConfig(array_merge($slaveConfig->getConfig(), ['conn' => $db]));
+            $slaveConfig->setConfig([...$slaveConfig->getConfig(), 'conn' => $db]);
             try {
                 $db->open();
                 return $db;

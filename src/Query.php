@@ -417,7 +417,7 @@ PATTERN;
         if ($this->select === null) {
             $this->select = $columns;
         } else {
-            $this->select = array_merge($this->select, $columns);
+            $this->select = [...$this->select, ...$columns];
         }
 
         return $this;
@@ -535,7 +535,7 @@ PATTERN;
         if ($this->groupBy === null) {
             $this->groupBy = $columns;
         } else {
-            $this->groupBy = array_merge($this->groupBy, $columns);
+            $this->groupBy = [...$this->groupBy, ...$columns];
         }
 
         return $this;
@@ -650,10 +650,7 @@ PATTERN;
             if (in_array($method, ['select', 'where'])) {
                 switch ($method) {
                     case 'select':
-                        $this->$method = array_merge(
-                            $this->$method ?? [],
-                            [sprintf("%s(%s)", $function, implode(',', $arguments))]
-                        );
+                        $this->$method = [...($this->$method ?? []), sprintf("%s(%s)", $function, implode(',', $arguments))];
                         break;
                     case 'where':
                         $this->{'and' . $method}(sprintf("%s(%s)", $function, implode(',', $arguments)));

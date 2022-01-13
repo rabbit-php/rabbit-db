@@ -79,12 +79,12 @@ class QueryBuilder
 
     public function setExpressionBuilders(array $builders): void
     {
-        $this->expressionBuilders = array_merge($this->expressionBuilders, $builders);
+        $this->expressionBuilders = [...$this->expressionBuilders, ...$builders];
     }
 
     public function setConditionClasses(array $classes): void
     {
-        $this->conditionClasses = array_merge($this->conditionClasses, $classes);
+        $this->conditionClasses = [...$this->conditionClasses, ...$classes];
     }
 
     public function insert(string $table, array|Query $columns, array &$params = [], bool $withUpdate = false): string
@@ -157,7 +157,7 @@ class QueryBuilder
     {
         $query = $query->prepare($this);
 
-        $params = empty($params) ? $query->params : array_merge($params, $query->params);
+        $params = [...$params, ...$query->params];
 
         $clauses = [
             $this->buildSelect($query->select, $params, $query->distinct, $query->selectOption),
@@ -357,7 +357,7 @@ class QueryBuilder
         foreach ($columns as $i => $column) {
             if ($column instanceof ExpressionInterface) {
                 $columns[$i] = $this->buildExpression($column);
-                $params = array_merge($params, $column->params);
+                $params = [...$params, ...$column->params];
             } elseif (strpos($column, '(') === false) {
                 $columns[$i] = $this->db->quoteColumnName($column);
             }
@@ -396,7 +396,7 @@ class QueryBuilder
         foreach ($columns as $name => $direction) {
             if ($direction instanceof ExpressionInterface) {
                 $orders[] = $this->buildExpression($direction);
-                $params = array_merge($params, $direction->params);
+                $params = [...$params, ...$direction->params];
             } else {
                 $orders[] = $this->db->quoteColumnName($name) . ($direction === SORT_DESC ? ' DESC' : '');
             }
@@ -824,7 +824,7 @@ class QueryBuilder
                 $constraints[] = $constraint;
             }
         }
-        $constraints = array_merge($constraints, $schema->getTableUniques($name));
+        $constraints = [...$constraints, ...$schema->getTableUniques($name)];
         // Remove duplicates
         $constraints = array_combine(array_map(function (Constraint $constraint) {
             $columns = $constraint->columnNames;
@@ -839,7 +839,7 @@ class QueryBuilder
                 $constraintColumnNames = array_map([$schema, 'quoteColumnName'], $constraint->columnNames);
                 $result = !array_diff($constraintColumnNames, $columns);
                 if ($result) {
-                    $columnNames = array_merge($columnNames, $constraintColumnNames);
+                    $columnNames = [...$columnNames, ...$constraintColumnNames];
                 }
                 return $result;
             }

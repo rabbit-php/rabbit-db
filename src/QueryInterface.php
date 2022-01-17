@@ -42,4 +42,6 @@ interface QueryInterface
     public function offset(int|null $offset): self;
 
     public function emulateExecution(bool $value = true): self;
+
+    public function totals(): ?int;
 }

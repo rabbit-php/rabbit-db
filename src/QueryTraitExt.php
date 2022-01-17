@@ -144,4 +144,9 @@ trait QueryTraitExt
         }
         return $this;
     }
+
+    public function totals(): ?int
+    {
+        return null;
+    }
 }

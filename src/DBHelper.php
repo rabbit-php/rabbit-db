@@ -83,9 +83,11 @@ class DBHelper
         $queryRes = $filter === [] || !$filter ? $query : static::Search($query, $filter);
         $rows = $queryRes->cache($duration, $cache)->limit($limit ?: null)->offset($offset)->all();
         if ($limit) {
-            $query->limit = null;
-            $query->offset = null;
-            $total = $queryRes->cache($duration, $cache)->count($count);
+            if (null === $total = $queryRes->totals()) {
+                $query->limit = null;
+                $query->offset = null;
+                $total = $queryRes->cache($duration, $cache)->count($count);
+            }
         } else {
             $total = count($rows);
         }

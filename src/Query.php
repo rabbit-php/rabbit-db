@@ -39,7 +39,7 @@ class Query extends BaseObject implements QueryInterface, ExpressionInterface
 
     protected ?CacheInterface $cache = null;
 
-    protected ?\Rabbit\Pool\ConnectionInterface $db = null;
+    protected readonly ?\Rabbit\Pool\ConnectionInterface $db;
 
     protected ?int $share = null;
     protected string $shareType = Connection::SHARE_PROCESS;

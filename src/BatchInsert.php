@@ -13,19 +13,10 @@ use Rabbit\Base\Helper\StringHelper;
  */
 class BatchInsert implements BatchInterface
 {
-    /** @var string */
-    protected string $table;
-    /** @var array */
     protected array $columnSchemas = [];
-    /** @var string */
     protected ?string $sql = '';
-    /** @var ConnectionInterface */
-    protected ConnectionInterface $db;
-    /** @var int */
     protected int $hasRows = 0;
-    /** @var Schema */
-    protected Schema $schema;
-    /** @var array */
+    protected readonly Schema $schema;
     protected array $columns = [];
 
     /**
@@ -33,10 +24,8 @@ class BatchInsert implements BatchInterface
      * @param string $table
      * @param ConnectionInterface $db
      */
-    public function __construct(string $table, ConnectionInterface $db)
+    public function __construct(protected string $table, protected readonly ConnectionInterface $db)
     {
-        $this->table = $table;
-        $this->db = $db;
         $this->schema = $this->db->getSchema();
         $this->sql = 'INSERT INTO ' . $this->schema->quoteTableName($table);
     }

@@ -8,7 +8,6 @@ use Rabbit\Base\App;
 use Rabbit\Base\Core\Context;
 use Rabbit\Pool\PoolInterface;
 use Rabbit\Pool\PoolManager;
-use Throwable;
 
 /**
  * Trait ConnectionTrait

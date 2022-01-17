@@ -46,7 +46,6 @@ abstract class Schema extends BaseObject
     const TYPE_MONEY = 'money';
     const TYPE_JSON = 'json';
     const SCHEMA_CACHE_VERSION = 1;
-    public ConnectionInterface $db;
     protected ?string $defaultSchema;
     public array $exceptionMap = [
         'SQLSTATE[23' => IntegrityException::class,
@@ -61,9 +60,8 @@ abstract class Schema extends BaseObject
     protected string $builderClass = QueryBuilder::class;
     private ?string $_serverVersion = null;
 
-    public function __construct(Connection $db)
+    public function __construct(public readonly Connection $db)
     {
-        $this->db = $db;
     }
 
     public function getTableSchemas(string $schema = '', bool $refresh = false): array

@@ -11,17 +11,15 @@ namespace Rabbit\DB;
 
 use Rabbit\Base\Exception\InvalidCallException;
 
-class DataReader implements \Iterator, \Countable
+final class DataReader implements \Iterator, \Countable
 {
     protected ?\PDOStatement $statement;
     protected bool $closed = false;
     protected $row;
     protected int $index = -1;
-    protected Command $command;
 
-    public function __construct(Command $command, array $config = [])
+    public function __construct(protected Command $command, array $config = [])
     {
-        $this->command = $command;
         $this->statement = $command->pdoStatement;
         $this->statement->setFetchMode(\PDO::FETCH_ASSOC);
 

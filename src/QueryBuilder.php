@@ -20,9 +20,6 @@ use Rabbit\Base\Exception\NotSupportedException;
 
 class QueryBuilder
 {
-
-    public ?ConnectionInterface $db;
-
     public string $separator = ' ';
 
     protected array $typeMap = [];
@@ -31,9 +28,8 @@ class QueryBuilder
 
     protected array $expressionBuilders = [];
 
-    public function __construct(ConnectionInterface $connection)
+    public function __construct(public ConnectionInterface $db)
     {
-        $this->db = $connection;
         $this->expressionBuilders = $this->defaultExpressionBuilders();
         $this->conditionClasses = $this->defaultConditionClasses();
     }

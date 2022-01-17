@@ -28,7 +28,6 @@ class Connection extends BaseObject implements ConnectionInterface
     const SHARE_ARRAY = 'share';
     const SHARE_PROCESS = 'process_share';
 
-    public ?string $dsn;
     public ?string $shortDsn;
     public ?string $username = null;
     public ?string $password = null;
@@ -72,9 +71,8 @@ class Connection extends BaseObject implements ConnectionInterface
      * Connection constructor.
      * @param string $dsn
      */
-    public function __construct(string $dsn)
+    public function __construct(protected string $dsn)
     {
-        $this->dsn = $dsn;
         $this->schemaCache = new ArrayCache();
         $this->serverStatusCache = new ArrayCache();
         $this->makeShortDsn();

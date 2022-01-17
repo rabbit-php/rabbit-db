@@ -19,13 +19,10 @@ class Transaction extends BaseObject
 
     const SERIALIZABLE = 'SERIALIZABLE';
 
-    public ?Connection $db;
-
     protected int $_level = 0;
 
-    public function __construct(Connection $db)
+    public function __construct(public readonly Connection $db)
     {
-        $this->db = $db;
     }
 
     public function begin(?string $isolationLevel = null): void

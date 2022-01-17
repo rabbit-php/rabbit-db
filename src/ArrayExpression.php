@@ -9,24 +9,15 @@ use Traversable;
 
 class ArrayExpression implements ExpressionInterface, \ArrayAccess, \Countable, \IteratorAggregate
 {
-    private ?string $type = null;
-    private $value;
-    private int $dimension;
-    /**
-     * @author Albert <63851587@qq.com>
-     * @param array $value
-     * @param [type] $type
-     * @param integer $dimension
-     */
-    public function __construct($value = [], $type = null, $dimension = 1)
+    private ExpressionInterface|array $value;
+
+    public function __construct(null|ExpressionInterface|array $value = [], private ?string $type = null, private int $dimension = 1)
     {
         if ($value instanceof self) {
             $value = $value->getValue();
         }
 
         $this->value = $value;
-        $this->type = $type;
-        $this->dimension = $dimension;
     }
 
     /**

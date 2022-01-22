@@ -47,10 +47,10 @@ abstract class Schema extends BaseObject
     const TYPE_JSON = 'json';
     const SCHEMA_CACHE_VERSION = 1;
     protected ?string $defaultSchema;
-    public array $exceptionMap = [
+    protected array $exceptionMap = [
         'SQLSTATE[23' => IntegrityException::class,
     ];
-    public string $columnSchemaClass = ColumnSchema::class;
+    protected string $columnSchemaClass = ColumnSchema::class;
     protected string $tableQuoteCharacter = "'";
     protected string $columnQuoteCharacter = '"';
     private ?array $_schemaNames = null;

@@ -175,7 +175,7 @@ class Command extends BaseObject
                         $this->db->dsn,
                         $rawSql,
                     ]);
-                    $cacheKey = extension_loaded('igbinary') ? igbinary_serialize($cacheKey) : serialize($cacheKey);
+                    $cacheKey = extension_loaded('msgpack') ? \msgpack_pack($cacheKey) : serialize($cacheKey);
                     $cacheKey = md5($cacheKey);
                     if (!empty($ret = $cache->get($cacheKey))) {
                         $result = unserialize($ret);
@@ -220,7 +220,7 @@ class Command extends BaseObject
                 $this->db->dsn,
                 $rawSql,
             ]);
-            $cacheKey = extension_loaded('igbinary') ? igbinary_serialize($cacheKey) : serialize($cacheKey);
+            $cacheKey = extension_loaded('msgpack') ? \msgpack_pack($cacheKey) : serialize($cacheKey);
             $cacheKey = md5($cacheKey);
             $type = $this->shareType;
             $s = $type($cacheKey, $func, $share, $this->db->shareCache);

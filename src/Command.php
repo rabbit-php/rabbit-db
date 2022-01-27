@@ -162,7 +162,7 @@ class Command extends BaseObject
     {
         $rawSql = $this->getRawSql();
         $share = $this->share ?? $this->db->share;
-        $func = function () use ($method, &$rawSql, $fetchMode) {
+        $func = function () use ($method, &$rawSql, $fetchMode): mixed {
             if ($method !== '') {
                 $info = $this->db->getQueryCacheInfo($this->queryCacheDuration, $this->cache);
                 if (is_array($info)) {
@@ -367,7 +367,7 @@ class Command extends BaseObject
     public function batchInsert(string $table, array $columns, array|Generator $rows): self
     {
         $table = $this->db->quoteSql($table);
-        $columns = array_map(function ($column) {
+        $columns = array_map(function ($column): string {
             return $this->db->quoteSql($column);
         }, $columns);
 

@@ -456,7 +456,7 @@ abstract class Schema extends BaseObject
         }
 
         if ($multiple) {
-            return array_map(function (array $row) {
+            return array_map(function (array $row): array {
                 return array_change_key_case($row, CASE_LOWER);
             }, $row);
         }

@@ -767,7 +767,7 @@ class QueryBuilder
             [$rawQuery, $params] = $this->build($subQuery);
             array_walk(
                 $params,
-                function (&$param) {
+                function (mixed &$param): void {
                     $param = $this->db->quoteValue($param);
                 }
             );
@@ -822,7 +822,7 @@ class QueryBuilder
         }
         $constraints = [...$constraints, ...$schema->getTableUniques($name)];
         // Remove duplicates
-        $constraints = array_combine(array_map(function (Constraint $constraint) {
+        $constraints = array_combine(array_map(function (Constraint $constraint): string|false {
             $columns = $constraint->columnNames;
             sort($columns, SORT_STRING);
             return json_encode($columns);
@@ -831,7 +831,7 @@ class QueryBuilder
         // Remove all constraints which do not cover the specified column list
         $constraints = array_values(array_filter(
             $constraints,
-            function (Constraint $constraint) use ($schema, $columns, &$columnNames) {
+            function (Constraint $constraint) use ($schema, $columns, &$columnNames): bool {
                 $constraintColumnNames = array_map([$schema, 'quoteColumnName'], $constraint->columnNames);
                 $result = !array_diff($constraintColumnNames, $columns);
                 if ($result) {

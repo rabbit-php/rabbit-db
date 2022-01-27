@@ -423,7 +423,7 @@ class Connection extends BaseObject implements ConnectionInterface
     {
         return preg_replace_callback(
             '/(\\{\\{(%?[\w\-\. ]+%?)\\}\\}|\\[\\[([\w\-\. ]+)\\]\\])/',
-            function ($matches) {
+            function (array $matches): string {
                 if (isset($matches[3])) {
                     return $this->quoteColumnName($matches[3]);
                 }

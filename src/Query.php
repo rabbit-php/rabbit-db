@@ -46,7 +46,7 @@ class Query extends BaseObject implements QueryInterface, ExpressionInterface
 
     public function __construct(?\Rabbit\Pool\ConnectionInterface $db = null, array $config = [])
     {
-        $this->db = $db ?? getDI('db')->get();
+        $this->db = $db ?? service('db')->get();
         $config !== [] && configure($this, $config);
     }
 
@@ -83,7 +83,7 @@ class Query extends BaseObject implements QueryInterface, ExpressionInterface
     public function batch(int $batchSize = 100): BatchQueryResult
     {
         return create([
-            'class' => BatchQueryResult::class,
+            '{}' => BatchQueryResult::class,
             'query' => $this,
             'batchSize' => $batchSize,
             'db' => $this->db,
@@ -94,7 +94,7 @@ class Query extends BaseObject implements QueryInterface, ExpressionInterface
     public function each(int $batchSize = 100): BatchQueryResult
     {
         return create([
-            'class' => BatchQueryResult::class,
+            '{}' => BatchQueryResult::class,
             'query' => method_exists($this, 'asArray') ? $this : $this,
             'batchSize' => $batchSize,
             'db' => $this->db,

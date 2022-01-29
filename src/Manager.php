@@ -25,12 +25,16 @@ class Manager extends BaseManager
                     continue;
                 }
                 /** @var PdoPool $pool */
-                $pool = ArrayHelper::remove($config, 'pool');
-                $poolConfig = $pool->getPoolConfig();
-                $poolConfig->setUri($config['dsn']);
-                $config['poolKey'] = $poolConfig->getName();
-                $conn = create($config, [], false);
-                $poolConfig->setConfig(['conn' => $conn]);
+                if ($args = ArrayHelper::remove($config, 'pool')) {
+                    $pool = create($args, [], false);
+                    $poolConfig = $pool->getPoolConfig();
+                    $poolConfig->setUri($config['dsn']);
+                    $config['poolKey'] = $poolConfig->getName();
+                    $conn = create($config, [], false);
+                    $poolConfig->setConfig(['conn' => $conn]);
+                } else {
+                    $conn = create($config, [], false);
+                }
                 $this->items[$name] = $conn;
             }
         }

@@ -17,16 +17,16 @@ class MakePdoConnection
         array $retryHandler = []
     ): void {
         /** @var Manager $manager */
-        $manager = getDI('db');
+        $manager = service('db');
         if (!$manager->has($name)) {
             $conn = [
                 $name => [
-                    'class' => $class,
+                    '{}' => $class,
                     'dsn' => $dsn,
                     'pool' => create([
-                        'class' => PdoPool::class,
+                        '{}' => PdoPool::class,
                         'poolConfig' => create([
-                            'class' => PoolProperties::class,
+                            '{}' => PoolProperties::class,
                             'minActive' => intval($pool['min'] ?? 3),
                             'maxActive' => intval($pool['max'] ?? 5),
                             'maxWait' => $pool['wait'] ?? 0,
@@ -38,7 +38,7 @@ class MakePdoConnection
             if (!empty($retryHandler)) {
                 $conn[$name]['retryHandler'] = create($retryHandler);
             } else {
-                $conn[$name]['retryHandler'] = getDI(RetryHandler::class);
+                $conn[$name]['retryHandler'] = service(RetryHandler::class);
             }
             $manager->add($conn);
         }

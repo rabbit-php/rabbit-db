@@ -107,7 +107,7 @@ class Connection extends BaseObject implements ConnectionInterface
         if ((int)$duration === 0 || $duration > 0) {
             if ($cache === null) {
                 if ($this->queryCache === null) {
-                    $cache = getDI('cache', false);
+                    $cache = service('cache', false);
                 } else {
                     $cache = $this->queryCache;
                 }
@@ -146,7 +146,7 @@ class Connection extends BaseObject implements ConnectionInterface
 
     public function createCommand(?string $sql = null, array $params = []): Command
     {
-        $config = ['class' => $this->commandClass, 'retryHandler' => $this->retryHandler];
+        $config = ['{}' => $this->commandClass, 'retryHandler' => $this->retryHandler];
         $config['db'] = $this;
         $config['sql'] = $sql;
         /** @var Command $command */

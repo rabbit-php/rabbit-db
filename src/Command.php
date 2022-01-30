@@ -20,7 +20,7 @@ use Rabbit\Server\ProcessShare;
 
 class Command extends BaseObject
 {
-    public ?ConnectionInterface $db;
+    public ?ConnectionInterface $db = null;
     public ?PDOStatement $pdoStatement = null;
     public int $fetchMode = \PDO::FETCH_ASSOC;
     public array $params = [];

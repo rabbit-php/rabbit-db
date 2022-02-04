@@ -4,16 +4,10 @@ declare(strict_types=1);
 
 namespace Rabbit\DB;
 
-use DI\DependencyException;
-use DI\NotFoundException;
 use Rabbit\Base\Helper\ArrayHelper;
 use Rabbit\DB\Pool\PdoPool;
 use Rabbit\Pool\BaseManager;
 
-/**
- * Class Manager
- * @package rabbit\db
- */
 class Manager extends BaseManager
 {
     public function add(array $configs): void

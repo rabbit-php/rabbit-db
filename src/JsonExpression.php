@@ -38,7 +38,7 @@ class JsonExpression implements ExpressionInterface, \JsonSerializable
         return $this->type;
     }
 
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
         $value = $this->getValue();
         if ($value instanceof QueryInterface) {

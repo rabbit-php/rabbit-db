@@ -35,9 +35,6 @@ class Command extends BaseObject
 
     public function __destruct()
     {
-        if ($this->pdoStatement !== null && method_exists($this->pdoStatement, 'closeCursor')) {
-            $this->pdoStatement->closeCursor();
-        }
         $this->pdoStatement = null;
         $this->db && $this->db->release();
     }
@@ -192,7 +189,6 @@ class Command extends BaseObject
 
             try {
                 $this->internalExecute($rawSql);
-
                 if ($method === '') {
                     $result = new DataReader($this);
                 } else {
@@ -200,6 +196,7 @@ class Command extends BaseObject
                         $fetchMode = $this->fetchMode;
                     }
                     $result = call_user_func_array([$this->pdoStatement, $method], (array)$fetchMode);
+                    $this->pdoStatement->closeCursor();
                 }
             } catch (Throwable $e) {
                 throw $e;
@@ -287,6 +284,7 @@ class Command extends BaseObject
                 $this->_pendingParams = [];
                 return;
             } catch (\Exception $e) {
+                $this->pdoStatement->closeCursor();
                 $e = $this->db->getSchema()->convertException($e, $rawSql);
                 if (($retryHandler = $this->db->getRetryHandler()) === null || (RetryHandlerInterface::RETRY_NO === $code = $retryHandler->handle($e, $attempt))) {
                     $this->pdoStatement = null;

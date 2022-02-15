@@ -284,7 +284,7 @@ class Command extends BaseObject
                 $this->_pendingParams = [];
                 return;
             } catch (\Exception $e) {
-                $this->pdoStatement->closeCursor();
+                $this->pdoStatement && $this->pdoStatement->closeCursor();
                 $e = $this->db->getSchema()->convertException($e, $rawSql);
                 if (($retryHandler = $this->db->getRetryHandler()) === null || (RetryHandlerInterface::RETRY_NO === $code = $retryHandler->handle($e, $attempt))) {
                     $this->pdoStatement = null;

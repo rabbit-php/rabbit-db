@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Rabbit\DB;
 
 use Rabbit\Base\Helper\ArrayHelper;
-use Throwable;
 
 /**
  * Trait QueryTraitExt
@@ -22,7 +21,7 @@ trait QueryTraitExt
         return $this;
     }
 
-    protected function normalizeOrderBy(array $columns): array
+    protected function normalizeOrderBy(string|array|ExpressionInterface $columns): array
     {
         if ($columns instanceof Expression) {
             return [$columns];

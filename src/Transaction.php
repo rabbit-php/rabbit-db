@@ -44,6 +44,7 @@ class Transaction extends BaseObject
                 $attempt++;
                 try {
                     $pdo->beginTransaction();
+                    break;
                 } catch (Throwable $e) {
                     if (($retryHandler = $this->db->getRetryHandler()) === null || (RetryHandlerInterface::RETRY_NO === $code = $retryHandler->handle($e, $attempt))) {
                         throw $e;

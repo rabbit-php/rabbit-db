@@ -62,12 +62,17 @@ class Transaction extends BaseObject
         $schema = $this->db->getSchema();
         if ($schema->supportsSavepoint()) {
             App::debug('Set savepoint ' . $this->_level, "db");
-            if (!$pdo->getAttribute(PDO::ATTR_EMULATE_PREPARES)) {
-                $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, true);
-                $schema->createSavepoint('LEVEL' . $this->_level);
-                $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
-            } else {
-                $schema->createSavepoint('LEVEL' . $this->_level);
+            try {
+                if (!$pdo->getAttribute(PDO::ATTR_EMULATE_PREPARES)) {
+                    $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, true);
+                    $schema->createSavepoint('LEVEL' . $this->_level);
+                    $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+                } else {
+                    $schema->createSavepoint('LEVEL' . $this->_level);
+                }
+            } catch (Throwable $e) {
+                $this->db->close();
+                throw $e;
             }
         } else {
             App::info('Transaction not started: nested transaction not supported', "db");
@@ -90,7 +95,13 @@ class Transaction extends BaseObject
         $pdo = $this->db->getConn();
         if ($this->_level === 0) {
             App::debug('Commit transaction', "db");
-            $pdo->inTransaction() && $pdo->commit();
+            try {
+                $pdo->inTransaction() && $pdo->commit();
+            } catch (Throwable $e) {
+                $this->db->close();
+                throw $e;
+            }
+
             $this->db->release(true);
             return;
         }
@@ -98,12 +109,17 @@ class Transaction extends BaseObject
         $schema = $this->db->getSchema();
         if ($schema->supportsSavepoint()) {
             App::debug('Release savepoint ' . $this->_level, "db");
-            if (!$pdo->getAttribute(PDO::ATTR_EMULATE_PREPARES)) {
-                $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, true);
-                $schema->releaseSavepoint('LEVEL' . $this->_level);
-                $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
-            } else {
-                $schema->releaseSavepoint('LEVEL' . $this->_level);
+            try {
+                if (!$pdo->getAttribute(PDO::ATTR_EMULATE_PREPARES)) {
+                    $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, true);
+                    $schema->releaseSavepoint('LEVEL' . $this->_level);
+                    $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+                } else {
+                    $schema->releaseSavepoint('LEVEL' . $this->_level);
+                }
+            } catch (Throwable $e) {
+                $this->db->close();
+                throw $e;
             }
         } else {
             App::info('Transaction not committed: nested transaction not supported', "db");
@@ -129,7 +145,13 @@ class Transaction extends BaseObject
         $pdo = $this->db->getConn();
         if ($this->_level === 0) {
             App::debug('Roll back transaction', "db");
-            $pdo->inTransaction() && $pdo->rollBack();
+            try {
+                $pdo->inTransaction() && $pdo->rollBack();
+            } catch (Throwable $e) {
+                $this->db->close();
+                throw $e;
+            }
+
             $this->db->release(true);
             return;
         }
@@ -137,12 +159,17 @@ class Transaction extends BaseObject
         $schema = $this->db->getSchema();
         if ($schema->supportsSavepoint()) {
             App::debug('Roll back to savepoint ' . $this->_level, "db");
-            if (!$pdo->getAttribute(PDO::ATTR_EMULATE_PREPARES)) {
-                $pdo->getConn()->setAttribute(PDO::ATTR_EMULATE_PREPARES, true);
-                $schema->rollBackSavepoint('LEVEL' . $this->_level);
-                $pdo->getConn()->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
-            } else {
-                $schema->rollBackSavepoint('LEVEL' . $this->_level);
+            try {
+                if (!$pdo->getAttribute(PDO::ATTR_EMULATE_PREPARES)) {
+                    $pdo->getConn()->setAttribute(PDO::ATTR_EMULATE_PREPARES, true);
+                    $schema->rollBackSavepoint('LEVEL' . $this->_level);
+                    $pdo->getConn()->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+                } else {
+                    $schema->rollBackSavepoint('LEVEL' . $this->_level);
+                }
+            } catch (Throwable $e) {
+                $this->db->close();
+                throw $e;
             }
         } else {
             App::info('Transaction not rolled back: nested transaction not supported', "db");

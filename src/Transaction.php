@@ -8,6 +8,7 @@ use PDO;
 use Rabbit\Base\App;
 use Rabbit\Base\Core\BaseObject;
 use Rabbit\Base\Exception\NotSupportedException;
+use Throwable;
 
 class Transaction extends BaseObject
 {
@@ -38,7 +39,21 @@ class Transaction extends BaseObject
                 $this->db->getSchema()->setTransactionIsolationLevel($isolationLevel);
             }
             App::debug('Begin transaction' . ($isolationLevel ? ' with isolation level ' . $isolationLevel : ''), "db");
-            $pdo->beginTransaction();
+            $attempt = 0;
+            while (true) {
+                $attempt++;
+                try {
+                    $pdo->beginTransaction();
+                } catch (Throwable $e) {
+                    if (($retryHandler = $this->db->getRetryHandler()) === null || (RetryHandlerInterface::RETRY_NO === $code = $retryHandler->handle($e, $attempt))) {
+                        throw $e;
+                    }
+                    if ($code === RetryHandlerInterface::RETRY_CONNECT) {
+                        $this->db->reconnect($attempt);
+                        $pdo = $this->db->getConn();
+                    }
+                }
+            }
             $this->_level = 1;
             return;
         }

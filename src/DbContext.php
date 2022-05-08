@@ -13,7 +13,7 @@ use Rabbit\Base\Core\Context;
  */
 class DbContext extends Context
 {
-    public static function get(string $name, ?string $key = 'database')
+    public static function get(string $name, ?string $key = 'database'): mixed
     {
         return parent::get($name, $key);
     }
@@ -28,9 +28,9 @@ class DbContext extends Context
         return parent::has($name, $key);
     }
 
-    public static function delete(string $name, ?string $key = 'database'): void
+    public static function delete(string $name, ?string $key = 'database'): mixed
     {
-        parent::delete($name, $key);
+        return parent::delete($name, $key);
     }
 
     public static function release(): void

@@ -38,8 +38,7 @@ trait ConnectionTrait
     public function release(bool $release = false): void
     {
         if (null !== $conn = DbContext::get($this->poolKey)) {
-            $transaction = $this->getTransaction();
-            if (!empty($transaction) && $transaction->getIsActive()) { //事务里面不释放连接
+            if ($conn->transaction->getIsActive()) { //事务里面不释放连接
                 return;
             }
             if ($this->autoRelease || $release) {
@@ -53,7 +52,7 @@ trait ConnectionTrait
     {
         $conn = $conn ?? DbContext::get($this->poolKey);
         if ($conn !== null) {
-            Context::set($this->poolKey . '.id', $conn->lastInsertId());
+            Context::set($this->poolKey . '.id', $conn->pdo->lastInsertId());
         }
     }
 

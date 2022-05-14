@@ -19,6 +19,7 @@ use Rabbit\Base\Helper\ArrayHelper;
 use Rabbit\Base\Helper\UrlHelper;
 use Rabbit\Cache\ArrayCache;
 use Rabbit\Pool\PoolManager;
+use stdClass;
 use Throwable;
 
 class Connection extends BaseObject implements ConnectionInterface
@@ -85,7 +86,7 @@ class Connection extends BaseObject implements ConnectionInterface
 
     public function getConn(): object
     {
-        return DbContext::get($this->poolKey);
+        return DbContext::get($this->poolKey)->pdo;
     }
 
     public function getRetryHandler(): ?RetryHandlerInterface
@@ -273,7 +274,10 @@ class Connection extends BaseObject implements ConnectionInterface
         if (!$pdo instanceof ConnectionInterface) {
             DbContext::set($this->poolKey, $pdo);
         } else {
-            DbContext::set($this->poolKey, $pdo->createPdoInstance());
+            $std = new stdClass;
+            $std->pdo = $pdo->createPdoInstance();
+            $std->transaction = new $this->transactionClass($this);
+            DbContext::set($this->poolKey, $std);
         }
     }
 
@@ -323,7 +327,7 @@ class Connection extends BaseObject implements ConnectionInterface
     public function getMasterPdo(): object
     {
         $this->open();
-        return DbContext::get($this->poolKey);
+        return DbContext::get($this->poolKey)->pdo;
     }
 
     public function transaction(callable $callback, null|string $isolationLevel = null)
@@ -347,30 +351,23 @@ class Connection extends BaseObject implements ConnectionInterface
     public function beginTransaction(null|string $isolationLevel = null): ?Transaction
     {
         $this->open();
-
-        if (null === $transaction = $this->getTransaction()) {
-            $transaction = new $this->transactionClass($this);
-            Context::set('db.transaction', $transaction, $this->poolKey);
-        }
+        $transaction = $this->getTransaction();
         $transaction->begin($isolationLevel);
-
         return $transaction;
     }
 
     public function getTransaction(): ?Transaction
     {
-        return Context::get('db.transaction', $this->poolKey);
+        return DbContext::get($this->poolKey)?->transaction;
     }
 
     private function rollbackTransactionOnLevel(Transaction $transaction, int $level): void
     {
         if ($transaction->isActive && $transaction->level === $level) {
-            // https://github.com/yiisoft/yii2/pull/13347
             try {
                 $transaction->rollBack();
             } catch (\Exception $e) {
-                App::error($e, "db");
-                // hide this exception to be able to continue throwing original exception outside
+                App::error($e->getMessage(), "db");
             }
         }
     }

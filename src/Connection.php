@@ -13,7 +13,6 @@ use PDO;
 use Psr\SimpleCache\CacheInterface;
 use Rabbit\Base\App;
 use Rabbit\Base\Core\BaseObject;
-use Rabbit\Base\Core\Context;
 use Rabbit\Base\Exception\NotSupportedException;
 use Rabbit\Base\Helper\ArrayHelper;
 use Rabbit\Base\Helper\UrlHelper;
@@ -276,7 +275,7 @@ class Connection extends BaseObject implements ConnectionInterface
         } else {
             $std = new stdClass;
             $std->pdo = $pdo->createPdoInstance();
-            $std->transaction = new $this->transactionClass($this);
+            $std->transaction = $this->canTransaction ? new $this->transactionClass($this) : null;
             DbContext::set($this->poolKey, $std);
         }
     }

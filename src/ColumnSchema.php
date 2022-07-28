@@ -23,7 +23,7 @@ class ColumnSchema
 
     public string $dbType;
 
-    public ExpressionInterface|PdoValue|Query|string|bool|array|int|float|null $defaultValue;
+    public mixed $defaultValue;
 
     public array $enumValues;
 
@@ -41,12 +41,12 @@ class ColumnSchema
 
     public string $comment;
 
-    public function phpTypecast(ExpressionInterface|PdoValue|Query|string|bool|array|int|float|null $value): ExpressionInterface|PdoValue|Query|string|bool|array|int|float|null
+    public function phpTypecast(mixed $value): mixed
     {
         return $this->typecast($value);
     }
 
-    protected function typecast(ExpressionInterface|PdoValue|Query|string|bool|array|int|float|null $value): ExpressionInterface|PdoValue|Query|string|bool|array|int|float|null
+    protected function typecast(mixed $value): mixed
     {
         if (
             $value === ''
@@ -93,7 +93,7 @@ class ColumnSchema
                     return StringHelper::floatToString($value);
                 }
                 if (is_array($value)) {
-                    throw new Exception("{$this->name} can not convert to string");
+                    return json_encode($value, JSON_UNESCAPED_UNICODE);
                 }
                 return (string)$value;
             case 'integer':
@@ -121,7 +121,7 @@ class ColumnSchema
         ];
     }
 
-    public function dbTypecast(ExpressionInterface|PdoValue|Query|string|bool|array|int|float|null $value): ExpressionInterface|PdoValue|Query|string|bool|array|int|float|null
+    public function dbTypecast(mixed $value): mixed
     {
         return $this->typecast($value);
     }

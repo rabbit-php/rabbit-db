@@ -30,6 +30,11 @@ class BatchInsert implements BatchInterface
         $this->sql = 'INSERT INTO ' . $this->schema->quoteTableName($table);
     }
 
+    public function hasColumn(): bool
+    {
+        return count($this->columns) > 0;
+    }
+
     /**
      * @return int
      */

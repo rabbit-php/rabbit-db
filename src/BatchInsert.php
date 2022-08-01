@@ -24,7 +24,7 @@ class BatchInsert implements BatchInterface
      * @param string $table
      * @param ConnectionInterface $db
      */
-    public function __construct(protected string $table, protected readonly ConnectionInterface $db)
+    public function __construct(public readonly string $table, protected readonly ConnectionInterface $db)
     {
         $this->schema = $this->db->getSchema();
         $this->sql = 'INSERT INTO ' . $this->schema->quoteTableName($table);

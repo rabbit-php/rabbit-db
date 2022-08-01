@@ -51,18 +51,18 @@ class BatchInsert implements BatchInterface
         return $this->columns;
     }
 
-    /**
-     * @param array $columns
-     * @return bool
-     */
-    public function addColumns(array $columns): bool
+    public function addColumns(array $columns = []): bool
     {
-        if (empty($columns) || $this->columns) {
+        if ($this->columns) {
             return false;
         }
 
         if (($tableSchema = $this->schema->getTableSchema($this->table)) !== null) {
             $this->columnSchemas = $tableSchema->columns;
+        }
+
+        if (empty($columns)) {
+            $columns = array_keys($this->columnSchemas);
         }
 
         foreach ($columns as $i => $name) {

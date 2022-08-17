@@ -16,7 +16,7 @@ class BatchInsert implements BatchInterface
     protected array $columnSchemas = [];
     protected ?string $sql = '';
     protected int $hasRows = 0;
-    protected readonly Schema $schema;
+    protected Schema $schema;
     protected array $columns = [];
 
     /**

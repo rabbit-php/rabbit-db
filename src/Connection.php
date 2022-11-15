@@ -133,7 +133,7 @@ class Connection extends BaseObject implements ConnectionInterface
         }
 
         if ($pdo !== null) {
-            App::warning('Closing DB connection: ' . $this->shortDsn, "db");
+            App::warning('Closing DB connection: ' . $this->shortDsn);
             DbContext::delete($this->poolKey);
             $this->schema = null;
         }
@@ -238,7 +238,7 @@ class Connection extends BaseObject implements ConnectionInterface
                 $db->open();
                 return $db;
             } catch (\Exception $e) {
-                App::warning("Connection ({$config['dsn']}) failed: " . $e->getMessage(), 'db');
+                App::warning("Connection ({$config['dsn']}) failed: " . $e->getMessage());
                 if ($cache instanceof CacheInterface) {
                     // mark this server as dead and only retry it after the specified interval
                     $cache->set($key, 1, $this->serverRetryInterval);
@@ -319,7 +319,7 @@ class Connection extends BaseObject implements ConnectionInterface
         if ($this->charset !== null && in_array($this->getDriverName(), ['pgsql', 'mysql', 'mysqli', 'cubrid'], true)) {
             $pdo->exec('SET NAMES ' . $pdo->quote($this->charset));
         }
-        ($token = 'Opening DB connection: ' . $this->shortDsn) && App::info($token, "db");
+        ($token = 'Opening DB connection: ' . $this->shortDsn) && App::info($token);
         return $pdo;
     }
 
@@ -366,7 +366,7 @@ class Connection extends BaseObject implements ConnectionInterface
             try {
                 $transaction->rollBack();
             } catch (\Exception $e) {
-                App::error($e->getMessage(), "db");
+                App::error($e->getMessage());
             }
         }
     }

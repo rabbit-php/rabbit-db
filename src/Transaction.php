@@ -38,7 +38,7 @@ class Transaction extends BaseObject
             if ($isolationLevel !== null) {
                 $this->db->getSchema()->setTransactionIsolationLevel($isolationLevel);
             }
-            App::debug('Begin transaction' . ($isolationLevel ? ' with isolation level ' . $isolationLevel : ''), "db");
+            App::debug('Begin transaction' . ($isolationLevel ? ' with isolation level ' . $isolationLevel : ''));
             $attempt = 0;
             while (true) {
                 $attempt++;
@@ -61,7 +61,7 @@ class Transaction extends BaseObject
 
         $schema = $this->db->getSchema();
         if ($schema->supportsSavepoint()) {
-            App::debug('Set savepoint ' . $this->_level, "db");
+            App::debug('Set savepoint ' . $this->_level);
             try {
                 if (!$pdo->getAttribute(PDO::ATTR_EMULATE_PREPARES)) {
                     $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, true);
@@ -75,7 +75,7 @@ class Transaction extends BaseObject
                 throw $e;
             }
         } else {
-            App::info('Transaction not started: nested transaction not supported', "db");
+            App::info('Transaction not started: nested transaction not supported');
             throw new NotSupportedException('Transaction not started: nested transaction not supported.');
         }
         $this->_level++;
@@ -94,7 +94,7 @@ class Transaction extends BaseObject
         $this->_level--;
         $pdo = $this->db->getConn();
         if ($this->_level === 0) {
-            App::debug('Commit transaction', "db");
+            App::debug('Commit transaction');
             try {
                 $pdo->inTransaction() && $pdo->commit();
             } catch (Throwable $e) {
@@ -108,7 +108,7 @@ class Transaction extends BaseObject
 
         $schema = $this->db->getSchema();
         if ($schema->supportsSavepoint()) {
-            App::debug('Release savepoint ' . $this->_level, "db");
+            App::debug('Release savepoint ' . $this->_level);
             try {
                 if (!$pdo->getAttribute(PDO::ATTR_EMULATE_PREPARES)) {
                     $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, true);
@@ -122,7 +122,7 @@ class Transaction extends BaseObject
                 throw $e;
             }
         } else {
-            App::info('Transaction not committed: nested transaction not supported', "db");
+            App::info('Transaction not committed: nested transaction not supported');
         }
     }
 
@@ -144,7 +144,7 @@ class Transaction extends BaseObject
         $this->_level--;
         $pdo = $this->db->getConn();
         if ($this->_level === 0) {
-            App::debug('Roll back transaction', "db");
+            App::debug('Roll back transaction');
             try {
                 $pdo->inTransaction() && $pdo->rollBack();
             } catch (Throwable $e) {
@@ -158,7 +158,7 @@ class Transaction extends BaseObject
 
         $schema = $this->db->getSchema();
         if ($schema->supportsSavepoint()) {
-            App::debug('Roll back to savepoint ' . $this->_level, "db");
+            App::debug('Roll back to savepoint ' . $this->_level);
             try {
                 if (!$pdo->getAttribute(PDO::ATTR_EMULATE_PREPARES)) {
                     $pdo->getConn()->setAttribute(PDO::ATTR_EMULATE_PREPARES, true);
@@ -172,7 +172,7 @@ class Transaction extends BaseObject
                 throw $e;
             }
         } else {
-            App::info('Transaction not rolled back: nested transaction not supported', "db");
+            App::info('Transaction not rolled back: nested transaction not supported');
         }
     }
 
@@ -185,7 +185,7 @@ class Transaction extends BaseObject
             $this->db->release(true);
             throw new Exception('Failed to set isolation level: transaction was inactive.');
         }
-        App::debug('Setting transaction isolation level to ' . $level, "db");
+        App::debug('Setting transaction isolation level to ' . $level);
         $this->db->getSchema()->setTransactionIsolationLevel($level);
     }
 

@@ -237,10 +237,10 @@ class Command extends BaseObject
         return $func();
     }
 
-    protected function logQuery(string &$rawSql, string $module = 'db'): void
+    protected function logQuery(string &$rawSql): void
     {
         if ($this->db->enableLogging && ($this->db->maxLog === 0 || ($this->db->maxLog > 0 && strlen($rawSql) < $this->db->maxLog))) {
-            App::info($this->db->shortDsn . PHP_EOL . $rawSql, $module);
+            App::info($this->db->shortDsn . PHP_EOL . $rawSql);
         }
     }
 

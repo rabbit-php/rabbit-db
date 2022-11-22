@@ -71,6 +71,6 @@ trait ConnectionTrait
         DbContext::delete($this->poolKey);
         $this->getPool()->sub();
         App::warning("The $attempt times to Reconnect DB connection: " . $this->shortDsn);
-        $this->open($attempt);
+        $this->open();
     }
 }

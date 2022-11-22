@@ -249,7 +249,7 @@ class Connection extends BaseObject implements ConnectionInterface
         return null;
     }
 
-    public function open(int $attempt = 0): void
+    public function open(): void
     {
         if (DbContext::has($this->poolKey) === true) {
             return;

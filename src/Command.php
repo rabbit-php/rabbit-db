@@ -624,7 +624,6 @@ class Command extends BaseObject
     {
         $sql = $this->sql;
         $rawSql = $this->getRawSql();
-        $this->logQuery($rawSql);
         if ($sql === '') {
             return 0;
         }

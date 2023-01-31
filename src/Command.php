@@ -239,7 +239,7 @@ class Command extends BaseObject
 
     protected function logQuery(string &$rawSql): void
     {
-        if ($this->db->enableLogging && ($this->db->maxLog === 0 || ($this->db->maxLog > 0 && strlen($rawSql) < $this->db->maxLog))) {
+        if ($this->db->enableLogging && ($this->db->maxLog === -1 || ($this->db->maxLog > -1 && strlen($rawSql) < $this->db->maxLog))) {
             App::info($this->db->shortDsn . PHP_EOL . $rawSql);
         }
     }

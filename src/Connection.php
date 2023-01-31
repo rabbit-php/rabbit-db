@@ -53,7 +53,7 @@ class Connection extends BaseObject implements ConnectionInterface
     public array $masterConfig = [];
     public bool $shuffleMasters = true;
     public bool $enableLogging = true;
-    public int $maxLog = 0;
+    public int $maxLog = 1024;
     public int $share = 3;
     public string $shareCache = 'memory';
     public bool $canTransaction = true;

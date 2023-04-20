@@ -261,6 +261,8 @@ class QueryBuilder
             if ($table instanceof Query) {
                 [$sql, $params] = $this->build($table, $params);
                 $tables[$i] = "($sql) " . $this->db->quoteTableName($i);
+            } elseif ($table instanceof Expression) {
+                $tables[$i] = (string)$table;
             } elseif (is_string($i)) {
                 if (strpos($table, '(') === false) {
                     $table = $this->db->quoteTableName($table);
